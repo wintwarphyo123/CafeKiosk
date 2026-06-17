@@ -1,0 +1,129 @@
+
+<p-toast key="globalMessage"></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="card" xmlns="http://www.w3.org/1999/html">
+    <p-table #dt2 [value]="menuModel" [columns]="cols" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 20, 50]"
+        class="p-datatable-striped" [loading]="isLoading"
+    [globalFilterFields]="['menuName', 'categoryName', 'description','price']" [tableStyle]="{ 'min-width': '50rem' }"
+        selectionMode="single" dataKey="menuId">
+
+        <ng-template pTemplate="caption">
+            <div class="flex w-full justify-between item-center pb-4">
+                <div>
+                    <p-button label="Create" (onClick)="create()"></p-button>
+                </div>
+                <div>
+                    <p-iconfield iconPosition="left" class="ml-auto">
+                        <p-inputicon>
+                            <i class="pi pi-search"></i>
+                        </p-inputicon>
+                        <input pInputText type="text" (input)="dt2.filterGlobal($event.target.value, 'contains')"
+                            placeholder="Search keyword" />
+                    </p-iconfield>
+                </div>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="header" let-columns>
+            <tr>
+                <th pFrozenColumn style="width: 3rem;text-align: center;">#</th>
+                <th style="width: 7rem;">Image</th>
+                @for(col of columns;track col.field){
+                    <th [pSortableColumn]="col.field" [style.text-align]="col.field === 'price' ? 'right' : 'left'"
+                        [style.width]="col.field === 'description' ? '25rem' : 'auto'">{{col.header}}
+                        <p-sortIcon [field]="col.field"></p-sortIcon>
+                    </th>
+                }
+                <th style="width: 8rem; text-align: center;">Is Active</th>
+                <th style="width: 8rem; text-align: center;">Actions</th>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-rowData let-columns="columns">
+            <tr [pSelectableRow]="rowData">
+                <td pFrozenColumn style="text-align: center;">
+                    <span class="pi pi-circle" [class.pi-check-circle]="selectedMenu === rowData"></span>
+                </td>
+                <td style="min-width: 5rem;">
+                    <p-image [src]="rowData.menuImage ?? ''" alt="{{ rowData.menuName }}"
+                        [style]="{ width: '80px', height: '60px' }"
+                        [imageStyle]="{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '10px' }"
+                        preview="true" (onImageError)="handleImageError($event)">
+                    </p-image>
+                </td>
+                @for(col of columns; track col.field){
+                    <td [style.text-align]="col.field === 'price' ? 'right' : 'left'">{{rowData[col.field]}}</td>
+                }
+                <td style="text-align: center;">{{ rowData.isAvailable }}</td>
+                <td>
+                    <div class="flex gap-2 justify-content-center">
+                        <p-button icon="pi pi-pencil" [rounded]="true" (onClick)="update(rowData)" pTooltip="Edit">
+                        </p-button>
+                        <p-button icon="pi pi-trash" severity="danger" [rounded]="true" (onClick)="delete(rowData)"
+                            pTooltip="Delete">
+                        </p-button>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<p-dialog header="{{ isEdited ? 'Edit Menu' : 'Create Menu' }}" [(visible)]="modalVisible" appendTo="body"
+    [breakpoints]="{ '1440px': '50vw', '1024px': '65vw', '768px': '85vw', '576px': '95vw' }" [modal]="true"
+    [style]="{ 'min-width': '30vw' }" [draggable]="false" [resizable]="false">
+    <form [formGroup]="menuForm" (submit)="submit()">
+        <div class="grid grid-cols-1 gap-y-5 p-2 max-w-md mx-auto">
+            <div class="flex flex-col gap-2">
+                <label style="font-weight: 600; width: 6rem;">Menu Name:</label>
+                <input pInputText formControlName="menuName" class="flex-auto" autocomplete="off" />
+            </div>
+            <div class="flex flex-col gap-2">
+                <label style="font-weight: 600; width: 6rem;">Price:</label>
+                <input pInputText formControlName="price" class="flex-auto" autocomplete="off" />
+            </div>
+            <div class="flex flex-col gap-2">
+                <label style="font-weight: 600; width: 6rem;">Description:</label>
+                <input pInputText formControlName="description" class="flex-auto" autocomplete="off" />
+            </div>
+            <div class="flex flex-col gap-2">
+                <label style="font-weight: 600; width: 6rem;">Category Name:</label>
+                <p-select formControlName="categoryId" [options]="optionCategory" optionLabel="label"
+                    optionValue="value" class="w-full" flex-auto placeholder="choose category"></p-select>
+            </div>
+            <div class="flex flex-col gap-2">
+                <label style="font-weight: 600; width: 6rem;">is Available:</label>
+                <input pInputText formControlName="isAvailable" class="flex-auto" autocomplete="off" />
+            </div>
+            <div class="col-span-1 gap-2">
+                <label>Image</label>
+                <div class="row mt-2">
+                    <div class="card border-round p-2" (click)="onUploadImg()">
+                        @if(!imgName){
+                        <div>
+                            <i class="pi pi-upload"></i>&nbsp;&nbsp; None<br />
+                        </div>
+                        }
+                        @if(imgName){
+                        <div>
+                            <i class="pi pi-file-check"></i>&nbsp;&nbsp; {{ imgName }}<br />
+                        </div>
+                        }
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <img [src]="imgSrc || thumbnailUrl" width="510" height="410" class="border-round shadow-2"
+                        (error)="handleImageError($event)" alt="Menu Image" />
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
+                <p-button label="Cancel" severity="secondary" type="button" (click)="modalVisible = false" />
+                <p-button [label]="isEdited ? 'Update' : 'Create'" type="submit" />
+            </div>
+        </div>
+    </form>
+</p-dialog>
+
+<input #image type="file" accept=".jpeg,.jpg,.png" (change)="onImgChange($event)" hidden style="display:none" />

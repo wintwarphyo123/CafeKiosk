@@ -1,0 +1,120 @@
+<p-toast key="globalMessage"></p-toast>
+<p-confirmDialog></p-confirmDialog>
+<div class="card" xmnls="http://www.w3.org/1999/html">
+    <p-table #dt2 [value]="categoryModel" [columns]="cols" [paginator]="true" [rows]="10"
+        [rowsPerPageOptions]="[10, 20, 50]" class="p-datatable-striped" [loading]="isLoading"
+        [globalFilterFields]="['categoryId', 'categoryName','status']" [tableStyle]="{ 'min-width': '50rem' }"
+        selectionMode="single" dataKey="categoryId">
+
+        <ng-template pTemplate="caption">
+            <div class="flex w-full justify-between item-center pb-4">
+                <div>
+                    <p-button label="Create" (onClick)="create()"></p-button>
+                </div>
+                <div>
+                    <p-iconfield iconPosition="left" class="ml-auto">
+                        <p-inputicon>
+                            <i class="pi pi-search"></i>
+                        </p-inputicon>
+                        <input pInputText type="text" (input)="dt2.filterGlobal($event.target.value, 'contains')"
+                            placeholder="Search keyword" />
+                    </p-iconfield>
+                </div>
+            </div>
+        </ng-template>
+        <ng-template pTemplate="header" let-columns>
+            <tr>
+                <th pFrozenColumn>#</th>
+                <th>image</th>
+                @for(col of columns;track col.field){
+                <th [pSortableColumn]="col.field">{{col.header}}
+                    <p-sortIcon [field]="col.field"></p-sortIcon>
+                </th>
+                }
+                <th>Is Active</th>
+                <th style="width: 8rem; text-align: center;">Actions</th>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-rowData let-columns="columns">
+            <tr [pSelectableRow]="rowData">
+
+                <td pFrozenColumn>
+                    <span class="pi pi-circle" [class.pi-check-circle]="selectedCategory === rowData"></span>
+                </td>
+                <td style="min-width: 5rem;">
+                    <p-image [src]="rowData.categoryImage ?? ''" alt="{{ rowData.categoryName }}"
+                        [style]="{ width: '80px', height: '60px' }"
+                        [imageStyle]="{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '10px' }"
+                        preview="true" (onImageError)="handleImageError($event)">
+                    </p-image>
+                </td>
+                @for(col of columns;track col.field){
+                    <td>{{ rowData[col.field] }}</td>
+                }
+                <td>{{rowData.isActive}}</td>
+                <td>
+                    <div class="flex gap-2 justify-content-center">
+                        <p-button icon="pi pi-pencil" [rounded]="true" (onClick)="update(rowData)" pTooltip="Edit">
+                        </p-button>
+                        <p-button icon="pi pi-trash" severity="danger" [rounded]="true" (onClick)="delete(rowData)"
+                            pTooltip="Delete">
+                        </p-button>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+
+    </p-table>
+</div>
+
+<p-dialog header="{{ isEdit ? 'Edit Category' : 'Create Category' }}" [(visible)]="modalVisible"
+    maskStyleClass="backdrop-blur-sm"
+    [breakpoints]="{ '1440px': '50vw', '1024px': '65vw', '768px': '85vw', '576px': '95vw' }" [modal]="true"
+    [style]="{ 'min-width': '30vw' }" [draggable]="false" [resizable]="false">
+    <form [formGroup]="categoryForm" (submit)="submit()">
+        <div class="grid grid-cols-1 gap-y-5 p-2 max-w-md mx-auto">
+            <div class="flex flex-col gap-2">
+                <label for="categoryName" class="font-semibold w-24" style="font-weight: 600; width: 6rem;">Category
+                    Name:</label>
+                <input pInputText formControlName="categoryName" class="flex-auto" autocomplete="off" />
+            </div>
+            <!--Image-->
+            <div class="col-span-1 gap-2">
+                <label>Image</label>
+                <div class="row mt-2">
+                    <div class="card border-round p-2" (click)="onUploadImg()">
+                        @if(!imgName){
+                        <div>
+                            <i class="pi pi-upload"></i>&nbsp;&nbsp; None<br />
+                        </div>
+                        }
+                        @if(imgName){
+                        <div>
+                            <i class="pi pi-file-check"></i>&nbsp;&nbsp; {{ imgName }}<br />
+                        </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="mt-2">
+                    @if(imgSrc){
+                    <img [src]="imgSrc" width="510" height="410" class="border-round shadow-2"
+                        (error)="handleImageError($event)" alt="Category Type" />
+                    }
+                    @if(!imgSrc){
+                    <img [src]="imgSrc" width="510" height="410" class="border-round shadow-2"
+                        (error)="handleImageError($event)" alt="Default Thumbnail" />
+                    }
+
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
+                <p-button icon="pi pi-check" label="{{ isEdit ? 'Update' : 'Save' }}" type="submit"
+                    [severity]="isEdit ? 'info' : 'success'"></p-button>
+            </div>
+        </div>
+    </form>
+</p-dialog>
+<input #image type="file" accept=".jpeg,.jpg,.png" (change)="onImgChange($event)" hidden style="display:none" />
