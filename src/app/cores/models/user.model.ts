@@ -9,3 +9,9 @@ export interface UserModel {
     role: string | null;
     profileImage: string | null;
 }//userId,userName,status,email,role,joinDate,phoneNumber,profileImage
+
+export interface LoginModel{
+    userName:string| null;
+    password:string | null;
+    role:string| null;
+}

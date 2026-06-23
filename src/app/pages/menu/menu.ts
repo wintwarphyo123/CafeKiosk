@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, ElementRef, inject, OnInit, ViewChild } from '@angular/core';
-import { MenuModel } from '../../cores/models/menu.model';
+import { MenuModel} from '../../cores/models/menu.model';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MessageService, ConfirmationService } from 'primeng/api';
@@ -17,10 +17,12 @@ import { MenuService } from '../../cores/services/menu';
 import { environment } from '../../../environments/environment';
 import { CategoryModel } from '../../cores/models/category.model';
 import { SortColumn } from '../../cores/models/root.model';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-menu',
-  imports: [CommonModule,
+  imports: [
+    CommonModule,
     FormsModule,
     ToastModule,
     ReactiveFormsModule,
@@ -33,12 +35,14 @@ import { SortColumn } from '../../cores/models/root.model';
     ToastModule,
     DialogModule,
     SelectModule,
-    ImageModule],
+    ImageModule
+  ],
   providers: [MessageService, ConfirmationService, DatePipe],
   templateUrl: './menu.html',
   styleUrl: './menu.scss',
 })
 export class Menu implements OnInit {
+
   @ViewChild('image') image!: ElementRef<HTMLInputElement>;
   @ViewChild('imgV') imgV!: ElementRef<HTMLInputElement>;
 
@@ -55,14 +59,15 @@ export class Menu implements OnInit {
   isLoading: boolean = false;
   modalVisible: boolean = false;
   isEdited: boolean = false;
-  optionCategory: { label: string | null, value: number | null}[] = [];
+  optionCategory: { label: string | null, value: number | null }[] = [];
   cols!: SortColumn[];
 
   constructor(
     private menuService: MenuService,
     private messageService: MessageService,
     private cdr: ChangeDetectorRef,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private router: Router
   ) { }
   //menuId,menuName,menuImage,description,price,isAvailable,categoryId,categoryName
   private formBuilder = inject(FormBuilder);
@@ -94,12 +99,12 @@ export class Menu implements OnInit {
         this.isLoading = false;
         console.log('API Response:', res);
         if (!res.success) {
-          this.messageService.add({key:'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to load users.' });
+          this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to load users.' });
           return;
         }
         const rawMenu = Array.isArray(res.data) ? res.data : [];
         this.menuModel = rawMenu.map((item) => ({
-          menuId: item.Id ?? item.menuId?? item.id??  0,
+          menuId: item.Id ?? item.menuId ?? item.id ?? 0,
           menuName: item.menuName ?? '',
           //item.categorye ? this.getImageUrl(item.categoryImage) : null,
           menuImage: item.menuImage ? this.getImageUrl(item.menuImage) : null,
@@ -113,8 +118,8 @@ export class Menu implements OnInit {
         const seen = new Set<number>();
         this.optionCategory = this.menuModel
           .map(cat => ({
-            label: cat.categoryName, 
-            value: cat.categoryId     
+            label: cat.categoryName,
+            value: cat.categoryId
           }))
           .filter(item => {
             if (!item.value || seen.has(item.value)) {
@@ -135,7 +140,7 @@ export class Menu implements OnInit {
   }
 
   handleImageError(event: any) {
-    event.target.src = '/thumbnail.jpg';
+    event.target.src =this.thumbnailUrl;
   }
 
   private getImageUrl(imagePath: string): string {
@@ -227,8 +232,9 @@ export class Menu implements OnInit {
         menuImage: formValue.menuImage,
         price: Number(formValue.price),
         description: formValue.description,
-        isAvailable: formValue.isAvailable==='true' || formValue.isAvailable === true,
+        isAvailable: formValue.isAvailable === 'true' || formValue.isAvailable === true,
         categoryId: Number(formValue.categoryId)
+
       }
       this.menuService.update(currentMenuId, menuData).subscribe({
         next: (res) => {
@@ -242,11 +248,12 @@ export class Menu implements OnInit {
               summary: 'success',
               detail: 'Category Update Successfully'
             });
-          }
-          else {
-            this.messageService.add({key:'globalMessage', severity: 'error', summary: 'Error', detail: res.message });
 
           }
+          else {
+            this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message });
+          }
+          this.selectedMenu = null;
         },
         error: (err) => {
           this.modalVisible = false;
@@ -268,8 +275,8 @@ export class Menu implements OnInit {
         menuImage: formValue.menuImage,
         price: Number(formValue.price),
         description: formValue.description,
-        isAvailable: formValue.isAvailable==='true' || formValue.isAvailable === true,
-        categoryId:Number(formValue.categoryId)
+        isAvailable: formValue.isAvailable === 'true' || formValue.isAvailable === true,
+        categoryId: Number(formValue.categoryId)
       }
       this.menuService.create(menuData).subscribe({
         next: (res) => {
@@ -284,7 +291,7 @@ export class Menu implements OnInit {
               detail: 'Category Create Successfully'
             });
           } else {
-            this.messageService.add({key:'globalMessage', severity: 'error', summary: 'Error', detail: res.message });
+            this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message });
           }
           this.cdr.detectChanges();
         },
@@ -324,7 +331,7 @@ export class Menu implements OnInit {
       price: menu.price ?? 0,
       description: menu.description ?? '',
       is_available: menu.isAvailable ?? true,
-      categoryId:menu.categoryId
+      categoryId: menu.categoryId
     });
     if (menu.menuImage) {
       this.imgSrc = menu.menuImage; // ဇယားထဲက ရရှိထားပြီးသား Image URL ကို ထည့်ပေးလိုက်တာပါ
@@ -337,7 +344,6 @@ export class Menu implements OnInit {
     }
 
     console.log(this.menuForm);
-    this.modalVisible = true;
 
   }
   delete(menu: MenuModel): void {
@@ -369,6 +375,9 @@ export class Menu implements OnInit {
         });
       }
     });
+  }
+  viewDetail(rowData: any) {
+    this.router.navigate(['/admin/menu/detail', rowData.menuId]);
   }
 
 }

@@ -1,0 +1,180 @@
+<div class="h-screen w-screen bg-[#FDF5ED] flex flex-col font-sans antialiased overflow-hidden">
+
+    <header
+        class="h-16 bg-white border-b border-orange-50 flex items-center justify-between px-6 shadow-sm shrink-0 z-30">
+        <div class="flex items-center gap-4">
+            <button (click)="sidebarVisible = !sidebarVisible"
+                class="p-2 hover:bg-gray-100 rounded-lg text-gray-700 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                    stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                </svg>
+            </button>
+            <h1 class="text-lg font-bold text-gray-800">Coffee Menu</h1>
+        </div>
+
+        <button class="relative p-2 hover:bg-orange-50 rounded-full text-gray-700 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+            </svg>
+            @if(cartCount>0){
+            <span
+                class="absolute -top-0.5 -right-0.5 bg-orange-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-black">
+                {{ cartCount }}
+            </span>
+            }
+        </button>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden relative">
+        @if(sidebarVisible){
+        <aside
+            class="h-full w-64 bg-white border-r border-orange-100 flex flex-col p-4 shadow-md shrink-0 transition-all duration-300 z-20">
+            <div class="flex items-center justify-between mb-6 px-2">
+                <span class="text-lg font-bold text-orange-600">☕ Purr'Coffee</span>
+                <button (click)="sidebarVisible = false" class="p-1.5 hover:bg-gray-100 rounded-md text-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
+                        stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="space-y-2 flex-1 overflow-y-auto">
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-2 mb-3">Categories</p>
+                <button (click)="selectCategory(null)"
+                    class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition duration-150 text-sm font-semibold mb-1"
+                    [ngClass]="selectedCategoryId === null ? 'bg-orange-100 text-orange-700 shadow-sm' : 'hover:bg-orange-50 text-gray-700'">
+
+                    <div
+                        class="w-7 h-7 flex items-center justify-center bg-orange-500 rounded-md text-white text-xs shrink-0">
+                        ✨
+                    </div>
+                    <span>All Menus</span>
+                </button>
+                @for(cat of categoryModel; track cat.categoryId ){
+                <button (click)="selectCategory(cat.categoryId)"
+                    class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-orange-50 text-gray-700 text-sm font-semibold transition duration-150">
+                    <img [src]="cat.categoryImage" [alt]="cat.categoryName" class="w-7 h-7 object-cover rounded-md" />
+                    <span>{{ cat.categoryName }}</span>
+                </button>
+                }
+
+
+            </div>
+        </aside>
+        }
+
+
+        <main class="flex-1 p-6 overflow-y-auto h-full">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 justify-items-center">
+                @for(item of filterMenuItem;track item.menuId){
+                <div
+                    class="bg-white rounded-xl p-3 shadow-sm border border-orange-50 flex flex-col justify-between w-full max-w-xs hover:shadow-md transition">
+                    <div>
+                        <div class="overflow-hidden rounded-lg cursor-pointer mb-2" (click)="openDetail(item)">
+                            <img [src]="item.menuImage" [alt]="item.menuName"
+                                class="w-full h-32 object-cover hover:scale-105 transition duration-200" />
+                        </div>
+                        <h3 class="text-sm font-bold text-gray-800 mb-0.5">{{ item.menuName }}</h3>
+                        <p class="text-xs text-gray-400 line-clamp-1 mb-2">{{ item.description }}</p>
+                    </div>
+
+                    <div class="flex items-center justify-between mt-1">
+                        <span class="text-base font-extrabold text-orange-600">${{ item.price | number:'1.2-2' }}</span>
+                        <button (click)="openDetail(item)"
+                            class="bg-[#A47551] hover:bg-[#8B5E3C] text-white text-xs px-2.5 py-1.5 rounded-lg font-medium transition">
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+                }
+
+            </div>
+        </main>
+
+    </div>
+</div>
+
+<p-dialog [(visible)]="displayDetail" [modal]="true" [header]="selectedItem?.menuName"
+    [style]="{ width: '90vw', maxWidth: '440px' }" [breakpoints]="{ '960px': '75vw', '641px': '90vw' }"
+    [draggable]="false" [resizable]="false">
+    @if(selectedItem){
+    <div class="flex flex-col gap-4 pt-2 max-h-[75vh] overflow-y-auto">
+        <div class="w-full flex justify-center">
+            <img [src]="selectedItem.menuImage" class="w-full h-40 object-cover rounded-xl shadow-inner" />
+        </div>
+
+        <div>
+            <h2 class="text-base font-bold text-gray-800">{{ selectedItem.menuName }}</h2>
+            <p class="text-xs text-gray-400 mt-0.5">{{ selectedItem.description }}</p>
+        </div>
+        @for(group of groupedOptions;track group.groupName){
+        <div class="border-t border-gray-100 pt-3">
+            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                {{ group.groupName }}
+            </label>
+
+            <div class="flex flex-col gap-2">
+                @for(option of group.items;track option.id){
+                <div
+                    class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl text-sm transition hover:bg-gray-100">
+                    <div class="flex items-center gap-3 cursor-pointer">
+                        <p-radioButton [name]="group.groupName" [value]="option"
+                            [(ngModel)]="selectedOptions[group.groupName]" (onClick)="calculateTotalPrice()">
+                        </p-radioButton>
+                        <label class="text-gray-700 text-xs font-semibold cursor-pointer">{{ option.itemName }}</label>
+                    </div>
+                    @if(option.extraPrice>0){
+                    <span class="text-xs font-bold text-green-600">
+                        +${{ option.extraPrice | number:'1.2-2' }}
+                    </span>
+                    }
+                </div>
+                }
+
+            </div>
+        </div>
+        }
+
+        <div class="mt-2 flex items-center justify-between border-t border-gray-100 pt-3 sticky bottom-0 bg-white">
+
+            <div class="flex items-center bg-gray-100 rounded-xl p-1 border border-gray-200">
+                <button (click)="decrementQuantity()"
+                    class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-gray-600 hover:bg-gray-50 active:scale-95 transition font-bold shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
+                        stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
+                    </svg>
+                </button>
+
+                <span class="text-sm font-black text-gray-800 w-8 text-center">{{ quantity }}</span>
+
+                <button (click)="incrementQuantity()"
+                    class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-gray-600 hover:bg-gray-50 active:scale-95 transition font-bold shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
+                        stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="flex flex-col text-right">
+                    <span class="text-[10px] text-gray-400 font-bold uppercase">Total Price</span>
+                    <span class="text-base font-black text-orange-600">
+                        ${{ ((selectedItem.price + totalExtraPrice) * quantity) | number:'1.2-2' }}
+                    </span>
+                </div>
+                <button (click)="confirmAddToCart()"
+                    class="bg-orange-500 hover:bg-orange-600 text-white text-xs px-5 py-2.5 rounded-xl font-bold transition shadow-sm active:scale-95">
+                    Confirm & Add
+                </button>
+            </div>
+        </div>
+    </div>
+    }
+</p-dialog>

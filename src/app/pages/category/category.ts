@@ -61,13 +61,12 @@ export class Category implements OnInit {
   isLoading: boolean = false;
   isEdit: boolean = false;
   errorMessage = signal<any[]>([]);
-cols!:SortColumn[];
+  cols!:SortColumn[];
   constructor(
-    //private route: ActivatedRoute,
+   
     private categoryService: CategoryService,
     private messageService: MessageService,
     private cdr: ChangeDetectorRef,
-    //private datePipe: DatePipe,
     private confirmationService: ConfirmationService
   ) { }
 
@@ -90,7 +89,7 @@ cols!:SortColumn[];
   loadData(): void {
     this.isLoading = true;
     this.categoryService.get().subscribe({
-      next: (res) => {//categoryId,categoryName,isActive,categoryImage,createdAt,updatedAt,deletedAt
+      next: (res) => {
         this.isLoading = false;
         if (!res.success) {
           this.messageService.add({key:'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to load users.' });

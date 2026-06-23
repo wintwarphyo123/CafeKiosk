@@ -1,0 +1,90 @@
+<p-toast key="globalMessage"></p-toast>
+
+<div class="min-h-screen flex items-center justify-center bg-stone-100 px-4 py-12 selection:bg-amber-100 font-sans">
+    
+    <div class="max-w-md w-full space-y-6 bg-white p-8 rounded-2xl border border-stone-200 shadow-xl transition-all">
+        
+        <div class="text-center">
+            <div class="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-amber-50 border border-amber-200 mb-3">
+                <i class="pi pi-coffee text-amber-800 text-2xl"></i>
+            </div>
+            <h2 class="text-xl font-bold tracking-tight text-stone-800 uppercase">
+                SmartCafe System
+            </h2>
+            <p class="mt-1 text-[11px] text-stone-500">
+                Please sign in to access your workspace dashboard.
+            </p>
+        </div>
+
+        <form [formGroup]="userForm" (submit)="onSubmit()" class="mt-6 space-y-4 text-[11px]">
+            
+            <div class="flex flex-col gap-1">
+                <label for="userName" class="font-bold text-stone-700 tracking-wide flex items-center gap-1">
+                    <i class="pi pi-user text-[10px]"></i> Username
+                </label>
+                <input pInputText 
+                       id="userName" 
+                       formControlName="userName" 
+                       type="text" 
+                       autocomplete="off"
+                       placeholder="Enter username"
+                       class="w-full text-[11px] p-2.5 border border-stone-200 rounded-lg bg-stone-50/30 focus:outline-none focus:border-amber-700 transition-colors placeholder:text-stone-400 placeholder:text-[10px]" />
+                
+                @if (userForm.get('userName')?.touched && userForm.get('userName')?.invalid) {
+                    <small class="text-rose-500 text-[10px] flex items-center gap-1">
+                        <i class="pi pi-times-circle text-[9px]"></i> Username is required.
+                    </small>
+                }
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <label for="password" class="font-bold text-stone-700 tracking-wide flex items-center gap-1">
+                    <i class="pi pi-lock text-[10px]"></i> Password
+                </label>
+                <input pInputText 
+                       id="password" 
+                       formControlName="password" 
+                       type="password" 
+                       placeholder="••••••••"
+                       class="w-full text-[11px] p-2.5 border border-stone-200 rounded-lg bg-stone-50/30 focus:outline-none focus:border-amber-700 transition-colors placeholder:text-stone-400" />
+                
+                @if (userForm.get('password')?.touched && userForm.get('password')?.invalid) {
+                    <small class="text-rose-500 text-[10px] flex items-center gap-1">
+                        <i class="pi pi-times-circle text-[9px]"></i> Password must be at least 4 characters.
+                    </small>
+                }
+            </div>
+
+            <div class="flex items-center justify-between py-1">
+                <div class="flex items-center">
+                    <input id="remember-me" name="remember-me" type="checkbox" class="h-3 w-3 text-amber-700 focus:ring-amber-600 border-stone-300 rounded cursor-pointer">
+                    <label for="remember-me" class="ml-1.5 block text-[10px] text-stone-500 select-none cursor-pointer"> Remember machine </label>
+                </div>
+                <div class="text-[10px]">
+                    <span class="text-stone-400">Forgot credentials? Contact Admin</span>
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <button type="submit"
+                        [disabled]="isloading"
+                        class="w-full bg-amber-700 hover:bg-amber-800 disabled:bg-amber-700/50 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors flex items-center justify-center gap-2 tracking-wide uppercase">
+                    
+                    @if (isloading) {
+                        <i class="pi pi-spin pi-spinner text-[12px]"></i>
+                        <span>Signing In...</span>
+                    } @else {
+                        <i class="pi pi-sign-in text-[12px]"></i>
+                        <span>Sign In</span>
+                    }
+                </button>
+            </div>
+        </form>
+
+        <div class="text-center border-t border-stone-100 pt-4">
+            <span class="text-stone-400 text-[9px] block">SmartCafe POS & Kiosk System v1.0.0</span>
+            <span class="text-stone-400 text-[9px] block">© 2026 All Rights Reserved</span>
+        </div>
+
+    </div>
+</div>

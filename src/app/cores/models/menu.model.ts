@@ -7,4 +7,6 @@ export interface MenuModel {
     isAvailable: boolean | null;
     categoryId: number | null;
     categoryName:string|null
-}//menuId,menuName,menuImage,description,price,isAvailable,categoryId,categoryName
+}
+
+

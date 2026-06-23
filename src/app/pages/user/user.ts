@@ -70,11 +70,11 @@ export class User implements OnInit {
   private formBuilder=inject(FormBuilder);
   public userForm: FormGroup=this.formBuilder.group({
     userId:[''],
-    userName:[''],
+    userName:['',[Validators.required]],
     status:[true],
     password:[''],
     email:['',[Validators.email]],
-    role:[''],
+    role:['',[Validators.required]],
     joinDate:[new Date().toISOString().slice(0, 10)],
     phoneNumber:[''],
     profileImage:['']
@@ -88,6 +88,7 @@ export class User implements OnInit {
       {field:'phoneNumber',header:'Phone Number'},
       {field:'joinDate',header:'Join Date'}
     ]
+    this.roleOption=['Admin','KitchenStaff'];
     this.loadData();
   }
   loadData() {
@@ -109,13 +110,11 @@ export class User implements OnInit {
           password: user.password ?? '',
           status: typeof user.status === 'string' ? user.status === 'true' : Boolean(user.status),
           role: String(user.role ?? user.userRole ?? '').trim(),
-          joinDate: this.datePipe.transform(user.joinDate,'yyy MMM dd'),
-          phoneNumber:user.phoneNumber?? '',
+          joinDate:user.joinDate?? this.datePipe.transform(user.joinDate,'yyy MMM dd'),
+          phoneNumber:user.phoneNumber??'',
           profileImage: user.profileImage ? this.getImageUrl(user.profileImage) : null,
         }));
-        const allRoles = this.userModel.map(u => u.role).filter(r => r !== null && r !== '') as string[];
-        this.roleOption = [...new Set(allRoles)];
-
+        
         this.cdr.detectChanges();
         console.log('categoryImage URLs', this.userModel.map((item) => item.profileImage));
 
@@ -289,6 +288,7 @@ export class User implements OnInit {
             this.resetImageFields();
             this.loadData();
             this.modelVisible = false;
+            this.selectedUser=null;
           } else {
             this.messageService.add({ key:'globalMessage',severity: 'error', summary: 'Error', detail: res.message || 'Failed to update user.' });
           }

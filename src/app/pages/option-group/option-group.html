@@ -5,27 +5,27 @@
     
     <div class="mb-4 flex justify-between items-end border-b border-stone-200 pb-2">
         <div>
-            <h2 class="text-sm font-bold text-stone-800 tracking-wide uppercase">☕ Category Management</h2>
-            <p class="text-stone-500 text-[10px]">Manage and organize your kiosk food & beverage categories.</p>
+            <h2 class="text-sm font-bold text-stone-800 tracking-wide uppercase">⚙️ Option Group Management</h2>
+            <p class="text-stone-500 text-[10px]">Manage and organize variants and modifiers for your kiosk items.</p>
         </div>
         <div>
             <button (click)="create()" 
                     class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-3 py-1.5 rounded text-[11px] flex items-center gap-1.5 shadow-sm transition-all">
-                <i class="pi pi-plus text-[10px]"></i> Create Category
+                <i class="pi pi-plus text-[10px]"></i> Create Option Group
             </button>
         </div>
     </div>
 
     <div class="bg-white rounded-lg shadow-xs border border-stone-200 overflow-hidden">
         <p-table #dt2 
-                 [value]="categoryModel" 
+                 [value]="optionGroupModel" 
                  [columns]="cols" 
                  [paginator]="true" 
                  [rows]="10"
                  [rowsPerPageOptions]="[10, 20, 50]" 
                  styleClass="p-datatable-sm p-datatable-striped" 
                  [loading]="isLoading"
-                 [globalFilterFields]="['categoryId', 'categoryName', 'status']" 
+                 [globalFilterFields]="['groupName']" 
                  [tableStyle]="{ 'min-width': '40rem' }"
                  selectionMode="single" 
                  dataKey="categoryId">
@@ -48,13 +48,11 @@
             <ng-template pTemplate="header" let-columns>
                 <tr class="bg-stone-100 text-stone-700 text-[11px] font-bold border-b border-stone-200">
                     <th pFrozenColumn class="w-10 text-center py-2 bg-stone-100">#</th>
-                    <th class="w-20 py-2">Image</th>
                     @for(col of columns; track col.field) {
                         <th [pSortableColumn]="col.field" class="py-2 px-3 text-left">
                             {{col.header}} <p-sortIcon [field]="col.field" class="text-[9px]"></p-sortIcon>
                         </th>
                     }
-                    <th class="w-24 text-center py-2">Status</th>
                     <th class="w-24 text-center py-2">Actions</th>
                 </tr>
             </ng-template>
@@ -64,33 +62,16 @@
                     
                     <td pFrozenColumn class="text-center py-1.5 bg-white">
                         <span class="pi text-[11px]" 
-                              [class.pi-circle]="selectedCategory !== rowData" 
-                              [class.pi-check-circle]="selectedCategory === rowData" 
-                              [class.text-amber-700]="selectedCategory === rowData"
-                              [class.text-stone-300]="selectedCategory !== rowData">
+                              [class.pi-circle]="selectedGroup !== rowData" 
+                              [class.pi-check-circle]="selectedGroup === rowData" 
+                              [class.text-amber-700]="selectedGroup === rowData"
+                              [class.text-stone-300]="selectedGroup !== rowData">
                         </span>
-                    </td>
-                    
-                    <td class="py-1">
-                        <p-image [src]="rowData.categoryImage ?? 'assets/images/default-placeholder.png'" 
-                                 alt="{{ rowData.categoryName }}"
-                                 [style]="{ width: '40px', height: '30px' }"
-                                 [imageStyle]="{ width: '40px', height: '30px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #e7e5e4' }"
-                                 preview="true" 
-                                 (onImageError)="handleImageError($event)">
-                        </p-image>
                     </td>
                     
                     @for(col of columns; track col.field) {
                         <td class="py-1.5 px-3 font-medium text-stone-800">{{ rowData[col.field] }}</td>
                     }
-                    
-                    <td class="text-center py-1.5">
-                        <span [class]="rowData.isActive ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-stone-100 text-stone-400 border-stone-200'" 
-                              class="px-2 py-0.5 rounded text-[10px] font-semibold border inline-block tracking-wider">
-                            {{ rowData.isActive ? 'ACTIVE' : 'DISABLED' }}
-                        </span>
-                    </td>
                     
                     <td class="text-center py-1.5">
                         <div class="flex gap-1 justify-center">
@@ -112,8 +93,8 @@
     </div>
 </div>
 
-<p-dialog header="{{ isEdit ? '☕ Edit Category Details' : '☕ Create New Category' }}" 
-          [(visible)]="modalVisible"
+<p-dialog header="{{ isEdited ? '⚙️ Edit Option Group' : '⚙️ Create New Option Group' }}" 
+          [(visible)]="modelVisible"
           maskStyleClass="backdrop-blur-xs bg-stone-900/10"
           [breakpoints]="{ '1440px': '30vw', '1024px': '45vw', '768px': '65vw', '576px': '90vw' }" 
           [modal]="true"
@@ -122,62 +103,34 @@
           [resizable]="false"
           styleClass="custom-coffee-dialog">
     
-    <form [formGroup]="categoryForm" (submit)="submit()">
+    <form [formGroup]="optionGroupForm" (submit)="edit()">
         <div class="grid grid-cols-1 gap-y-3 p-1 text-[11px] font-sans">
             
             <div class="flex flex-col gap-1">
-                <label for="categoryName" class="font-bold text-stone-700 tracking-wide">
-                    Category Name <span class="text-rose-500">*</span>
+                <label for="groupName" class="font-bold text-stone-700 tracking-wide">
+                    Option Group Name <span class="text-rose-500">*</span>
                 </label>
                 <input pInputText 
-                       id="categoryName"
-                       formControlName="categoryName" 
+                       id="groupName"
+                       formControlName="groupName" 
                        class="w-full text-[11px] p-2 border border-stone-200 rounded bg-stone-50/30 focus:outline-none focus:border-amber-700 transition-colors" 
                        autocomplete="off" 
-                       placeholder="e.g., Hot Coffees, Iced Teas" />
+                       placeholder="e.g., Sweetness Level, Milk Options" />
             </div>
             
-            <div class="flex flex-col gap-1 mt-1">
-                <label class="font-bold text-stone-700 tracking-wide">Category Image</label>
-                
-                <div class="border border-dashed border-stone-300 hover:border-amber-600 bg-stone-50/50 p-3 rounded text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-1" 
-                     (click)="onUploadImg()">
-                    
-                    @if(!imgName) {
-                        <div class="text-stone-400 py-1">
-                            <i class="pi pi-upload text-[12px] mr-1"></i>
-                            <span>Click to browse photo</span>
-                        </div>
-                    } @else {
-                        <div class="text-amber-800 font-semibold flex items-center gap-1">
-                            <i class="pi pi-file-check text-[12px]"></i>
-                            <span class="truncate max-w-[180px]">Selected: {{ imgName }}</span>
-                        </div>
-                    }
-                </div>
-
-                <div class="mt-1.5 bg-stone-100 p-1.5 rounded border border-stone-200 flex justify-center items-center">
-                    <img [src]="imgSrc || 'assets/images/default-placeholder.png'" 
-                         class="w-full max-h-36 object-cover rounded shadow-xs border border-white"
-                         (error)="handleImageError($event)" 
-                         alt="Category Cover Preview" />
-                </div>
-            </div>
-
             <div class="flex justify-end gap-1.5 mt-3 pt-2.5 border-t border-stone-100">
                 <button type="button"
-                        (click)="modalVisible = false;selectedCategory=null"
+                        (click)="modelVisible = false; selectedGroup=null"
                         class="px-3 py-1.5 rounded text-stone-500 hover:bg-stone-100 font-medium transition-colors">
                     Cancel
                 </button>
                 
                 <button type="submit"
                         class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-4 py-1.5 rounded shadow-xs transition-colors">
-                    {{ isEdit ? 'Update Changes' : 'Save Category' }}
+                    {{ isEdited ? 'Update Changes' : 'Save Group' }}
                 </button>
             </div>
 
         </div>
     </form>
 </p-dialog>
-<input #image type="file" accept=".jpeg,.jpg,.png" (change)="onImgChange($event)" hidden style="display:none" />

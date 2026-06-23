@@ -1,129 +1,219 @@
-
 <p-toast key="globalMessage"></p-toast>
 <p-confirmDialog></p-confirmDialog>
 
-<div class="card" xmlns="http://www.w3.org/1999/html">
-    <p-table #dt2 [value]="menuModel" [columns]="cols" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 20, 50]"
-        class="p-datatable-striped" [loading]="isLoading"
-    [globalFilterFields]="['menuName', 'categoryName', 'description','price']" [tableStyle]="{ 'min-width': '50rem' }"
-        selectionMode="single" dataKey="menuId">
+<div class="w-full max-w-7xl mx-auto p-4 text-[11px] font-sans selection:bg-amber-100">
+    
+    <div class="mb-4 flex justify-between items-end border-b border-stone-200 pb-2">
+        <div>
+            <h2 class="text-sm font-bold text-stone-800 tracking-wide uppercase">☕ Menu Management</h2>
+            <p class="text-stone-500 text-[10px]">Create, edit and optimize your food and beverage menu lists.</p>
+        </div>
+        <div>
+            <button (click)="create()" 
+                    class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-3 py-1.5 rounded text-[11px] flex items-center gap-1.5 shadow-sm transition-all">
+                <i class="pi pi-plus text-[10px]"></i> Create Menu
+            </button>
+        </div>
+    </div>
 
-        <ng-template pTemplate="caption">
-            <div class="flex w-full justify-between item-center pb-4">
-                <div>
-                    <p-button label="Create" (onClick)="create()"></p-button>
-                </div>
-                <div>
-                    <p-iconfield iconPosition="left" class="ml-auto">
+    <div class="bg-white rounded-lg shadow-xs border border-stone-200 overflow-hidden">
+        <p-table #dt2 
+                 [value]="menuModel" 
+                 [columns]="cols" 
+                 [paginator]="true" 
+                 [rows]="10" 
+                 [rowsPerPageOptions]="[10, 20, 50]"
+                 styleClass="p-datatable-sm p-datatable-striped" 
+                 [loading]="isLoading"
+                 [globalFilterFields]="['menuName', 'categoryName', 'description','price']" 
+                 [tableStyle]="{ 'min-width': '50rem' }"
+                 selectionMode="single" 
+                 dataKey="menuId">
+
+            <ng-template pTemplate="caption">
+                <div class="flex w-full justify-end items-center py-1 bg-stone-50/50 px-2 border-b border-stone-100">
+                    <p-iconfield iconPosition="left">
                         <p-inputicon>
-                            <i class="pi pi-search"></i>
+                            <i class="pi pi-search text-stone-400 text-[10px]"></i>
                         </p-inputicon>
-                        <input pInputText type="text" (input)="dt2.filterGlobal($event.target.value, 'contains')"
-                            placeholder="Search keyword" />
+                        <input pInputText 
+                               type="text" 
+                               (input)="dt2.filterGlobal($event.target.value, 'contains')"
+                               placeholder="Search menu..." 
+                               class="text-[11px] py-1 px-2.5 border border-stone-200 rounded bg-white w-48 focus:outline-none focus:border-amber-600 transition-colors" />
                     </p-iconfield>
                 </div>
-            </div>
-        </ng-template>
+            </ng-template>
 
-        <ng-template pTemplate="header" let-columns>
-            <tr>
-                <th pFrozenColumn style="width: 3rem;text-align: center;">#</th>
-                <th style="width: 7rem;">Image</th>
-                @for(col of columns;track col.field){
-                    <th [pSortableColumn]="col.field" [style.text-align]="col.field === 'price' ? 'right' : 'left'"
-                        [style.width]="col.field === 'description' ? '25rem' : 'auto'">{{col.header}}
-                        <p-sortIcon [field]="col.field"></p-sortIcon>
-                    </th>
-                }
-                <th style="width: 8rem; text-align: center;">Is Active</th>
-                <th style="width: 8rem; text-align: center;">Actions</th>
-            </tr>
-        </ng-template>
+           <ng-template pTemplate="header" let-columns>
+    <tr class="bg-stone-100 text-stone-700 text-[11px] font-bold border-b border-stone-200">
+        <th pFrozenColumn class="w-10 text-center py-2 bg-stone-100">#</th>
+        <th class="w-20 py-2">Image</th>
+        
+        @for(col of columns; track col.field) {
+            <th [pSortableColumn]="col.field" 
+                [class.text-right]="col.field === 'price'"
+                [class.text-left]="col.field !== 'price'"
+                [style.width]="col.field === 'description' ? '20rem' : 'auto'"
+                class="py-2 px-3 select-none cursor-pointer hover:bg-stone-200/40 transition-colors">
+                
+                <!-- Flex container handles alignment without line breaks -->
+                <div class="flex items-center gap-1 whitespace-nowrap"
+                     [class.justify-end]="col.field === 'price'"
+                     [class.justify-start]="col.field !== 'price'">
+                    
+                    <span>{{ col.header }}</span>
+                    <p-sortIcon [field]="col.field" class="scale-75 origin-left inline-block opacity-70"></p-sortIcon>
+                </div>
+            </th>
+        }
+        
+        <th class="w-24 text-center py-2">Availability</th>
+        <th class="w-28 text-center py-2">Actions</th>
+    </tr>
+</ng-template>
 
-        <ng-template pTemplate="body" let-rowData let-columns="columns">
-            <tr [pSelectableRow]="rowData">
-                <td pFrozenColumn style="text-align: center;">
-                    <span class="pi pi-circle" [class.pi-check-circle]="selectedMenu === rowData"></span>
-                </td>
-                <td style="min-width: 5rem;">
-                    <p-image [src]="rowData.menuImage ?? ''" alt="{{ rowData.menuName }}"
-                        [style]="{ width: '80px', height: '60px' }"
-                        [imageStyle]="{ width: '80px', height: '60px', objectFit: 'cover', borderRadius: '10px' }"
-                        preview="true" (onImageError)="handleImageError($event)">
-                    </p-image>
-                </td>
-                @for(col of columns; track col.field){
-                    <td [style.text-align]="col.field === 'price' ? 'right' : 'left'">{{rowData[col.field]}}</td>
-                }
-                <td style="text-align: center;">{{ rowData.isAvailable }}</td>
-                <td>
-                    <div class="flex gap-2 justify-content-center">
-                        <p-button icon="pi pi-pencil" [rounded]="true" (onClick)="update(rowData)" pTooltip="Edit">
-                        </p-button>
-                        <p-button icon="pi pi-trash" severity="danger" [rounded]="true" (onClick)="delete(rowData)"
-                            pTooltip="Delete">
-                        </p-button>
-                    </div>
-                </td>
-            </tr>
-        </ng-template>
-    </p-table>
+            <ng-template pTemplate="body" let-rowData let-columns="columns">
+                <tr [pSelectableRow]="rowData" class="border-b border-stone-100 text-stone-600 text-[11px] hover:bg-amber-50/30 transition-colors">
+                    
+                    <td pFrozenColumn class="text-center py-1.5 bg-white">
+                        <span class="pi text-[11px]" 
+                              [class.pi-circle]="selectedMenu !== rowData" 
+                              [class.pi-check-circle]="selectedMenu === rowData" 
+                              [class.text-amber-700]="selectedMenu === rowData"
+                              [class.text-stone-300]="selectedMenu !== rowData">
+                        </span>
+                    </td>
+                    
+                    <td class="py-1">
+                        <p-image [src]="rowData.menuImage ?? 'assets/images/default-placeholder.png'" 
+                                 alt="{{ rowData.menuName }}"
+                                 [style]="{ width: '40px', height: '30px' }"
+                                 [imageStyle]="{ width: '40px', height: '30px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #e7e5e4' }"
+                                 preview="true" 
+                                 (onImageError)="handleImageError($event)">
+                        </p-image>
+                    </td>
+                    
+                    @for(col of columns; track col.field) {
+                        <td [class.text-right]="col.field === 'price'" 
+                            [class.text-left]="col.field !== 'price'"
+                            class="py-1.5 px-3 font-medium text-stone-800">
+                            @if(col.field === 'price') {
+                                {{ rowData[col.field] | number }} MMK
+                            } @else {
+                                {{ rowData[col.field] }}
+                            }
+                        </td>
+                    }
+                    
+                    <td class="text-center py-1.5">
+                        <span [class]="rowData.isAvailable ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'" 
+                              class="px-2 py-0.5 rounded text-[10px] font-semibold border inline-block tracking-wider">
+                            {{ rowData.isAvailable ? 'AVAILABLE' : 'OUT OF STOCK' }}
+                        </span>
+                    </td>
+                    
+                    <td class="text-center py-1.5">
+                        <div class="flex gap-1 justify-center">
+                            <button (click)="viewDetail(rowData)" 
+                                    class="text-stone-500 hover:text-amber-700 p-1 rounded hover:bg-stone-100 transition-colors"
+                                    pTooltip="Manage Options" tooltipPosition="top">
+                                <i class="pi pi-cog text-[11px]"></i>
+                            </button>
+                            <button (click)="update(rowData)" 
+                                    class="text-stone-500 hover:text-amber-700 p-1 rounded hover:bg-stone-100 transition-colors"
+                                    pTooltip="Edit" tooltipPosition="top">
+                                <i class="pi pi-pencil text-[11px]"></i>
+                            </button>
+                            <button (click)="delete(rowData)" 
+                                    class="text-stone-400 hover:text-rose-600 p-1 rounded hover:bg-stone-100 transition-colors"
+                                    pTooltip="Delete" tooltipPosition="top">
+                                <i class="pi pi-trash text-[11px]"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </ng-template>
+        </p-table>
+    </div>
 </div>
 
-<p-dialog header="{{ isEdited ? 'Edit Menu' : 'Create Menu' }}" [(visible)]="modalVisible" appendTo="body"
-    [breakpoints]="{ '1440px': '50vw', '1024px': '65vw', '768px': '85vw', '576px': '95vw' }" [modal]="true"
-    [style]="{ 'min-width': '30vw' }" [draggable]="false" [resizable]="false">
+<p-dialog header="{{ isEdited ? '☕ Edit Menu Details' : '☕ Create New Menu Item' }}" 
+          [(visible)]="modalVisible" 
+          appendTo="body"
+          maskStyleClass="backdrop-blur-xs bg-stone-900/10"
+          [breakpoints]="{ '1440px': '35vw', '1024px': '50vw', '768px': '70vw', '576px': '95vw' }" 
+          [modal]="true"
+          [style]="{ 'min-width': '24vw' }" 
+          [draggable]="false" 
+          [resizable]="false">
+    
     <form [formGroup]="menuForm" (submit)="submit()">
-        <div class="grid grid-cols-1 gap-y-5 p-2 max-w-md mx-auto">
-            <div class="flex flex-col gap-2">
-                <label style="font-weight: 600; width: 6rem;">Menu Name:</label>
-                <input pInputText formControlName="menuName" class="flex-auto" autocomplete="off" />
+        <div class="grid grid-cols-1 gap-y-3 p-1 text-[11px] font-sans">
+            
+            <div class="flex flex-col gap-1">
+                <label class="font-bold text-stone-700">Menu Name <span class="text-rose-500">*</span></label>
+                <input pInputText formControlName="menuName" class="w-full text-[11px] p-2 border border-stone-200 rounded focus:outline-none focus:border-amber-700" autocomplete="off" placeholder="e.g., Iced Caramel Macchiato" />
             </div>
-            <div class="flex flex-col gap-2">
-                <label style="font-weight: 600; width: 6rem;">Price:</label>
-                <input pInputText formControlName="price" class="flex-auto" autocomplete="off" />
+            
+            <div class="flex flex-col gap-1">
+                <label class="font-bold text-stone-700">Price (MMK) <span class="text-rose-500">*</span></label>
+                <input pInputText formControlName="price" class="w-full text-[11px] p-2 border border-stone-200 rounded focus:outline-none focus:border-amber-700" autocomplete="off" placeholder="e.g., 4500" />
             </div>
-            <div class="flex flex-col gap-2">
-                <label style="font-weight: 600; width: 6rem;">Description:</label>
-                <input pInputText formControlName="description" class="flex-auto" autocomplete="off" />
+            
+            <div class="flex flex-col gap-1">
+                <label class="font-bold text-stone-700">Description</label>
+                <input pInputText formControlName="description" class="w-full text-[11px] p-2 border border-stone-200 rounded focus:outline-none focus:border-amber-700" autocomplete="off" placeholder="e.g., Espresso with milk and rich caramel sauce" />
             </div>
-            <div class="flex flex-col gap-2">
-                <label style="font-weight: 600; width: 6rem;">Category Name:</label>
-                <p-select formControlName="categoryId" [options]="optionCategory" optionLabel="label"
-                    optionValue="value" class="w-full" flex-auto placeholder="choose category"></p-select>
+            
+            <div class="flex flex-col gap-1">
+                <label class="font-bold text-stone-700">Category Name <span class="text-rose-500">*</span></label>
+                <p-select formControlName="categoryId" 
+                          [options]="optionCategory" 
+                          optionLabel="label"
+                          optionValue="value" 
+                          class="w-full compact-dropdown text-[11px]" 
+                          placeholder="Choose a category"></p-select>
             </div>
-            <div class="flex flex-col gap-2">
-                <label style="font-weight: 600; width: 6rem;">is Available:</label>
-                <input pInputText formControlName="isAvailable" class="flex-auto" autocomplete="off" />
+            
+            <div class="flex flex-col gap-1">
+                <label class="font-bold text-stone-700">Is Available <span class="text-rose-500">*</span></label>
+                <input pInputText formControlName="isAvailable" class="w-full text-[11px] p-2 border border-stone-200 rounded focus:outline-none focus:border-amber-700" autocomplete="off" placeholder="true / false" />
             </div>
-            <div class="col-span-1 gap-2">
-                <label>Image</label>
-                <div class="row mt-2">
-                    <div class="card border-round p-2" (click)="onUploadImg()">
-                        @if(!imgName){
-                        <div>
-                            <i class="pi pi-upload"></i>&nbsp;&nbsp; None<br />
+            
+            <div class="flex flex-col gap-1 mt-1">
+                <label class="font-bold text-stone-700">Menu Image</label>
+                <div class="border border-dashed border-stone-300 hover:border-amber-600 bg-stone-50/50 p-2.5 rounded text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-1" 
+                     (click)="imageInput.click()">
+                    
+                    @if(!imgName) {
+                        <div class="text-stone-400 py-0.5">
+                            <i class="pi pi-upload text-[11px] mr-1"></i><span>Browse product image</span>
                         </div>
-                        }
-                        @if(imgName){
-                        <div>
-                            <i class="pi pi-file-check"></i>&nbsp;&nbsp; {{ imgName }}<br />
+                    } @else {
+                        <div class="text-amber-800 font-semibold flex items-center gap-1">
+                            <i class="pi pi-file-check text-[11px]"></i><span class="truncate max-w-[180px]">{{ imgName }}</span>
                         </div>
-                        }
-                    </div>
+                    }
                 </div>
-                <div class="mt-2">
-                    <img [src]="imgSrc || thumbnailUrl" width="510" height="410" class="border-round shadow-2"
-                        (error)="handleImageError($event)" alt="Menu Image" />
+
+                <div class="mt-1.5 bg-stone-100 p-1 rounded border border-stone-200 flex justify-center items-center">
+                    <img [src]="imgSrc || thumbnailUrl" 
+                         class="w-full max-h-32 object-cover rounded shadow-xs border border-white"
+                         (error)="handleImageError($event)" 
+                         alt="Menu Preview" />
                 </div>
             </div>
 
-            <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
-                <p-button label="Cancel" severity="secondary" type="button" (click)="modalVisible = false" />
-                <p-button [label]="isEdited ? 'Update' : 'Create'" type="submit" />
+            <div class="flex justify-end gap-1.5 mt-3 pt-2 border-t border-stone-100">
+                <button type="button" (click)="modalVisible = false;selectedMenu=null" class="px-3 py-1.5 rounded text-stone-500 hover:bg-stone-100 font-medium">Cancel</button>
+                <button type="submit" class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-4 py-1.5 rounded shadow-xs">
+                    {{ isEdited ? 'Update Changes' : 'Create Item' }}
+                </button>
             </div>
         </div>
     </form>
 </p-dialog>
 
-<input #image type="file" accept=".jpeg,.jpg,.png" (change)="onImgChange($event)" hidden style="display:none" />
+<input #imageInput type="file" accept=".jpeg,.jpg,.png" (change)="onImgChange($event)" hidden style="display:none" />

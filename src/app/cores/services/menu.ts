@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { enableProfiling, Injectable } from '@angular/core';
 import { Observable, ReplaySubject } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { MenuModel } from '../models/menu.model';
 import { RootModel } from '../models/root.model';
+import { RequestMenuOptionGroupDto } from '../models/menu-detail.model';
 
 @Injectable({
   providedIn: 'root',
@@ -25,6 +26,18 @@ export class MenuService {
 
   delete(id:number):Observable<RootModel>{
     return this.http.delete<RootModel>(`${environment.apiUrl}/api/menu/${id}`,{})
+  }
+
+  getAllOptionGroups():Observable<RootModel>{
+    return this.http.get<RootModel>(`${environment.apiUrl}/api/menu/all-option-groups`)
+  }
+
+  getMenudetail(id:number):Observable<RootModel>{
+    return this.http.get<RootModel>(`${environment.apiUrl}/api/menu/detail/${id}`)
+  }
+
+  linkOptionGroup(dto: RequestMenuOptionGroupDto):Observable<RootModel>{
+    return this.http.post<RootModel>(`${environment.apiUrl}/api/menu/link-option-group`,dto)
   }
   convertBase64(file: File): Observable<string> {
     const result = new ReplaySubject<string>(1);
