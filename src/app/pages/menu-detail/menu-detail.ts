@@ -86,14 +86,14 @@ export class MenuDetail implements OnInit {
           this.updateActivePanels();
         } else {
 
-          console.warn(`⚠️ Menu Id: ${this.menuId} `);
+          console.warn(` Menu Id: ${this.menuId} `);
           this.clearUiStates();
         }
         this.cdr.detectChanges();
         this.isLoading = false;
       },
       error: (err) => {
-        console.error('❌ Menu Detail API Error:', err);
+        console.error(' Menu Detail API Error:', err);
         this.messageService.add({ 
           key: 'globalMessage', 
           severity: 'error', 

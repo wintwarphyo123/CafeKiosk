@@ -74,12 +74,11 @@ export class Dashboard implements OnInit {
     })
   }
 
-  // 🎨 Chart ရဲ့ Font Size ကို အသေး (text-xs / 10px) ဖြစ်အောင်နှင့် မလိုအပ်သော မျဉ်းကြောင်းများ ဖျောက်ရန် Configuration
   initChartOptions() {
     this.chartOptions = {
       plugins: {
         legend: {
-          display: false // Dataset Label အကွက်ကို ဖျောက်ထားပါမည် (သပ်ရပ်စေရန်)
+          display: false 
         },
         tooltip: {
           bodyFont: { size: 11, family: 'sans-serif' },
@@ -90,10 +89,10 @@ export class Dashboard implements OnInit {
         x: {
           ticks: {
             font: { size: 10, family: 'sans-serif' },
-            color: '#78716c' // Stone-500 color (Matches category style perfectly)
+            color: '#78716c' 
           },
           grid: {
-            display: false // ဒေါင်လိုက်မျဉ်းများကို ဖျောက်ပါမည်
+            display: false
           }
         },
         y: {
@@ -111,16 +110,15 @@ export class Dashboard implements OnInit {
     };
   }
 
-  // 🔄 Dropdown ပြောင်းလိုက်တဲ့အခါ စာရင်းအသစ် ပြန်ဆွဲပေးမယ့် Event
+  
   onPeriodChange() {
     this.loadChartData();
   }
 
-  // 📊 Dropdown Selection အလိုက် သက်ဆိုင်ရာ Bar Chart Data များကို ပြောင်းလဲပေးမည့် နေရာ
+  
   loadChartData() {
     this.isLoading = true;
 
-    // Coffee Shop / Kiosk Design Token System နှင့် ကိုက်ညီသော အရောင်များ ပြောင်းလဲထားပါသည်
     if (this.selectedPeriod === 'day') {
       this.chartData = {
         labels: ['08:00 AM', '10:00 AM', '12:00 PM', '02:00 PM', '04:00 PM', '06:00 PM', '08:00 PM'],

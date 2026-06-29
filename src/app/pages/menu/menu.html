@@ -2,33 +2,25 @@
 <p-confirmDialog></p-confirmDialog>
 
 <div class="w-full max-w-7xl mx-auto p-4 text-[11px] font-sans selection:bg-amber-100">
-    
+
     <div class="mb-4 flex justify-between items-end border-b border-stone-200 pb-2">
         <div>
             <h2 class="text-sm font-bold text-stone-800 tracking-wide uppercase">☕ Menu Management</h2>
             <p class="text-stone-500 text-[10px]">Create, edit and optimize your food and beverage menu lists.</p>
         </div>
         <div>
-            <button (click)="create()" 
-                    class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-3 py-1.5 rounded text-[11px] flex items-center gap-1.5 shadow-sm transition-all">
+            <button (click)="create()"
+                class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-3 py-1.5 rounded text-[11px] flex items-center gap-1.5 shadow-sm transition-all">
                 <i class="pi pi-plus text-[10px]"></i> Create Menu
             </button>
         </div>
     </div>
 
     <div class="bg-white rounded-lg shadow-xs border border-stone-200 overflow-hidden">
-        <p-table #dt2 
-                 [value]="menuModel" 
-                 [columns]="cols" 
-                 [paginator]="true" 
-                 [rows]="10" 
-                 [rowsPerPageOptions]="[10, 20, 50]"
-                 styleClass="p-datatable-sm p-datatable-striped" 
-                 [loading]="isLoading"
-                 [globalFilterFields]="['menuName', 'categoryName', 'description','price']" 
-                 [tableStyle]="{ 'min-width': '50rem' }"
-                 selectionMode="single" 
-                 dataKey="menuId">
+        <p-table #dt2 [value]="menuModel" [columns]="cols" [paginator]="true" [rows]="10"
+            [rowsPerPageOptions]="[10, 20, 50]" styleClass="p-datatable-sm p-datatable-striped" [loading]="isLoading"
+            [globalFilterFields]="['menuName', 'categoryName', 'description','price']"
+            [tableStyle]="{ 'min-width': '50rem' }" selectionMode="single" dataKey="menuId">
 
             <ng-template pTemplate="caption">
                 <div class="flex w-full justify-end items-center py-1 bg-stone-50/50 px-2 border-b border-stone-100">
@@ -36,179 +28,174 @@
                         <p-inputicon>
                             <i class="pi pi-search text-stone-400 text-[10px]"></i>
                         </p-inputicon>
-                        <input pInputText 
-                               type="text" 
-                               (input)="dt2.filterGlobal($event.target.value, 'contains')"
-                               placeholder="Search menu..." 
-                               class="text-[11px] py-1 px-2.5 border border-stone-200 rounded bg-white w-48 focus:outline-none focus:border-amber-600 transition-colors" />
+                        <input pInputText type="text" (input)="dt2.filterGlobal($event.target.value, 'contains')"
+                            placeholder="Search menu..."
+                            class="text-[11px] py-1 px-2.5 border border-stone-200 rounded bg-white w-48 focus:outline-none focus:border-amber-600 transition-colors" />
                     </p-iconfield>
                 </div>
             </ng-template>
 
-           <ng-template pTemplate="header" let-columns>
-    <tr class="bg-stone-100 text-stone-700 text-[11px] font-bold border-b border-stone-200">
-        <th pFrozenColumn class="w-10 text-center py-2 bg-stone-100">#</th>
-        <th class="w-20 py-2">Image</th>
-        
-        @for(col of columns; track col.field) {
-            <th [pSortableColumn]="col.field" 
-                [class.text-right]="col.field === 'price'"
-                [class.text-left]="col.field !== 'price'"
-                [style.width]="col.field === 'description' ? '20rem' : 'auto'"
-                class="py-2 px-3 select-none cursor-pointer hover:bg-stone-200/40 transition-colors">
-                
-                <!-- Flex container handles alignment without line breaks -->
-                <div class="flex items-center gap-1 whitespace-nowrap"
-                     [class.justify-end]="col.field === 'price'"
-                     [class.justify-start]="col.field !== 'price'">
+            <ng-template pTemplate="header" let-columns>
+                <tr class="bg-stone-100 text-stone-700 text-[11px] font-bold border-b border-stone-200">
+                    <th class="w-20 py-2">Image</th>
+
+                    @for(col of columns; track col.field) {
+                    <th [pSortableColumn]="col.field" [class.text-right]="col.field === 'price'"
+                        [class.text-left]="col.field !== 'price'"
+                        [style.width]="col.field === 'description' ? '20rem' : 'auto'"
+                        class="py-2 px-3 select-none cursor-pointer hover:bg-stone-200/40 transition-colors">
+
+                        <!-- Flex container handles alignment without line breaks -->
+                        <div class="flex items-center gap-1 whitespace-nowrap">
+
+                            <span>{{ col.header }}</span>
+                            <p-sortIcon [field]="col.field"
+                                class="scale-75 origin-left inline-block opacity-70"></p-sortIcon>
+                        </div>
+                    </th>
+                    }
+                    <th class="w-28 text-center py-2">{{ userRole === 'ADMIN' ? 'Actions' : 'Availability' }}</th>
                     
-                    <span>{{ col.header }}</span>
-                    <p-sortIcon [field]="col.field" class="scale-75 origin-left inline-block opacity-70"></p-sortIcon>
-                </div>
-            </th>
-        }
-        
-        <th class="w-24 text-center py-2">Availability</th>
-        <th class="w-28 text-center py-2">Actions</th>
-    </tr>
-</ng-template>
+
+
+                </tr>
+            </ng-template>
 
             <ng-template pTemplate="body" let-rowData let-columns="columns">
-                <tr [pSelectableRow]="rowData" class="border-b border-stone-100 text-stone-600 text-[11px] hover:bg-amber-50/30 transition-colors">
-                    
-                    <td pFrozenColumn class="text-center py-1.5 bg-white">
-                        <span class="pi text-[11px]" 
-                              [class.pi-circle]="selectedMenu !== rowData" 
-                              [class.pi-check-circle]="selectedMenu === rowData" 
-                              [class.text-amber-700]="selectedMenu === rowData"
-                              [class.text-stone-300]="selectedMenu !== rowData">
-                        </span>
-                    </td>
-                    
+                <tr [pSelectableRow]="rowData"
+                    class="border-b border-stone-100 text-stone-600 text-[11px] hover:bg-amber-50/30 transition-colors">
+
                     <td class="py-1">
-                        <p-image [src]="rowData.menuImage ?? 'assets/images/default-placeholder.png'" 
-                                 alt="{{ rowData.menuName }}"
-                                 [style]="{ width: '40px', height: '30px' }"
-                                 [imageStyle]="{ width: '40px', height: '30px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #e7e5e4' }"
-                                 preview="true" 
-                                 (onImageError)="handleImageError($event)">
+                        <p-image [src]="rowData.menuImage ?? 'assets/images/default-placeholder.png'"
+                            alt="{{ rowData.menuName }}" [style]="{ width: '40px', height: '30px' }"
+                            [imageStyle]="{ width: '40px', height: '30px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #e7e5e4' }"
+                            preview="true" (onImageError)="handleImageError($event)">
                         </p-image>
                     </td>
-                    
+
                     @for(col of columns; track col.field) {
-                        <td [class.text-right]="col.field === 'price'" 
-                            [class.text-left]="col.field !== 'price'"
-                            class="py-1.5 px-3 font-medium text-stone-800">
-                            @if(col.field === 'price') {
-                                {{ rowData[col.field] | number }} MMK
-                            } @else {
-                                {{ rowData[col.field] }}
-                            }
-                        </td>
-                    }
-                    
-                    <td class="text-center py-1.5">
-                        <span [class]="rowData.isAvailable ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'" 
-                              class="px-2 py-0.5 rounded text-[10px] font-semibold border inline-block tracking-wider">
-                            {{ rowData.isAvailable ? 'AVAILABLE' : 'OUT OF STOCK' }}
-                        </span>
+                    <td [class.text-right]="col.field === 'price'" [class.text-left]="col.field !== 'price'"
+                        class="py-1.5 px-3 font-medium text-stone-800">
+                        @if(col.field === 'price') {
+                        {{ rowData[col.field] | number }} MMK
+                        } @else {
+                        {{ rowData[col.field] }}
+                        }
                     </td>
-                    
+                    }
+                    @if(userRole !== 'ADMIN') {
+                    <td class="text-center py-1.5">
+                        <button (click)="toggleMenuAvailability(rowData)"
+                            class="cursor-pointer focus:outline-none block mx-auto transition-transform active:scale-95">
+                            <span
+                                [class]="rowData.isAvailable ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'"
+                                class="px-2 py-0.5 rounded text-[10px] font-semibold border inline-block tracking-wider transition-colors">
+                                {{ rowData.isAvailable ? 'AVAILABLE' : 'OUT OF STOCK' }}
+                            </span>
+                        </button>
+                    </td>
+                    }
+
+                    @if(userRole === 'ADMIN') {
                     <td class="text-center py-1.5">
                         <div class="flex gap-1 justify-center">
-                            <button (click)="viewDetail(rowData)" 
-                                    class="text-stone-500 hover:text-amber-700 p-1 rounded hover:bg-stone-100 transition-colors"
-                                    pTooltip="Manage Options" tooltipPosition="top">
+                            <button (click)="viewDetail(rowData)"
+                                class="text-stone-500 hover:text-amber-700 p-1 rounded hover:bg-stone-100 transition-colors"
+                                pTooltip="Manage Options" tooltipPosition="top">
                                 <i class="pi pi-cog text-[11px]"></i>
                             </button>
-                            <button (click)="update(rowData)" 
-                                    class="text-stone-500 hover:text-amber-700 p-1 rounded hover:bg-stone-100 transition-colors"
-                                    pTooltip="Edit" tooltipPosition="top">
+                            <button (click)="update(rowData)"
+                                class="text-stone-500 hover:text-amber-700 p-1 rounded hover:bg-stone-100 transition-colors"
+                                pTooltip="Edit" tooltipPosition="top">
                                 <i class="pi pi-pencil text-[11px]"></i>
                             </button>
-                            <button (click)="delete(rowData)" 
-                                    class="text-stone-400 hover:text-rose-600 p-1 rounded hover:bg-stone-100 transition-colors"
-                                    pTooltip="Delete" tooltipPosition="top">
+                            <button (click)="delete(rowData)"
+                                class="text-stone-400 hover:text-rose-600 p-1 rounded hover:bg-stone-100 transition-colors"
+                                pTooltip="Delete" tooltipPosition="top">
                                 <i class="pi pi-trash text-[11px]"></i>
                             </button>
                         </div>
                     </td>
+                    }
+
                 </tr>
             </ng-template>
         </p-table>
     </div>
 </div>
 
-<p-dialog header="{{ isEdited ? '☕ Edit Menu Details' : '☕ Create New Menu Item' }}" 
-          [(visible)]="modalVisible" 
-          appendTo="body"
-          maskStyleClass="backdrop-blur-xs bg-stone-900/10"
-          [breakpoints]="{ '1440px': '35vw', '1024px': '50vw', '768px': '70vw', '576px': '95vw' }" 
-          [modal]="true"
-          [style]="{ 'min-width': '24vw' }" 
-          [draggable]="false" 
-          [resizable]="false">
-    
+<p-dialog header="{{ isEdited ? '☕ Edit Menu Details' : '☕ Create New Menu Item' }}" [(visible)]="modalVisible"
+    appendTo="body" maskStyleClass="backdrop-blur-xs bg-stone-900/10"
+    [breakpoints]="{ '1440px': '35vw', '1024px': '50vw', '768px': '70vw', '576px': '95vw' }" [modal]="true"
+    [style]="{ 'min-width': '24vw' }" [draggable]="false" [resizable]="false">
+
     <form [formGroup]="menuForm" (submit)="submit()">
         <div class="grid grid-cols-1 gap-y-3 p-1 text-[11px] font-sans">
-            
+
             <div class="flex flex-col gap-1">
                 <label class="font-bold text-stone-700">Menu Name <span class="text-rose-500">*</span></label>
-                <input pInputText formControlName="menuName" class="w-full text-[11px] p-2 border border-stone-200 rounded focus:outline-none focus:border-amber-700" autocomplete="off" placeholder="e.g., Iced Caramel Macchiato" />
+                <input pInputText formControlName="menuName"
+                    class="w-full text-[11px] p-2 border border-stone-200 rounded focus:outline-none focus:border-amber-700"
+                    autocomplete="off" placeholder="e.g., Iced Caramel Macchiato" />
             </div>
-            
+
             <div class="flex flex-col gap-1">
                 <label class="font-bold text-stone-700">Price (MMK) <span class="text-rose-500">*</span></label>
-                <input pInputText formControlName="price" class="w-full text-[11px] p-2 border border-stone-200 rounded focus:outline-none focus:border-amber-700" autocomplete="off" placeholder="e.g., 4500" />
+                <input pInputText formControlName="price"
+                    class="w-full text-[11px] p-2 border border-stone-200 rounded focus:outline-none focus:border-amber-700"
+                    autocomplete="off" placeholder="e.g., 4500" />
             </div>
-            
+
             <div class="flex flex-col gap-1">
                 <label class="font-bold text-stone-700">Description</label>
-                <input pInputText formControlName="description" class="w-full text-[11px] p-2 border border-stone-200 rounded focus:outline-none focus:border-amber-700" autocomplete="off" placeholder="e.g., Espresso with milk and rich caramel sauce" />
+                <input pInputText formControlName="description"
+                    class="w-full text-[11px] p-2 border border-stone-200 rounded focus:outline-none focus:border-amber-700"
+                    autocomplete="off" placeholder="e.g., Espresso with milk and rich caramel sauce" />
             </div>
-            
+
             <div class="flex flex-col gap-1">
                 <label class="font-bold text-stone-700">Category Name <span class="text-rose-500">*</span></label>
-                <p-select formControlName="categoryId" 
-                          [options]="optionCategory" 
-                          optionLabel="label"
-                          optionValue="value" 
-                          class="w-full compact-dropdown text-[11px]" 
-                          placeholder="Choose a category"></p-select>
+                <p-select formControlName="categoryId" [options]="optionCategory" optionLabel="label"
+                    optionValue="value" class="w-full compact-dropdown text-[11px]"
+                    placeholder="Choose a category"></p-select>
             </div>
-            
+
             <div class="flex flex-col gap-1">
                 <label class="font-bold text-stone-700">Is Available <span class="text-rose-500">*</span></label>
-                <input pInputText formControlName="isAvailable" class="w-full text-[11px] p-2 border border-stone-200 rounded focus:outline-none focus:border-amber-700" autocomplete="off" placeholder="true / false" />
+                <input pInputText formControlName="isAvailable"
+                    class="w-full text-[11px] p-2 border border-stone-200 rounded focus:outline-none focus:border-amber-700"
+                    autocomplete="off" placeholder="true / false" />
             </div>
-            
+
             <div class="flex flex-col gap-1 mt-1">
                 <label class="font-bold text-stone-700">Menu Image</label>
-                <div class="border border-dashed border-stone-300 hover:border-amber-600 bg-stone-50/50 p-2.5 rounded text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-1" 
-                     (click)="imageInput.click()">
-                    
+                <div class="border border-dashed border-stone-300 hover:border-amber-600 bg-stone-50/50 p-2.5 rounded text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-1"
+                    (click)="imageInput.click()">
+
                     @if(!imgName) {
-                        <div class="text-stone-400 py-0.5">
-                            <i class="pi pi-upload text-[11px] mr-1"></i><span>Browse product image</span>
-                        </div>
+                    <div class="text-stone-400 py-0.5">
+                        <i class="pi pi-upload text-[11px] mr-1"></i><span>Browse product image</span>
+                    </div>
                     } @else {
-                        <div class="text-amber-800 font-semibold flex items-center gap-1">
-                            <i class="pi pi-file-check text-[11px]"></i><span class="truncate max-w-[180px]">{{ imgName }}</span>
-                        </div>
+                    <div class="text-amber-800 font-semibold flex items-center gap-1">
+                        <i class="pi pi-file-check text-[11px]"></i><span class="truncate max-w-[180px]">{{ imgName
+                            }}</span>
+                    </div>
                     }
                 </div>
 
                 <div class="mt-1.5 bg-stone-100 p-1 rounded border border-stone-200 flex justify-center items-center">
-                    <img [src]="imgSrc || thumbnailUrl" 
-                         class="w-full max-h-32 object-cover rounded shadow-xs border border-white"
-                         (error)="handleImageError($event)" 
-                         alt="Menu Preview" />
+                    <img [src]="imgSrc || thumbnailUrl"
+                        class="w-full max-h-32 object-cover rounded shadow-xs border border-white"
+                        (error)="handleImageError($event)" alt="Menu Preview" />
                 </div>
             </div>
 
             <div class="flex justify-end gap-1.5 mt-3 pt-2 border-t border-stone-100">
-                <button type="button" (click)="modalVisible = false;selectedMenu=null" class="px-3 py-1.5 rounded text-stone-500 hover:bg-stone-100 font-medium">Cancel</button>
-                <button type="submit" class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-4 py-1.5 rounded shadow-xs">
+                <button type="button" (click)="modalVisible = false;selectedMenu=null"
+                    class="px-3 py-1.5 rounded text-stone-500 hover:bg-stone-100 font-medium">Cancel</button>
+                <button type="submit"
+                    class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-4 py-1.5 rounded shadow-xs">
                     {{ isEdited ? 'Update Changes' : 'Create Item' }}
                 </button>
             </div>

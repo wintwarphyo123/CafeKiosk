@@ -30,94 +30,97 @@ import { ImageModule } from "primeng/image";
     TableModule,
     ConfirmDialogModule,
     InputTextModule,
-    ToastModule,
     DialogModule,
     SelectModule,
     ImageModule,
-],
-  providers: [ConfirmationService, DatePipe,MessageService],
+  ],
+  providers: [ConfirmationService, DatePipe, MessageService],
   templateUrl: './user.html',
   styleUrl: './user.scss',
 })
 export class User implements OnInit {
-@ViewChild('image') image!: ElementRef<HTMLInputElement>;
-@ViewChild('imgV') imgV!: ElementRef<HTMLInputElement>;
-  
+  @ViewChild('image') image!: ElementRef<HTMLInputElement>;
+  @ViewChild('imgV') imgV!: ElementRef<HTMLInputElement>;
+
   imgName: string = '';
-
   imgBase64String: string = '';
-
   imgSrc: String = '';
-
   thumbnailUrl: string = '/thumbnail.jpg';
-  userModel:UserModel[]=[];
-  modelVisible:boolean=false;
-  isLoading:boolean=false;
-  isEditMode:boolean=false;
-  selectedUser:UserModel|null=null;
-  roleOption:string[]=[];
-  cols!:SortColumn[];
+  
+  userModel: UserModel[] = [];
+  modelVisible: boolean = false;
+  isLoading: boolean = false;
+  isEditMode: boolean = false;
+  selectedUser: UserModel | null = null;
+  roleOption: string[] = [];
+  cols!: SortColumn[];
   errorMessage = signal<any[]>([]);
+
+  private formBuilder = inject(FormBuilder);
+  
+  public userForm: FormGroup = this.formBuilder.group({
+    userId: [''],
+    userName: ['', [Validators.required]],
+    status: [true],
+    password: [''],
+    email: ['', [Validators.email]],
+    role: ['', [Validators.required]],
+    joinDate: [new Date().toISOString().slice(0, 10)],
+    phoneNumber: [''],
+    profileImage: ['']
+  });
+
   constructor(
-    private userService:UserService,
+    private userService: UserService,
     private messageService: MessageService,
     private cdr: ChangeDetectorRef,
     private datePipe: DatePipe,
     private confirmationService: ConfirmationService
-  ){}
-  
-//userId,userName,status,email,role,joinDate,phoneNumber,profileImage
-  private formBuilder=inject(FormBuilder);
-  public userForm: FormGroup=this.formBuilder.group({
-    userId:[''],
-    userName:['',[Validators.required]],
-    status:[true],
-    password:[''],
-    email:['',[Validators.email]],
-    role:['',[Validators.required]],
-    joinDate:[new Date().toISOString().slice(0, 10)],
-    phoneNumber:[''],
-    profileImage:['']
-  });
-//userName,email,role,joinDate,phoneNumber
+  ) { }
+
   ngOnInit(): void {
-    this.cols=[
-      {field:'userName',header:'UserName'},
-      {field:'email',header:'Email'},
-      {field:'role',header:'Role'},
-      {field:'phoneNumber',header:'Phone Number'},
-      {field:'joinDate',header:'Join Date'}
-    ]
-    this.roleOption=['Admin','KitchenStaff'];
+    this.cols = [
+      { field: 'userName', header: 'UserName' },
+      { field: 'email', header: 'Email' },
+      { field: 'role', header: 'Role' },
+      { field: 'phoneNumber', header: 'Phone Number' },
+      { field: 'joinDate', header: 'Join Date' }
+    ];
+    this.roleOption = ['Admin', 'KitchenStaff'];
     this.loadData();
   }
+
   loadData() {
-    this.isLoading=true;
+    this.isLoading = true;
     this.userService.get().subscribe({
-      next:(res)=>{
-        this.isLoading=false;
-        if(!res.success){
-          this.messageService.add({ key:'globalMessage',severity: 'error', summary: 'Error', detail: res.message || 'Failed to load users.' });
-          return; 
+      next: (res) => {
+        this.isLoading = false;
+        if (!res.success) {
+          this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to load users.' });
+          return;
         }
 
         const rawUsers = Array.isArray(res.data) ? res.data : [];
-//userId,userName,status,email,role,joinDate,phoneNumber,profileImage
-        this.userModel = rawUsers.map((user: any) => ({
-          userId: user.userId ?? user.id ?? '',
-          userName: user.userName ?? user.username ?? '',
-          email: user.email ?? user.mail ?? '',
-          password: user.password ?? '',
-          status: typeof user.status === 'string' ? user.status === 'true' : Boolean(user.status),
-          role: String(user.role ?? user.userRole ?? '').trim(),
-          joinDate:user.joinDate?? this.datePipe.transform(user.joinDate,'yyy MMM dd'),
-          phoneNumber:user.phoneNumber??'',
-          profileImage: user.profileImage ? this.getImageUrl(user.profileImage) : null,
-        }));
-        
-        this.cdr.detectChanges();
-        console.log('categoryImage URLs', this.userModel.map((item) => item.profileImage));
+        this.userModel = rawUsers.map((user: any) => {
+          const rawDate = user.joinDate || null;
+          const formattedDate = rawDate
+            ? this.datePipe.transform(rawDate, 'yyyy MMMM dd')
+            : '';
+            
+          return {
+            userId: user.userId ?? user.id ?? '',
+            userName: user.userName ?? user.username ?? '',
+            email: user.email ?? user.mail ?? '',
+            password: user.password ?? '',
+            status: typeof user.status === 'string' ? user.status === 'true' : Boolean(user.status),
+            role: String(user.role ?? user.userRole ?? '').trim(),
+            joinDate: formattedDate, 
+            phoneNumber: user.phoneNumber ?? '',
+            profileImage: user.profileImage ? this.getImageUrl(user.profileImage) : null,
+          };
+        });
 
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.isLoading = false;
@@ -140,7 +143,6 @@ export class User implements OnInit {
     if (path.startsWith('images/')) {
       return `${base}/${path}`;
     }
-
     return `${base}/images/user/${path}`;
   }
 
@@ -149,34 +151,27 @@ export class User implements OnInit {
   }
 
   onImgChange(event: any): void {
-
     if (this.image.nativeElement.value == '') {
       this.imgName = 'None';
       return;
     }
 
     if (this.checkValidExtension(this.image)) {
-
       const reader = new FileReader();
-
       this.imgName = this.image.nativeElement.value;
-
       const file: File = event.target.files[0];
+      
       if (file) {
         this.userService.convertBase64(file).subscribe((base64) => {
           this.imgBase64String = base64;
           this.userForm.controls['profileImage'].setValue(base64);
-          console.log(this.imgBase64String);
-        })
+        });
 
-        /* Show Image */
         reader.readAsDataURL(file);
         reader.onload = () => {
-          console.log(reader.result);
           this.imgSrc = reader.result as string;
-
           this.cdr.detectChanges();
-        }
+        };
       }
     }
   }
@@ -201,56 +196,55 @@ export class User implements OnInit {
         summary: 'Warning',
         detail: "Please choose valid files. [Accepted file: Image]"
       });
-
       sender.nativeElement.value = '';
-
       return false;
     }
-    else return true;
+    return true;
   }
 
-  create():void{
-    this.modelVisible=true;
-    this.isEditMode=false;
+  create(): void {
+    this.modelVisible = true;
+    this.isEditMode = false;
     this.resetImageFields();
     this.userForm.reset({
       userId: '',
       userName: '',
       password: '',
       status: true,
-      email:'',
-      phoneNumber:'',
+      email: '',
+      phoneNumber: '',
       joinDate: new Date().toISOString().slice(0, 10),
       profileImage: '',
       role: ''
     });
     this.cdr.detectChanges();
   }
-  update(user:UserModel):void{
-    this.isEditMode=true;
-    this.selectedUser=user;
-    this.userForm.reset({
-      userId: '',
-      userName: '',
-      password: '',
-      email: '',
-      phoneNumber:'',
-      role: '',
-      status: true,
-      joinDate: new Date().toISOString().slice(0, 10),
-      profileImage: '',
-    });
+
+  update(user: UserModel): void {
+    this.isEditMode = true;
+    this.selectedUser = user;
+    this.userForm.reset();
+    
+    let safeFormDate = new Date().toISOString().slice(0, 10);
+    if (user.joinDate) {
+      const parsedDate = new Date(user.joinDate);
+      if (!isNaN(parsedDate.getTime())) {
+        safeFormDate = this.datePipe.transform(parsedDate, 'yyyy-MM-dd') || safeFormDate;
+      }
+    }
+
     this.userForm.patchValue({
       userId: user.userId ?? '',
       userName: user.userName ?? '',
-      password:'',
+      password: '',
       email: user.email ?? '',
-      phoneNumber:user.phoneNumber ?? '',
+      phoneNumber: user.phoneNumber ?? '',
       status: user.status ?? true,
-      joinDate: user.joinDate ? this.datePipe.transform(user.joinDate, 'yyyy-MM-dd') : new Date().toISOString().slice(0, 10),
+      joinDate: safeFormDate, 
       profileImage: user.profileImage ?? '',
-      role: user.role??''
+      role: user.role ?? ''
     });
+
     if (user.profileImage) {
       this.imgSrc = user.profileImage;
       this.imgName = user.profileImage.substring(user.profileImage.lastIndexOf('/') + 1);
@@ -258,79 +252,70 @@ export class User implements OnInit {
       this.imgSrc = '';
       this.imgName = '';
     }
-    this.modelVisible=true;
+    this.modelVisible = true;
     this.cdr.detectChanges();
   }
-  submit():void{
-     if (this.userForm.invalid) {
+
+  submit(): void {
+    if (this.userForm.invalid) {
       this.userForm.markAllAsTouched();
       return;
     }
 
-    const formValue=this.userForm.getRawValue();
-    let userData:any;
-    if(this.isEditMode){
-      userData={
-        userId: this.selectedUser!.userId,
-        userName: formValue.userName,
-        password: formValue.password,
-        status: formValue.status,
-        joinDate: formValue.joinDate,
-        role: formValue.role,
-        phoneNumber:formValue.phoneNumber,
-        email: formValue.email,
-        profileImage: formValue.profileImage
-      }
-      this.userService.update(this.selectedUser!.userId,userData).subscribe({
+    const formValue = this.userForm.getRawValue();
+    let userData: any = {
+      userName: formValue.userName,
+      password: formValue.password,
+      status: formValue.status,
+      joinDate: formValue.joinDate,
+      role: formValue.role,
+      phoneNumber: formValue.phoneNumber,
+      email: formValue.email,
+      profileImage: formValue.profileImage
+    };
+
+    if (this.isEditMode) {
+      userData.userId = this.selectedUser!.userId;
+      this.userService.update(this.selectedUser!.userId, userData).subscribe({
         next: (res) => {
           if (res.success) {
-            this.messageService.add({key:'globalMessage', severity: 'success', summary: 'Success', detail: res.message || 'User updated successfully.' });
+            this.messageService.add({ key: 'globalMessage', severity: 'success', summary: 'Success', detail: res.message || 'User updated successfully.' });
             this.resetImageFields();
             this.loadData();
             this.modelVisible = false;
-            this.selectedUser=null;
+            this.selectedUser = null;
           } else {
-            this.messageService.add({ key:'globalMessage',severity: 'error', summary: 'Error', detail: res.message || 'Failed to update user.' });
+            this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to update user.' });
           }
         },
         error: (err) => {
-          this.messageService.add({ key:'globalMessage',severity: 'error', summary: 'Error', detail: err.message || 'An error occurred while updating the user.' });
+          this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'An error occurred while updating the user.' });
         },
       });
-    }//userId,userName,status,email,role,joinDate,phoneNumber,profileImage
-
-      else {
-      userData = {
-        userId: "",
-        userName: formValue.userName,
-        status:formValue.status,
-        password: formValue.password,
-        phoneNumber:formValue.phoneNumber,
-        role: formValue.role,
-        email: formValue.email,
-        profileImage: formValue.profileImage
-      }
+    } else {
+      userData.userId = "";
       this.userService.create(userData).subscribe({
         next: (res) => {
           if (res.success) {
-            this.messageService.add({key:'globalMessage', severity: 'success', summary: 'Success', detail: res.message || 'User created successfully.' });
+            this.messageService.add({ key: 'globalMessage', severity: 'success', summary: 'Success', detail: res.message || 'User created successfully.' });
             this.resetImageFields();
             this.loadData();
             this.modelVisible = false;
           } else {
-            this.messageService.add({key:'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to create user.' });
+            this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to create user.' });
           }
         },
         error: (err) => {
-          this.messageService.add({ key:'globalMessage',severity: 'error', summary: 'Error', detail: err.message || 'An error occurred while creating the user.' });
+          this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'An error occurred while creating the user.' });
         },
       });
     }
   }
-  delete(user:UserModel):void{
-this.selectedUser = user;
+
+  delete(user: UserModel): void {
+    this.selectedUser = user;
     if (!this.selectedUser) {
-      this.messageService.add({ key:'globalMessage',severity: 'warn', summary: 'No user selected', detail: 'Please select a user to delete.' });
+      this.messageService.add({ key: 'globalMessage', severity: 'warn', summary: 'No user selected', detail: 'Please select a user to delete.' });
       return;
     }
 
@@ -342,18 +327,17 @@ this.selectedUser = user;
         this.userService.delete(this.selectedUser!.userId).subscribe({
           next: (res) => {
             if (res.success) {
-              this.messageService.add({key:'globalMessage', severity: 'success', summary: 'Success', detail: res.message || 'User deleted successfully.' });
+              this.messageService.add({ key: 'globalMessage', severity: 'success', summary: 'Success', detail: res.message || 'User deleted successfully.' });
               this.loadData();
             } else {
-              this.messageService.add({key:'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to delete user.' });
+              this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to delete user.' });
             }
           },
           error: (err) => {
-            this.messageService.add({key:'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'An error occurred while deleting the user.' });
+            this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'An error occurred while deleting the user.' });
           },
         });
       },
     });
   }
-
 }

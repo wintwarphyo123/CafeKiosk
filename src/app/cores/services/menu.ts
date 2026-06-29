@@ -39,6 +39,10 @@ export class MenuService {
   linkOptionGroup(dto: RequestMenuOptionGroupDto):Observable<RootModel>{
     return this.http.post<RootModel>(`${environment.apiUrl}/api/menu/link-option-group`,dto)
   }
+
+  changeStatus(menuId:number):Observable<RootModel>{
+    return this.http.put<RootModel>(`${environment.apiUrl}/api/menu/${menuId}/available`,{})
+  }
   convertBase64(file: File): Observable<string> {
     const result = new ReplaySubject<string>(1);
     const reader = new FileReader();

@@ -1,0 +1,124 @@
+<p-toast key="globalMessage"></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="w-full max-w-7xl mx-auto p-6 text-xs font-sans selection:bg-orange-100">
+    
+    <div class="mb-6 flex justify-between items-end border-b border-gray-200 pb-4">
+        <div>
+            <h2 class="text-base font-black text-gray-800 tracking-wide flex items-center gap-2">
+                📦 Order Management
+            </h2>
+            <p class="text-gray-500 text-[11px] mt-0.5">Monitor incoming checkout records, real-time transaction receipts, and payment logs.</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200/80 overflow-hidden">
+        <p-table #dt2 
+                 [value]="orderModel" 
+                 [columns]="cols" 
+                 [paginator]="true" 
+                 [rows]="10"
+                 [rowsPerPageOptions]="[10, 20, 50]" 
+                 styleClass="p-datatable-sm custom-table" 
+                 [loading]="isLoading"
+                 [globalFilterFields]="['orderNumber', 'totalAmount', 'phoneNumber', 'note']" 
+                 [tableStyle]="{ 'min-width': '50rem' }"
+                 selectionMode="single" 
+                 dataKey="orderId">
+
+            <ng-template pTemplate="caption">
+                <div class="flex w-full justify-end items-center py-2.5 bg-gray-50/70 px-4 border-b border-gray-100">
+                    <p-iconfield iconPosition="left">
+                        <p-inputicon class="flex items-center">
+                            <i class="pi pi-search text-gray-400 text-xs"></i>
+                        </p-inputicon>
+                        <input pInputText 
+                               type="text" 
+                               (input)="dt2.filterGlobal($event.target.value, 'contains')"
+                               placeholder="Search order number, phone, note..." 
+                               class="text-xs py-1.5 pl-8 pr-3 border border-gray-200 rounded-lg bg-white w-64 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/20 transition-all text-gray-700" />
+                    </p-iconfield>
+                </div>
+            </ng-template>
+
+            <ng-template pTemplate="header" let-columns>
+                <tr class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
+                    <th class="w-12 text-center py-3 bg-gray-50 text-gray-500 font-semibold">#</th>
+                    @for(col of columns; track col.field) {
+                        <th [pSortableColumn]="col.field" 
+                            [class.text-right]="col.field === 'totalAmount'"
+                            class="py-3 px-4 text-left font-semibold text-gray-600 hover:bg-gray-100 transition-colors">
+                            <div class="flex items-center gap-1" [class.justify-end]="col.field === 'totalAmount'">
+                                {{ col.header }}
+                                <p-sortIcon [field]="col.field" class="text-[10px] opacity-70"></p-sortIcon>
+                            </div>
+                        </th>
+                    }
+                    <th>View Detail</th>
+                </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
+                <tr [pSelectableRow]="rowData" class="border-b border-gray-100 text-gray-600 hover:bg-orange-50/20 transition-colors">
+                    
+                    <td class="text-center py-2.5 font-bold text-gray-400 bg-white border-r border-gray-50">
+                        {{ rowIndex + 1 }}
+                    </td>
+                    
+                    @for(col of columns; track col.field) {
+                        <td class="py-2.5 px-4 text-gray-700" [class.text-right]="col.field === 'totalAmount'">
+                            
+                            @if(col.field === 'orderNumber') {
+                                <span class="font-mono font-bold text-gray-800 tracking-wide select-all">{{ rowData[col.field] }}</span>
+                            }
+
+                            @else if(col.field === 'totalAmount') {
+                                <span class="font-extrabold text-gray-900">{{ rowData[col.field] | currency:'USD':'symbol':'1.0-0' }}</span>
+                            }
+
+                            @else if(col.field === 'phoneNumber') {
+                                <span class="font-medium tracking-wide text-gray-600">{{ rowData[col.field] }}</span>
+                            }
+
+                            @else if(col.field === 'note') {
+                                @if(rowData[col.field] && rowData[col.field].includes('Paid via')) {
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-green-50 text-green-700 border border-green-100">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                        {{ rowData[col.field] }}
+                                    </span>
+                                } @else if (rowData[col.field]) {
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-100">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                        Txn Code: {{ rowData[col.field] }}
+                                    </span>
+                                } @else {
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-gray-50 text-gray-400 border border-gray-100">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
+                                        Unpaid / Cash
+                                    </span>
+                                }
+                            }
+
+                            @else if(col.field === 'createdAt') {
+                                <span class="text-gray-500 font-medium text-[11px]">{{ rowData[col.field] | date: 'yyyy MMMM dd' }}</span>
+                            }
+
+                            @else {
+                                {{ rowData[col.field] }}
+                            }
+                        </td>
+                    }
+                    <td>
+                        <button (click)="viewDetail(rowData)" 
+                                class="text-stone-500 hover:text-amber-700 p-1 rounded hover:bg-stone-100 transition-colors"
+                                pTooltip="Manage Options" tooltipPosition="top">
+                                <i class="pi pi-cog text-[11px]"></i>
+                        </button>
+                    </td>
+                    
+                </tr>
+
+            </ng-template>
+        </p-table>
+    </div>
+</div>

@@ -47,7 +47,7 @@
 
             <ng-template pTemplate="header" let-columns>
                 <tr class="bg-stone-100 text-stone-700 text-[11px] font-bold border-b border-stone-200">
-                    <th pFrozenColumn class="w-10 text-center py-2 bg-stone-100">#</th>
+                   
                     @for(col of columns; track col.field) {
                         <th [pSortableColumn]="col.field" class="py-2 px-3 text-left">
                             {{col.header}} <p-sortIcon [field]="col.field" class="text-[9px]"></p-sortIcon>
@@ -59,15 +59,6 @@
 
             <ng-template pTemplate="body" let-rowData let-columns="columns">
                 <tr [pSelectableRow]="rowData" class="border-b border-stone-100 text-stone-600 text-[11px] hover:bg-amber-50/30 transition-colors">
-                    
-                    <td pFrozenColumn class="text-center py-1.5 bg-white">
-                        <span class="pi text-[11px]" 
-                              [class.pi-circle]="selectedGroup !== rowData" 
-                              [class.pi-check-circle]="selectedGroup === rowData" 
-                              [class.text-amber-700]="selectedGroup === rowData"
-                              [class.text-stone-300]="selectedGroup !== rowData">
-                        </span>
-                    </td>
                     
                     @for(col of columns; track col.field) {
                         <td class="py-1.5 px-3 font-medium text-stone-800">{{ rowData[col.field] }}</td>

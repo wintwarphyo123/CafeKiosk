@@ -19,6 +19,8 @@ import { MessageService } from 'primeng/api';
 export class AdminLayout implements OnInit {
   userProfile: any = null;
   isProfileOpen: boolean = false;
+  isMobileMenuOpen: boolean = false;
+  
 
   constructor(
     private userService: UserService,
@@ -51,7 +53,7 @@ export class AdminLayout implements OnInit {
   }
 
   onLogout() {
-    localStorage.removeItem('token'); // local storage ထဲက token ကို ဖျက်မယ်
-    this.router.navigate(['/login']); // login page သို့ ပြန်ပို့မယ်
+    localStorage.removeItem('token'); 
+    this.router.navigate(['/login']); 
   }
 }

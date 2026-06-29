@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, ElementRef, inject, OnInit, ViewChild } from '@angular/core';
-import { MenuModel} from '../../cores/models/menu.model';
+import { MenuModel } from '../../cores/models/menu.model';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MessageService, ConfirmationService } from 'primeng/api';
@@ -53,6 +53,7 @@ export class Menu implements OnInit {
   imgSrc: String = '';
 
   thumbnailUrl: string = '/thumbnail.jpg';
+  userRole: string = '';
 
   menuModel: MenuModel[] = [];
   selectedMenu: MenuModel | null = null;
@@ -90,6 +91,8 @@ export class Menu implements OnInit {
       { field: 'description', header: 'Description' },
       { field: 'categoryName', header: 'Category Name' }
     ]
+    const savedRole = localStorage.getItem('userRole') || '';
+    this.userRole = savedRole.toUpperCase(); 
     this.loadData();
   }
   loadData() {
@@ -140,7 +143,7 @@ export class Menu implements OnInit {
   }
 
   handleImageError(event: any) {
-    event.target.src =this.thumbnailUrl;
+    event.target.src = this.thumbnailUrl;
   }
 
   private getImageUrl(imagePath: string): string {
@@ -295,7 +298,7 @@ export class Menu implements OnInit {
           }
           this.cdr.detectChanges();
         },
-        error: (err) => {
+        error: () => {
           this.modalVisible = false;
           this.loadData();
           this.messageService.add({
@@ -334,9 +337,9 @@ export class Menu implements OnInit {
       categoryId: menu.categoryId
     });
     if (menu.menuImage) {
-      this.imgSrc = menu.menuImage; // ဇယားထဲက ရရှိထားပြီးသား Image URL ကို ထည့်ပေးလိုက်တာပါ
+      this.imgSrc = menu.menuImage;
 
-      // URL လမ်းကြောင်းထဲကနေ ဖိုင်နာမည်တစ်ခုပဲ ဖြတ်ယူပြချင်ရင် (မပြချင်လည်း ရပါတယ်)
+
       this.imgName = menu.menuImage.substring(menu.menuImage.lastIndexOf('/') + 1);
     } else {
       this.imgSrc = '';
@@ -360,7 +363,7 @@ export class Menu implements OnInit {
               key: 'globalMessage',
               severity: 'success',
               summary: 'success',
-              detail: 'Category delete Successfully'
+              detail: 'Menu delete Successfully'
             });
           },
           error: (err) => {
@@ -369,7 +372,7 @@ export class Menu implements OnInit {
               key: 'globalMessage',
               severity: 'warn',
               summary: 'Warning',
-              detail: 'Category delete Failed'
+              detail: 'Menu delete Failed'
             });
           }
         });
@@ -380,4 +383,36 @@ export class Menu implements OnInit {
     this.router.navigate(['/admin/menu/detail', rowData.menuId]);
   }
 
+  toggleMenuAvailability(item: any) {
+    this.isLoading=true;
+    this.menuService.changeStatus(item.menuId).subscribe({
+      next:(res)=>{
+        this.isLoading=false;
+        if(res.success){
+          item.isAvailable=!item.isAvailable;
+          this.messageService.add({
+              key: 'globalMessage',
+              severity: 'success',
+              summary: 'success',
+              detail: res.message || ' Successfully'
+            });
+        }else{
+          this.messageService.add({
+              key: 'globalMessage',
+              severity: 'error',
+              summary: 'Failed',
+              detail: ' failed'
+            });
+        }
+      },
+      error:(err)=>{
+        this.messageService.add({
+              key: 'globalMessage',
+              severity: 'error',
+              summary: 'Error',
+              detail: 'Something is wrong, Try again'
+            });
+      }
+    })
+  }
 }

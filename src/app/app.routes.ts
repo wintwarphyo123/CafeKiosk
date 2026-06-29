@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { Dashboard } from './pages/dashboard/dashboard'; // Dashboard ရှိလျှင် Import လုပ်ပါ (မရှိသေးက ဆောက်ပေးရန်လိုပါသည်)
+import { Dashboard } from './pages/dashboard/dashboard'; 
 import { Category } from './pages/category/category';
 import { Menu } from './pages/menu/menu';
 import { User } from './pages/user/user';
@@ -10,9 +10,12 @@ import { StaffLayout } from './layouts/staff-layout/staff-layout';
 import { MenuDetail } from './pages/menu-detail/menu-detail';
 import { Login } from './pages/login/login';
 import { MenuComponent } from './pages/customer/menu/menu';
+import { Orders } from './pages/orders/orders';
+import { OrderDetail } from './pages/orders/order-detail/order-detail';
+import { KitchenDashboard } from './pages/kitchen-dashboard/kitchen-dashboard';
 
 export const routes: Routes = [
-
+  // Default Application Entry Point
   {
     path: '',
     redirectTo: 'customer_menu',
@@ -21,9 +24,13 @@ export const routes: Routes = [
   {
     path: 'customer_menu',
     component: MenuComponent
-
+  },
+  {
+    path: 'login',
+    component: Login
   },
 
+  // Admin Management Console Layout
   {
     path: 'admin',
     component: AdminLayout,
@@ -60,33 +67,42 @@ export const routes: Routes = [
       {
         path: 'users',
         component: User
+      },
+      {
+        path: 'orders',
+        component: Orders
+      },
+      {
+        path: 'order/detail/:id',
+        component: OrderDetail
       }
     ]
   },
-  {
-    path: 'login',
-    component: Login
-  },
 
-  {
-    path: '',
-    redirectTo: 'admin/dashboard',
-    pathMatch: 'full'
-  },
-
-  {
-    path: '**',
-    redirectTo: 'admin/dashboard'
-  },
+ 
   {
     path: 'staff',
     component: StaffLayout,
     children: [
       {
         path: '',
-        redirectTo: 'dashboard',
+        redirectTo: 'kitchen-dashboard',
         pathMatch: 'full'
-      }
+      },
+      {
+        path: 'kitchen-dashboard',
+        component: KitchenDashboard
+      },
+      {
+      path: 'menu',
+      component: Menu 
+    }
     ]
+  },
+
+ 
+  {
+    path: '**',
+    redirectTo: 'customer_menu' 
   }
 ];

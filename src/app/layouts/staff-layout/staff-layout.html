@@ -1,1 +1,131 @@
-<p>staff-layout works!</p>
+<div class="flex h-screen w-full overflow-hidden bg-slate-50">
+
+  <div class="w-64 h-screen bg-stone-900 text-stone-100 text-white flex flex-col justify-between p-4 text-sm shrink-0">
+    <div class="flex items-center gap-2 px-2 py-4 border-b border-slate-800">
+      <i class="pi pi-coffee text-amber-400 text-lg"></i>
+      <span class="font-bold text-base tracking-wide flex items-center gap-2">
+        <img src="/Logo-1.png" alt="Logo" class="w-10 h-10 object-contain" />
+        <span class="text-stone-200">Rori's Cafe</span>
+      </span>
+    </div>
+
+    <div class="flex-1 py-4 flex flex-col gap-1 overflow-y-auto">
+      <a routerLink="/staff/kitchen-dashboard" routerLinkActive="bg-stone-800 text-amber-400"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 transition-all">
+        <i class="pi pi-chart-bar text-xs"></i> <span>Kitchen Dashboard</span>
+      </a>
+      <a routerLink="/staff/report" routerLinkActive="bg-stone-800 text-amber-400"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 transition-all">
+        <i class="pi pi-book text-xs"></i> <span>Reports</span>
+      </a>
+
+      <a routerLink="/staff/menu" routerLinkActive="bg-stone-800 text-amber-400"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 transition-all">
+        <i class="pi pi-book text-xs"></i> <span>Menus</span>
+      </a>
+    </div>
+    <!--logout-->
+    <div class="border-t border-slate-800 pt-4">
+      <button (click)="onLogout()"
+        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-all text-left">
+        <i class="pi pi-sign-out text-xs"></i> <span>Logout</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="flex-1 overflow-y-auto p-6">
+    <p class="text-xs text-slate-400 mb-2">kitchen-layout status: active</p>
+    <div
+      class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 bg-white p-3 rounded-xl border border-stone-100 shadow-xs">
+
+      <!-- Left: Search Box -->
+      <div class="relative w-full sm:w-72">
+        <input type="text" placeholder="Search..." [(ngModel)]="searchText" (keyup.enter)="onSearch()"
+          (input)="onSearch()" (search)="onSearch()"
+          class="w-full text-[11px] bg-stone-50 text-stone-700 placeholder-stone-400 pl-8 pr-3 py-1.5 rounded-lg border border-stone-200 focus:outline-none focus:border-amber-700 focus:bg-white transition-all" />
+        <i class="pi pi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400 text-[10px]"></i>
+      </div>
+      <div class="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+        <button class="px-4 py-2 text-sm font-medium rounded-md transition-all"
+          [class.bg-white]="selectedStatus === 'All'" [class.shadow-sm]="selectedStatus === 'All'"
+          (click)="changeStatus('All')">
+          All Active
+        </button>
+        <button class="px-4 py-2 text-sm font-medium rounded-md transition-all"
+          [class.bg-green-500]="selectedStatus === 'Paid'" [class.text-white]="selectedStatus === 'Paid'"
+          (click)="changeStatus('Paid')">
+          New (Paid)
+        </button>
+        <button class="px-4 py-2 text-sm font-medium rounded-md transition-all"
+          [class.bg-blue-500]="selectedStatus === 'Preparing'" [class.text-white]="selectedStatus === 'Preparing'"
+          (click)="changeStatus('Preparing')">
+          Preparing
+        </button>
+      </div>
+
+      <!-- Right: Actions & Profile -->
+      <div class="flex items-center gap-4 w-full sm:w-auto justify-end">
+
+        <!-- Action Utility Icons with Badges -->
+        <div class="flex items-center gap-2">
+          <!-- Notifications -->
+          <button
+            class="relative w-7 h-7 flex items-center justify-center bg-amber-50 text-amber-800 rounded-lg border border-amber-100 hover:bg-amber-100 transition-colors">
+            <i class="pi pi-bell text-[11px]"></i>
+            <span
+              class="absolute -top-1 -right-1 bg-amber-700 text-white font-bold text-[8px] h-3.5 w-3.5 rounded-full flex items-center justify-center scale-90">3</span>
+          </button>
+
+          <!-- Settings -->
+          <button
+            class="relative w-7 h-7 flex items-center justify-center bg-stone-100 text-stone-600 rounded-lg hover:bg-stone-200 transition-colors">
+            <i class="pi pi-cog text-[11px]"></i>
+          </button>
+        </div>
+
+        <!-- Divider line -->
+        <div class="h-5 w-[1px] bg-stone-200 hidden sm:block"></div>
+
+        <!-- User Profile Dropdown Placeholder -->
+        <div class="relative">
+          <div (click)="toggleProfile()" class="flex items-center gap-2 cursor-pointer group select-none">
+            <div class="text-right hidden sm:block">
+              <span class="text-stone-400 text-[9px] block font-medium">Hello,</span>
+              <span class="text-stone-800 font-bold block text-[11px] group-hover:text-amber-800 transition-colors">
+                {{ userProfile?.userName || 'Loading...' }}
+              </span>
+            </div>
+            <div
+              class="w-8 h-8 rounded-full bg-amber-100 border border-amber-200 flex items-center justify-center text-amber-900 font-bold overflow-hidden text-xs">
+              {{ userProfile?.role === 'Admin' ? '💼' : '👩‍🍳' }}
+            </div>
+          </div>
+          @if(isProfileOpen){
+          <div
+            class="absolute right-0 mt-2 w-56 bg-white rounded-xl border border-stone-200 shadow-xl py-3 z-50 text-[11px] animate-fade-in">
+            <div class="px-4 py-2 border-b border-stone-100">
+              <p class="font-bold text-stone-800 text-xs">{{ userProfile?.userName }}</p>
+              <p class="text-stone-400 text-[10px] truncate">{{ userProfile?.email }}</p>
+              <span
+                class="inline-block bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-md mt-1 text-[9px] uppercase">
+                {{ userProfile?.role }}
+              </span>
+            </div>
+
+            <div class="p-1.5 space-y-0.5">
+              <button (click)="onLogout()"
+                class="w-full flex items-center gap-2 px-3 py-2 rounded-md text-rose-600 hover:bg-rose-50 transition-colors text-left font-medium">
+                <i class="pi pi-sign-out text-[10px]"></i> <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
+          }
+
+        </div>
+
+      </div>
+    </div>
+    <router-outlet></router-outlet>
+  </div>
+
+</div>
