@@ -13,4 +13,10 @@ export class DashboardService {
     let url:string=`${environment.apiUrl}/api/dashboard/summary`;
     return this.http.get<RootModel>(url);
   }
+  getAllTrendingItem():Observable<RootModel>{
+    return this.http.get<RootModel>(`${environment.apiUrl}/api/dashboard/trending_item`);
+  }
+  getRevenue(period:string):Observable<RootModel>{
+    return this.http.get<RootModel>(`${environment.apiUrl}/api/dashboard/Revenue_Overview?period=${period}`);
+  }
 }

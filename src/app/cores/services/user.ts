@@ -56,7 +56,9 @@ export class UserService {
         })
       );
   }
-  
+  changeStatus(id:string):Observable<RootModel>{
+    return this.http.put<RootModel>(`${environment.apiUrl}/api/user/${id}/update-status`,{})
+  }
 
   convertBase64(file: File): Observable<string> {
     const result = new ReplaySubject<string>(1);
@@ -67,4 +69,5 @@ export class UserService {
     };
     return result;
   }
+
 }

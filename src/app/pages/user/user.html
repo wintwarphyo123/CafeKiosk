@@ -56,7 +56,7 @@
                 <tr class="border-b border-stone-100 text-stone-600 text-[11px] hover:bg-amber-50/30 transition-colors">
 
                     <td class="py-1">
-                        <p-image [src]="rowData.profileImage ?? 'assets/images/default-placeholder.png'"
+                        <p-image [src]="rowData.profileImage ?? ''"
                             alt="{{ rowData.userName }}" [style]="{ width: '40px', height: '30px' }"
                             [imageStyle]="{ width: '40px', height: '30px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #e7e5e4' }"
                             preview="true" (onImageError)="handleImageError($event)">
@@ -75,11 +75,13 @@
                     }
 
                     <td class="text-center py-1.5">
-                        <span
+                        <button  (click)="UserStatus(rowData)" pTooltip="Change Status" tooltipPosition="top">
+                            <span
                             [class]="rowData.status ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-stone-100 text-stone-400 border-stone-200'"
                             class="px-2 py-0.5 rounded text-[10px] font-semibold border inline-block tracking-wider">
                             {{ rowData.status ? 'ACTIVE' : 'INACTIVE' }}
                         </span>
+                        </button>
                     </td>
 
                     <td class="text-center py-1.5">
@@ -183,7 +185,7 @@
                 </div>
 
                 <div class="mt-1.5 bg-stone-100 p-1.5 rounded border border-stone-200 flex justify-center items-center">
-                    <img [src]="imgSrc || 'assets/images/default-placeholder.png'"
+                    <img [src]="imgSrc || ''"
                         class="max-h-36 object-cover rounded shadow-xs border border-white"
                         (error)="handleImageError($event)" alt="User Preview Thumbnail" />
                 </div>

@@ -9,12 +9,13 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { ImageModule } from 'primeng/image';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
-import { SelectModule } from 'primeng/select';
+import { SelectModule } from 'primeng/select'; // 💡 Menu အတိုင်း SelectModule ကိုပဲ သုံးထားပါတယ်
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
 import { OptionItemModel } from '../../cores/models/option-item.model';
 import { SortColumn } from '../../cores/models/root.model';
 import { OptionItemService } from '../../cores/services/option-item';
+import { OptionGroupService } from '../../cores/services/option-group';
 
 @Component({
   selector: 'app-option-item',
@@ -28,9 +29,8 @@ import { OptionItemService } from '../../cores/services/option-item';
     TableModule,
     ConfirmDialogModule,
     InputTextModule,
-    ToastModule,
     DialogModule,
-    SelectModule,
+    SelectModule, // 💡 Menu အတိုင်း တပုံစံတည်း SelectModule ပါပဲ
     ImageModule
   ],
   providers: [MessageService, ConfirmationService, DatePipe],
@@ -44,117 +44,144 @@ export class OptionItem implements OnInit {
   modelVisible: boolean = false;
   isEdited: boolean = false;
   selectedOptionItem: OptionItemModel | null = null;
-  optionGroup: { label: string | null, value: number | null }[] = [];
+  dropDownOptions: any[] = [];
   cols!: SortColumn[];
+  
   constructor(
     private optionItemService: OptionItemService,
+    private optionGroupService: OptionGroupService,
     private messageService: MessageService,
     private cdr: ChangeDetectorRef,
     private confirmationService: ConfirmationService
   ) { }
-  //id,itemName,extraprice,optionGroupId,groupName
+
   private formBuilder = inject(FormBuilder);
   public optionItemForm: FormGroup = this.formBuilder.group({
     id: [0],
     itemName: [''],
     extraPrice: [0],
-    optionGroupId: [0],
+    optionGroupId: [0], // 💡 FIX: Menu အတိုင်း default ကို 0 ပဲ ပေးထားပါမယ်
     groupName: ['']
   });
+
   ngOnInit(): void {
     this.cols = [
       { field: 'itemName', header: 'Item Name' },
       { field: 'extraPrice', header: 'Extra Price' },
       { field: 'groupName', header: 'Group Name' },
-    ]
-    this.loadData();
+    ];
+    this.loadOptionGroups();
   }
+
+  loadOptionGroups() {
+    this.isLoading = true;
+    this.optionGroupService.get().subscribe({
+      next: (res) => {
+        this.isLoading = false;
+        if (res.success) {
+          const rawGroups = Array.isArray(res.data) ? res.data : [];
+          
+          this.dropDownOptions = rawGroups.map((gp) => ({
+            id: gp.id || gp.optionGroupId || 0,
+            name: gp.name || gp.groupName || 'Unknown Group'
+          }));
+          
+          console.log('Successfully loaded groups:', this.dropDownOptions);
+        } else {
+          this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to load option groups.' });
+        }
+        this.cdr.detectChanges();
+        this.loadData(); 
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.loadData(); 
+        this.cdr.detectChanges();
+        this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: 'Failed to fetch option groups from server.' });
+      }
+    });
+  }
+
   loadData() {
     this.isLoading = true;
     this.optionItemService.get().subscribe({
       next: (res) => {
         this.isLoading = false;
-        if (!res.success) {
-          this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to load users.' });
-          return;
+        if (res.success) {
+          const rawItem = Array.isArray(res.data) ? res.data : [];
+          this.optionItemModel = rawItem.map((item) => ({
+            id: item.id ?? 0,
+            itemName: item.itemName ?? '',
+            extraPrice: item.extraPrice ?? 0,
+            optionGroupId: item.optionGroupId ?? 0, // 💡 FIX: Menu component ရဲ့ categoryId ကဲ့သို့ default ကို 0 ပေးလိုက်ပါတယ်
+            groupName: item.groupName ?? '',
+          }));
+        } else {
+          this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to load items.' });
         }
-        const rawItem = Array.isArray(res.data) ? res.data : [];
-        this.optionItemModel = rawItem.map((item) => ({
-          id: item.id ?? 0,
-          itemName: item.itemName ?? '',
-          extraPrice: item.extraPrice ?? '',
-          optionGroupId: item.optionGroupId ?? 0,
-          groupName: item.groupName ?? '',
-        }));
-        const raw = new Set<Number>();
-        this.optionGroup = this.optionItemModel
-          .map(gp => ({
-            label: gp.groupName,
-            value: gp.optionGroupId,
-          }))
-          .filter(item => {
-            if (!item.value || raw.has(item.value)) {
-              return false;
-            }
-            raw.add(item.value);
-            return true;
-          });
         this.cdr.detectChanges();
-        console.log(this.optionItemModel)
       },
       error: (err) => {
         this.isLoading = false;
         this.cdr.detectChanges();
+        this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: 'Failed to fetch data from server.' });
       }
-
-    })
+    });
   }
 
-  create():void{
-    this.modelVisible=true;
-    this.isEdited=false;
-    this.optionItemForm.reset();
+  create(): void {
+    this.isEdited = false;
+    this.selectedOptionItem = null;
+    this.optionItemForm.reset({
+      id: 0,
+      itemName: '',
+      extraPrice: 0,
+      optionGroupId: 0, // 💡 Default 0
+      groupName: ''
+    });
+    this.modelVisible = true;
   }
-  //id,itemName,extraprice,optionGroupId,groupName
-  update(model:OptionItemModel){
-    this.modelVisible=true;
-    this.isEdited=true;
+
+  update(model: OptionItemModel) {
     this.optionItemForm.reset();
-    this.selectedOptionItem=model;
+    this.isEdited = true;
+    this.selectedOptionItem = model;
+    
     this.optionItemForm.patchValue({
-      id:model.id ?? 0,
-      itemName:model.itemName ?? '',
-      extraPrice:model.extraPrice ?? '',
-      optionGroupId:model.optionGroupId
-    })
+      id: model.id ?? 0,
+      itemName: model.itemName ?? '',
+      extraPrice: model.extraPrice ?? 0,
+      optionGroupId: model.optionGroupId ?? 0 // 💡 Default 0
+    });
+    this.modelVisible = true;
+    this.cdr.detectChanges();
   }
-  edit():void{
-    const optionItem=this.optionItemForm.getRawValue();
-    let itemData:any;
-    if(this.isEdited){
+
+  edit(): void {
+    const optionItem = this.optionItemForm.getRawValue();
+    let itemData: any;
+    
+    if (this.isEdited) {
       const currentId = this.selectedOptionItem?.id ?? 0;
-      itemData={
-        id:currentId,
-        itemName:optionItem.itemName,
-        extraPrice:Number(optionItem.extraPrice),
-        optionGroupId:Number(optionItem.optionGroupId)
-      }
-      this.optionItemService.update(currentId,itemData).subscribe({
+      itemData = {
+        id: currentId,
+        itemName: optionItem.itemName,
+        extraPrice: Number(optionItem.extraPrice),
+        optionGroupId: Number(optionItem.optionGroupId)
+      };
+      this.optionItemService.update(currentId, itemData).subscribe({
         next: (res) => {
           if (res.success) {
             this.modelVisible = false;
-            
             this.loadData();
             this.messageService.add({
               key: 'globalMessage',
               severity: 'success',
-              summary: 'success',
-              detail: 'Category Update Successfully'
+              summary: 'Success',
+              detail: 'Option Item Updated Successfully'
             });
-          }
-          else {
-            this.messageService.add({key:'globalMessage', severity: 'error', summary: 'Error', detail: res.message });
-
+          } else {
+            this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message });
           }
         },
         error: (err) => {
@@ -164,31 +191,30 @@ export class OptionItem implements OnInit {
             key: 'globalMessage',
             severity: 'warn',
             summary: 'Warning',
-            detail: 'Category Update Failed'
+            detail: 'Option Item Update Failed'
           });
-        },
-        complete: () => { },
-      })
-    }else{
-      itemData={
-        id:0,
-        itemName:optionItem.itemName,
-        extraPrice:Number(optionItem.extraPrice),
-        optionGroupId:Number(optionItem.optionGroupId)
-      }
+        }
+      });
+    } else {
+      itemData = {
+        id: 0,
+        itemName: optionItem.itemName,
+        extraPrice: Number(optionItem.extraPrice),
+        optionGroupId: Number(optionItem.optionGroupId)
+      };
       this.optionItemService.create(itemData).subscribe({
-         next: (res) => {
+        next: (res) => {
           if (res.success) {
             this.modelVisible = false;
             this.loadData();
             this.messageService.add({
               key: 'globalMessage',
               severity: 'success',
-              summary: 'success',
-              detail: 'Category Create Successfully'
+              summary: 'Success',
+              detail: 'Option Item Created Successfully'
             });
           } else {
-            this.messageService.add({key:'globalMessage', severity: 'error', summary: 'Error', detail: res.message });
+            this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message });
           }
           this.cdr.detectChanges();
         },
@@ -199,42 +225,42 @@ export class OptionItem implements OnInit {
             key: 'globalMessage',
             severity: 'warn',
             summary: 'Warning',
-            detail: 'Category Create Fail'
-          });
-        },
-        complete: () => { },
-      })
-    }
-  }
-
-  delete(optionItem:OptionItemModel): void {
-      this.selectedOptionItem = optionItem;
-      this.confirmationService.confirm({
-        message: 'Are you sure want to delete?',
-        header: 'Confirmation',
-        icon: 'pi pi-exclamation-triangle',
-        accept: () => {
-          this.optionItemService.delete(optionItem.id).subscribe({
-            next: (res) => {
-              this.modelVisible = false;
-              this.messageService.add({
-                key: 'globalMessage',
-                severity: 'success',
-                summary: 'success',
-                detail: 'Category delete Successfully'
-              });
-            },
-            error: (err) => {
-              this.modelVisible = false;
-              this.messageService.add({
-                key: 'globalMessage',
-                severity: 'warn',
-                summary: 'Warning',
-                detail: 'Category delete Failed'
-              });
-            }
+            detail: 'Option Item Create Failed'
           });
         }
       });
     }
+  }
+
+  delete(optionItem: OptionItemModel): void {
+    this.selectedOptionItem = optionItem;
+    this.confirmationService.confirm({
+      message: 'Are you sure want to delete?',
+      header: 'Confirmation',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        this.optionItemService.delete(optionItem.id).subscribe({
+          next: (res) => {
+            this.loadData();
+            this.modelVisible = false;
+            this.messageService.add({
+              key: 'globalMessage',
+              severity: 'success',
+              summary: 'Success',
+              detail: 'Option Item Deleted Successfully'
+            });
+          },
+          error: (err) => {
+            this.modelVisible = false;
+            this.messageService.add({
+              key: 'globalMessage',
+              severity: 'warn',
+              summary: 'Warning',
+              detail: 'Option Item Delete Failed'
+            });
+          }
+        });
+      }
+    });
+  }
 }

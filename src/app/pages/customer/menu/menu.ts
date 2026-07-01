@@ -87,16 +87,17 @@ export class MenuComponent implements OnInit {
   filterMenuItem: any[] = [];
   allOptionGroupList: any[] = [];
   cartItems: any[] = [];
+  orderCount: number = 0;
   
 
   constructor(
     private categoryService: CategoryService,
     private menuService: MenuService,
     private cdr: ChangeDetectorRef,
-   private route: ActivatedRoute,
     private router: Router,
     private messageService: MessageService,
-    private orderService: OrderService
+    private orderService: OrderService,
+    //private notificationService: NotificationService
   ) { }
 
   ngOnInit() {

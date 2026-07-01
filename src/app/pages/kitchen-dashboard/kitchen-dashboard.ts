@@ -53,13 +53,15 @@ export class KitchenDashboard implements OnInit, OnDestroy {
   sidebarVisible: boolean = false;
   isUpdatingStatus: boolean = false;
   cols!: SortColumn[];
+  searchText: string = '';
+  selectedStatus: string = 'All';
 
   statusOptions: string[] = ['Pending', 'Paid', 'Preparing', 'Ready', 'Cancelled'];
 
   private formBuilder = inject(FormBuilder);
   private destroy$ = new Subject<void>();
-  
-  // ဒေတာ ရောက်မောက်ချင်းကို စောင့်ကြည့်ထိန်းချုပ်ရန် Stream များ
+
+
   private ordersLoaded$ = new Subject<OrderResponseDto[]>();
 
   public orderForm: FormGroup = this.formBuilder.group({
@@ -76,7 +78,6 @@ export class KitchenDashboard implements OnInit, OnDestroy {
     private orderService: OrderService,
     private messageService: MessageService,
     private route: ActivatedRoute,
-    private datePipe: DatePipe,
     private cdr: ChangeDetectorRef,
     private router: Router
   ) { }
@@ -89,11 +90,10 @@ export class KitchenDashboard implements OnInit, OnDestroy {
       { field: 'note', header: 'Transition Note' },
       { field: 'createdAt', header: 'Ordered Date' },
     ];
-    
-    // စနစ်နှစ်ခုလုံး (API data ဝင်လာခြင်း + URL Query ပြောင်းလဲခြင်း) ကို အချိန်ကိုက် ညှိနှိုင်းစောင့်ကြည့်ခြင်း
+
+
     this.initSearchPipeline();
-    
-    // အော်ဒါများ ဆွဲယူခြင်း
+
     this.loadData();
   }
 
@@ -104,7 +104,7 @@ export class KitchenDashboard implements OnInit, OnDestroy {
 
   loadData(): void {
     this.isLoading = true;
-    this.orderService.get().pipe(takeUntil(this.destroy$)).subscribe({
+    this.orderService.get(this.selectedStatus).pipe(takeUntil(this.destroy$)).subscribe({
       next: (res) => {
         this.isLoading = false;
         if (!res.success) {
@@ -126,11 +126,9 @@ export class KitchenDashboard implements OnInit, OnDestroy {
           phoneNumber: item.phoneNumber ?? '',
           note: item.note ?? '',
           createdAt: item.createdAt ?? new Date(),
-          // FIXED: မော်ဒယ် dialog ထဲမှာ item စာရင်းတွေ ပေါ်မလာတဲ့ပြဿနာကို ဖြေရှင်းရန် orderItems ကို သေချာစွာ map လုပ်ပေးထားပါတယ်
           orderItems: item.orderItems ?? []
         }));
-        
-        // ပိုက်လိုင်းထဲသို့ ဒေတာအသစ်များကို တွန်းပို့ပေးခြင်း
+
         this.ordersLoaded$.next(this.orderModel);
         this.cdr.detectChanges();
       },
@@ -152,16 +150,16 @@ export class KitchenDashboard implements OnInit, OnDestroy {
       this.ordersLoaded$,
       this.route.queryParams
     ]).pipe(takeUntil(this.destroy$))
-    .subscribe(([orders, params]) => {
-      const searchKey = params['search'] || '';
-      const statusKey=params['status'] || 'All';
-      this.applyFilter(searchKey,statusKey, orders);
-    });
+      .subscribe(([orders, params]) => {
+        const searchKey = params['search'] || '';
+        const statusKey = params['status'] || 'All';
+        this.applyFilter(searchKey, statusKey, orders);
+      });
   }
 
-  applyFilter(searchKey: string,statusKey: string, currentOrders: OrderResponseDto[]): void {
+  applyFilter(searchKey: string, statusKey: string, currentOrders: OrderResponseDto[]): void {
     let cleanKey = searchKey.trim().toLowerCase();
-    
+
     if (cleanKey.startsWith('#')) {
       cleanKey = cleanKey.substring(1);
     }
@@ -170,18 +168,18 @@ export class KitchenDashboard implements OnInit, OnDestroy {
     if (statusKey !== 'All') {
       result = result.filter(o => o.orderStatus.toLowerCase() === statusKey.toLowerCase());
     }
-    
+
     if (cleanKey) {
       this.filteredOrders = currentOrders.filter(order =>
         order.orderNumber.toLowerCase().includes(cleanKey) ||
         (order.phoneNumber && order.phoneNumber.includes(cleanKey))
       );
-    } 
+    }
     else {
 
       this.filteredOrders = [...currentOrders];
     }
-    this.filteredOrders=result;
+    this.filteredOrders = result;
     this.cdr.detectChanges();
   }
 
@@ -191,10 +189,10 @@ export class KitchenDashboard implements OnInit, OnDestroy {
       next: (res) => {
         this.isLoading = false;
         if (res.success && res.data) {
-          
+
           this.selectedOrder = {
             ...res.data,
-            orderItems: res.data.orderItems ?? [] 
+            orderItems: res.data.orderItems ?? []
           };
           this.sidebarVisible = true;
 
@@ -304,4 +302,19 @@ export class KitchenDashboard implements OnInit, OnDestroy {
         return 'info';
     }
   }
+
+  changeStatus(status: string) {
+    this.selectedStatus = status;
+    this.onFilterChange();
+  }
+
+  onFilterChange() {
+    this.router.navigate(['/staff/kitchen-dashboard'], {
+      queryParams: {
+        status: this.selectedStatus
+      },
+      queryParamsHandling: 'merge'
+    });
+  }
+
 }

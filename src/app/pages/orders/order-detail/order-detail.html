@@ -1,93 +1,107 @@
-@if (selectedOrder) {
-<div class="max-w-2xl mx-auto my-6 bg-white shadow-lg rounded-xl border border-gray-100 overflow-hidden">
-  
-  <div class="p-6 bg-gray-50 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+<div>
+  <div class="flex items-center gap-2">
+    <button (click)="goBack()"
+      class="text-stone-500 hover:text-stone-800 p-1 rounded hover:bg-stone-100 transition-colors">
+      <i class="pi pi-arrow-left text-sm"></i>
+    </button>
     <div>
-      <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-        <span>Order #{{ selectedOrder.orderNumber || selectedOrder.orderId }}</span>
-      </h2>
-      <p class="text-sm text-gray-500 mt-1">Placed on {{ selectedOrder.createdAt | date:'medium' }}</p>
-    </div>
-    
-    <div class="flex items-center gap-2">
-      <span class="text-sm font-semibold text-gray-600">Status:</span>
-      <p-tag 
-        [severity]="getPaymentSeverity(selectedOrder.orderStatus)"
-        [value]="selectedOrder.orderStatus?.toUpperCase()">
-      </p-tag>
+      <h2 class="text-sm font-bold text-stone-800 tracking-wide uppercase">⚙️ Order Specification</h2>
+      <p class="text-stone-500 text-[10px]">View Order Details</p>
     </div>
   </div>
+  @if (selectedOrder) {
+  <div class="max-w-2xl mx-auto my-6 bg-white shadow-lg rounded-xl border border-gray-100 overflow-hidden">
 
-  <div class="p-6 space-y-6">
-    <h3 class="text-sm font-bold uppercase tracking-wider text-gray-400">Items Ordered</h3>
-    
-    <div class="divide-y divide-gray-100">
-      @for(item of selectedOrder.orderItems; track item.orderItemId){
+    <div
+      class="p-6 bg-gray-50 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div>
+        <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+          <span>Order #{{ selectedOrder.orderNumber || selectedOrder.orderId }}</span>
+        </h2>
+        <p class="text-sm text-gray-500 mt-1">Placed on {{ selectedOrder.createdAt | date:'medium' }}</p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span class="text-sm font-semibold text-gray-600">Status:</span>
+        <p-tag [severity]="getPaymentSeverity(selectedOrder.orderStatus)"
+          [value]="selectedOrder.orderStatus?.toUpperCase()">
+        </p-tag>
+      </div>
+    </div>
+
+    <div class="p-6 space-y-6">
+      <h3 class="text-sm font-bold uppercase tracking-wider text-gray-400">Items Ordered</h3>
+
+      <div class="divide-y divide-gray-100">
+        @for(item of selectedOrder.orderItems; track item.orderItemId){
         <div class="py-4 first:pt-0 last:pb-0">
           <div class="flex justify-between items-start">
             <div>
               <div class="flex items-center">
                 <span class="font-bold text-gray-800 text-lg">{{ item.quantity }}x</span>
-                <span class="ml-2 font-semibold text-gray-800 text-lg">{{ item.menuName || 'Item #' + item.menuId }}</span>
+                <span class="ml-2 font-semibold text-gray-800 text-lg">{{ item.menuName || 'Item #' + item.menuId
+                  }}</span>
               </div>
-              
+
               @if(item.selectedOptions && item.selectedOptions.length > 0) {
-                <div class="mt-1.5 flex flex-wrap gap-1.5 ml-7">
-                  @for(opt of item.selectedOptions; track opt.optionItemName) {
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
-                      <span class="text-slate-400 font-normal mr-1">{{ opt.optionGroupName }}:</span>
-                      <strong>{{ opt.optionItemName }}</strong>
-                      @if(opt.extraPrice > 0) {
-                        <span class="ml-1 text-emerald-600">(+{{ opt.extraPrice | currency }})</span>
-                      }
-                    </span>
+              <div class="mt-1.5 flex flex-wrap gap-1.5 ml-7">
+                @for(opt of item.selectedOptions; track opt.optionItemName) {
+                <span
+                  class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                  <span class="text-slate-400 font-normal mr-1">{{ opt.optionGroupName }}:</span>
+                  <strong>{{ opt.optionItemName }}</strong>
+                  @if(opt.extraPrice > 0) {
+                  <span class="ml-1 text-emerald-600">(+{{ opt.extraPrice | currency }})</span>
                   }
-                </div>
+                </span>
+                }
+              </div>
               }
             </div>
-            <span class="font-mono text-gray-700 font-semibold">{{ (item.priceAtOrder * item.quantity) | currency }}</span>
+            <span class="font-mono text-gray-700 font-semibold">{{ (item.priceAtOrder * item.quantity) | currency
+              }}</span>
           </div>
         </div>
-      }
-    </div>
-  </div>
-
-  <div class="m-6 p-5 bg-slate-50 rounded-xl border border-slate-200/60">
-    <div class="space-y-2 text-sm text-gray-600 pb-4 border-b border-dashed border-slate-300">
-      <div class="flex justify-between">
-        <span>Subtotal</span>
-        <span class="font-mono">{{ selectedOrder.totalAmount | currency }}</span>
-      </div>
-      
-      <div class="flex justify-between text-lg font-bold text-gray-900 pt-1">
-        <span>Total Amount</span>
-        <span class="font-mono text-xl text-emerald-700">{{ selectedOrder.totalAmount | currency }}</span>
+        }
       </div>
     </div>
 
-    <div class="mt-4 p-4 rounded-lg flex items-center justify-between"
-         [ngClass]="{
+    <div class="m-6 p-5 bg-slate-50 rounded-xl border border-slate-200/60">
+      <div class="space-y-2 text-sm text-gray-600 pb-4 border-b border-dashed border-slate-300">
+        <div class="flex justify-between">
+          <span>Subtotal</span>
+          <span class="font-mono">{{ selectedOrder.totalAmount | currency }}</span>
+        </div>
+
+        <div class="flex justify-between text-lg font-bold text-gray-900 pt-1">
+          <span>Total Amount</span>
+          <span class="font-mono text-xl text-emerald-700">{{ selectedOrder.totalAmount | currency }}</span>
+        </div>
+      </div>
+
+      <div class="mt-4 p-4 rounded-lg flex items-center justify-between" [ngClass]="{
            'bg-emerald-50 border border-emerald-200 text-emerald-800': selectedOrder.orderStatus === 'Paid',
            'bg-amber-50 border border-amber-200 text-amber-800': selectedOrder.orderStatus === 'Pending' || selectedOrder.orderStatus === 'Preparing' || selectedOrder.orderStatus === 'Ready',
            'bg-rose-50 border border-rose-200 text-rose-800': selectedOrder.orderStatus === 'Cancelled'
          }">
-      
-      <div class="flex items-center gap-3">
-        <div>
-          <p class="text-xs opacity-80">Notes: {{ selectedOrder.note || 'None' }}</p>
+
+        <div class="flex items-center gap-3">
+          <div>
+            <p class="text-xs opacity-80">Notes: {{ selectedOrder.note || 'None' }}</p>
+          </div>
         </div>
-      </div>
 
-      <div class="text-right">
-        <span class="text-xs uppercase tracking-wider font-bold opacity-70 block">Processed At</span>
-        <span class="text-sm font-mono font-bold">{{ selectedOrder.createdAt | date:'mediumTime' }}</span>
-      </div>
+        <div class="text-right">
+          <span class="text-xs uppercase tracking-wider font-bold opacity-70 block">Processed At</span>
+          <span class="text-sm font-mono font-bold">{{ selectedOrder.createdAt | date:'mediumTime' }}</span>
+        </div>
 
+      </div>
     </div>
   </div>
-</div>
-} @else {
+  } @else {
   <div class="text-center my-10 text-gray-500">
     @if (isloading) { Loading order data... } @else { No order details found. }
   </div>
-}
+  }
+</div>

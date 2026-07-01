@@ -28,6 +28,10 @@ export class MenuService {
     return this.http.delete<RootModel>(`${environment.apiUrl}/api/menu/${id}`,{})
   }
 
+  getAllCategories():Observable<RootModel>{
+    return this.http.get<RootModel>(`${environment.apiUrl}/api/menu/all_categories`);
+  }
+
   getAllOptionGroups():Observable<RootModel>{
     return this.http.get<RootModel>(`${environment.apiUrl}/api/menu/all-option-groups`)
   }

@@ -340,4 +340,23 @@ export class User implements OnInit {
       },
     });
   }
+
+  UserStatus(user: UserModel): void {
+    this.isLoading=false;
+    this.userService.changeStatus(user.userId).subscribe({
+      next: (res) => {
+        this.isLoading=false;
+        if (res.success) {
+          user.status = !user.status; 
+          this.messageService.add({ key: 'globalMessage', severity: 'success', summary: 'Success', detail: res.message || 'User status updated successfully.' });
+          this.loadData();
+        } else {
+          this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to update user status.' });
+        }
+      },
+      error: (err) => {
+        this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'An error occurred while updating user status.' });
+      },
+    });
+  }
 }

@@ -20,6 +20,7 @@ export class AdminLayout implements OnInit {
   userProfile: any = null;
   isProfileOpen: boolean = false;
   isMobileMenuOpen: boolean = false;
+  notificationCount: number = 0;
   
 
   constructor(
@@ -34,6 +35,7 @@ export class AdminLayout implements OnInit {
         if (res.success) {
           this.userProfile = res.data;
         }
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.messageService.add({
@@ -50,6 +52,7 @@ export class AdminLayout implements OnInit {
 
   toggleProfile() {
     this.isProfileOpen = !this.isProfileOpen;
+    
   }
 
   onLogout() {

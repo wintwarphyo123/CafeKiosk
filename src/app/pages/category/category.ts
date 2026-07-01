@@ -209,9 +209,8 @@ export class Category implements OnInit {
       isActive: category.isActive ?? ''
     });
     if (category.categoryImage) {
-      this.imgSrc = category.categoryImage; // ဇယားထဲက ရရှိထားပြီးသား Image URL ကို ထည့်ပေးလိုက်တာပါ
+      this.imgSrc = category.categoryImage; 
       
-      // URL လမ်းကြောင်းထဲကနေ ဖိုင်နာမည်တစ်ခုပဲ ဖြတ်ယူပြချင်ရင် (မပြချင်လည်း ရပါတယ်)
       this.imgName = category.categoryImage.substring(category.categoryImage.lastIndexOf('/') + 1);
     } else {
       this.imgSrc = '';
@@ -273,6 +272,7 @@ export class Category implements OnInit {
         next: (res) => {
           if (res.success) {
             this.modalVisible = false;
+            this.loadData();
             this.resetImageFields();
             this.loadData();
             this.messageService.add({
@@ -330,6 +330,36 @@ export class Category implements OnInit {
       }
     });
   }
+
+  changeStatus(category: CategoryModel): void {
+   this.isLoading=true;
+    this.categoryService.changeStatus(category.categoryId).subscribe({
+      next: (res) => {
+        this.isLoading=false;
+        if (res.success) {
+          category.isActive = !category.isActive;
+          this.messageService.add({
+            key: 'globalMessage',
+            severity: 'success',
+            summary: 'success',
+            detail: 'Category status updated successfully'
+          });
+        } else {
+          this.messageService.add({ key:'globalMessage',severity: 'error', summary: 'Error', detail: res.message });
+        }
+      },
+      error: (err) => {
+        this.isLoading=false;
+        this.messageService.add({
+          key: 'globalMessage',
+          severity: 'warn',
+          summary: 'Warning',
+          detail: 'Category status update failed'
+        });
+      }
+    }); 
+  }
+
   resetImageFields() {
     this.imgBase64String = '';
     this.imgSrc = '';

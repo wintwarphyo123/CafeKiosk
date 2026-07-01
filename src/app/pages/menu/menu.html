@@ -54,8 +54,10 @@
                         </div>
                     </th>
                     }
-                    <th class="w-28 text-center py-2">{{ userRole === 'ADMIN' ? 'Actions' : 'Availability' }}</th>
-                    
+                    <th class="w-28 text-center py-2">Available</th>
+                    @if(userRole === 'ADMIN') {
+                    <th class="w-28 text-center py-2">Actions</th>
+                    }
 
 
                 </tr>
@@ -66,8 +68,8 @@
                     class="border-b border-stone-100 text-stone-600 text-[11px] hover:bg-amber-50/30 transition-colors">
 
                     <td class="py-1">
-                        <p-image [src]="rowData.menuImage ?? 'assets/images/default-placeholder.png'"
-                            alt="{{ rowData.menuName }}" [style]="{ width: '40px', height: '30px' }"
+                        <p-image [src]="rowData.menuImage ?? ''" alt="{{ rowData.menuName }}"
+                            [style]="{ width: '40px', height: '30px' }"
                             [imageStyle]="{ width: '40px', height: '30px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #e7e5e4' }"
                             preview="true" (onImageError)="handleImageError($event)">
                         </p-image>
@@ -83,9 +85,9 @@
                         }
                     </td>
                     }
-                    @if(userRole !== 'ADMIN') {
+
                     <td class="text-center py-1.5">
-                        <button (click)="toggleMenuAvailability(rowData)"
+                        <button (click)="toggleMenuAvailability(rowData)" pTooltip="Change Status" tooltipPosition="top"
                             class="cursor-pointer focus:outline-none block mx-auto transition-transform active:scale-95">
                             <span
                                 [class]="rowData.isAvailable ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'"
@@ -94,7 +96,7 @@
                             </span>
                         </button>
                     </td>
-                    }
+                    
 
                     @if(userRole === 'ADMIN') {
                     <td class="text-center py-1.5">
@@ -126,8 +128,8 @@
 
 <p-dialog header="{{ isEdited ? '☕ Edit Menu Details' : '☕ Create New Menu Item' }}" [(visible)]="modalVisible"
     appendTo="body" maskStyleClass="backdrop-blur-xs bg-stone-900/10"
-    [breakpoints]="{ '1440px': '35vw', '1024px': '50vw', '768px': '70vw', '576px': '95vw' }" [modal]="true"
-    [style]="{ 'min-width': '24vw' }" [draggable]="false" [resizable]="false">
+    [breakpoints]="{ '1440px': '45vw', '1024px': '60vw', '768px': '80vw', '576px': '95vw' }" [modal]="true"
+    [style]="{ 'min-width': '40vw' }" [draggable]="false" [resizable]="false">
 
     <form [formGroup]="menuForm" (submit)="submit()">
         <div class="grid grid-cols-1 gap-y-3 p-1 text-[11px] font-sans">
@@ -148,16 +150,16 @@
 
             <div class="flex flex-col gap-1">
                 <label class="font-bold text-stone-700">Description</label>
-                <input pInputText formControlName="description"
-                    class="w-full text-[11px] p-2 border border-stone-200 rounded focus:outline-none focus:border-amber-700"
-                    autocomplete="off" placeholder="e.g., Espresso with milk and rich caramel sauce" />
+                <textarea pInputText formControlName="description" rows="4"
+                    class="w-full text-[11px] p-2 border border-stone-200 rounded focus:outline-none focus:border-amber-700 resize-y"
+                    placeholder="Type comprehensive ingredient listings, notes, or detailed preparation processes..."></textarea>
             </div>
 
             <div class="flex flex-col gap-1">
                 <label class="font-bold text-stone-700">Category Name <span class="text-rose-500">*</span></label>
-                <p-select formControlName="categoryId" [options]="optionCategory" optionLabel="label"
-                    optionValue="value" class="w-full compact-dropdown text-[11px]"
-                    placeholder="Choose a category"></p-select>
+                <p-select formControlName="categoryId" [options]="allCategories" optionLabel="name" optionValue="id"
+                    class="w-full compact-dropdown text-[11px]" placeholder="Choose a category">
+                </p-select>
             </div>
 
             <div class="flex flex-col gap-1">
@@ -178,8 +180,7 @@
                     </div>
                     } @else {
                     <div class="text-amber-800 font-semibold flex items-center gap-1">
-                        <i class="pi pi-file-check text-[11px]"></i><span class="truncate max-w-[180px]">{{ imgName
-                            }}</span>
+                        <i class="pi pi-file-check text-[11px]"></i><span class="truncate max-w-[180px]">{{ imgName }}</span>
                     </div>
                     }
                 </div>
@@ -192,7 +193,7 @@
             </div>
 
             <div class="flex justify-end gap-1.5 mt-3 pt-2 border-t border-stone-100">
-                <button type="button" (click)="modalVisible = false;selectedMenu=null"
+                <button type="button" (click)="modalVisible = false; selectedMenu = null"
                     class="px-3 py-1.5 rounded text-stone-500 hover:bg-stone-100 font-medium">Cancel</button>
                 <button type="submit"
                     class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-4 py-1.5 rounded shadow-xs">

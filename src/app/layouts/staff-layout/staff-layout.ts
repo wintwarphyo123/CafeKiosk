@@ -21,7 +21,7 @@ export class StaffLayout implements OnInit {
   userProfile: any = null;
   isProfileOpen: boolean = false;
   searchText: string = '';
-  selectedStatus: string = 'All';
+  
   constructor(
     private userService: UserService,
     private messageService: MessageService,
@@ -56,24 +56,21 @@ export class StaffLayout implements OnInit {
     localStorage.removeItem('token');
     this.router.navigate(['/login']);
   }
+  onSearch() {
+    this.router.navigate(['/staff/kitchen-dashboard'], {
+      queryParams: { search: this.searchText },
+      queryParamsHandling: 'merge'
+    });
+  }
   changeStatus(status: string) {
-    this.selectedStatus=status;
     this.onFilterChange();
   }
 
   onFilterChange() {
-    this.router.navigate(['/staff/kitchen-dashboard'], { 
-      queryParams: { 
-        search: this.searchText.trim(), 
-        status: this.selectedStatus 
-      },
-      queryParamsHandling: 'merge'
-    });
-  }
-  onSearch() {
-
     this.router.navigate(['/staff/kitchen-dashboard'], {
-      queryParams: { search: this.searchText },
+      queryParams: {
+        search: this.searchText.trim(),
+      },
       queryParamsHandling: 'merge'
     });
   }

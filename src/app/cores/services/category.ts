@@ -26,6 +26,9 @@ export class CategoryService {
   delete(id:number):Observable<RootModel>{
     return this.http.delete<RootModel>(`${environment.apiUrl}/api/category/${id}`,{})
   }
+  changeStatus(id:number):Observable<RootModel>{
+    return this.http.put<RootModel>(`${environment.apiUrl}/api/category/${id}/update-status`,{})
+  }
   convertBase64(file: File): Observable<string> {
     const result = new ReplaySubject<string>(1);
     const reader = new FileReader();

@@ -24,3 +24,8 @@ export interface RequestMenuOptionGroupDto {
     menuId: number;
     optionGroupIds: number[];
 }
+
+export interface AllCategoryForDropDown{
+    CategoriesId:number;
+    CategoriesName:string;
+}

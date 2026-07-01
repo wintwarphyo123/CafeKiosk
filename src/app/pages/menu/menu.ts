@@ -15,9 +15,10 @@ import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
 import { MenuService } from '../../cores/services/menu';
 import { environment } from '../../../environments/environment';
-import { CategoryModel } from '../../cores/models/category.model';
+
 import { SortColumn } from '../../cores/models/root.model';
 import { Router } from '@angular/router';
+import { AllCategoryForDropDown } from '../../cores/models/menu-detail.model';
 
 @Component({
   selector: 'app-menu',
@@ -32,7 +33,6 @@ import { Router } from '@angular/router';
     TableModule,
     ConfirmDialogModule,
     InputTextModule,
-    ToastModule,
     DialogModule,
     SelectModule,
     ImageModule
@@ -43,15 +43,11 @@ import { Router } from '@angular/router';
 })
 export class Menu implements OnInit {
 
-  @ViewChild('image') image!: ElementRef<HTMLInputElement>;
-  @ViewChild('imgV') imgV!: ElementRef<HTMLInputElement>;
+  @ViewChild('imageInput') imageInput!: ElementRef<HTMLInputElement>; // Fixed Template reference variable name
 
   imgName: string = '';
-
   imgBase64String: string = '';
-
   imgSrc: String = '';
-
   thumbnailUrl: string = '/thumbnail.jpg';
   userRole: string = '';
 
@@ -60,7 +56,7 @@ export class Menu implements OnInit {
   isLoading: boolean = false;
   modalVisible: boolean = false;
   isEdited: boolean = false;
-  optionCategory: { label: string | null, value: number | null }[] = [];
+  allCategories: any[] = [];
   cols!: SortColumn[];
 
   constructor(
@@ -70,7 +66,7 @@ export class Menu implements OnInit {
     private confirmationService: ConfirmationService,
     private router: Router
   ) { }
-  //menuId,menuName,menuImage,description,price,isAvailable,categoryId,categoryName
+
   private formBuilder = inject(FormBuilder);
   public menuForm: FormGroup = this.formBuilder.group({
     id: [0],
@@ -79,10 +75,9 @@ export class Menu implements OnInit {
     description: [''],
     price: [0],
     isAvailable: [true],
-    categoryId: [0],
+    categoryId: [null], 
     categoryName: ['']
   })
-
 
   ngOnInit(): void {
     this.cols = [
@@ -93,14 +88,45 @@ export class Menu implements OnInit {
     ]
     const savedRole = localStorage.getItem('userRole') || '';
     this.userRole = savedRole.toUpperCase(); 
-    this.loadData();
+    this.categoryData();
   }
+
+  categoryData(){
+    this.isLoading = true;
+    this.menuService.getAllCategories().subscribe({
+      next: (res) => {
+        this.isLoading = false;
+        console.log('Categories API Response:', res);
+        if (!res.success) {
+          this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to load categories.' });
+          return;
+        }
+        
+        const rawCategory = Array.isArray(res.data) ? res.data : [];
+        
+        this.allCategories = rawCategory.map((item: any) => ({
+          id: item.categoriesId ?? item.id ?? item.CategoriesId ?? 0,
+          name: item.categoriesName ?? item.name ?? item.CategoriesName ?? ''
+        }));
+
+        this.cdr.detectChanges();
+       
+        this.loadData();
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.loadData(); 
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   loadData() {
     this.isLoading = true;
     this.menuService.get().subscribe({
       next: (res) => {
         this.isLoading = false;
-        console.log('API Response:', res);
+        console.log('Menu List API Response:', res);
         if (!res.success) {
           this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to load users.' });
           return;
@@ -109,31 +135,15 @@ export class Menu implements OnInit {
         this.menuModel = rawMenu.map((item) => ({
           menuId: item.Id ?? item.menuId ?? item.id ?? 0,
           menuName: item.menuName ?? '',
-          //item.categorye ? this.getImageUrl(item.categoryImage) : null,
           menuImage: item.menuImage ? this.getImageUrl(item.menuImage) : null,
           description: item.description ?? '',
           price: item.price ?? 0,
-          isAvailable: item.is_available ?? '',
+          isAvailable: item.isAvailable ?? item.is_available ?? true,
           categoryId: item.categoryId ?? 0,
           categoryName: item.categoryName ?? ''
         }));
 
-        const seen = new Set<number>();
-        this.optionCategory = this.menuModel
-          .map(cat => ({
-            label: cat.categoryName,
-            value: cat.categoryId
-          }))
-          .filter(item => {
-            if (!item.value || seen.has(item.value)) {
-              return false;
-            }
-            seen.add(item.value);
-            return true;
-          });
-
         this.cdr.detectChanges();
-        console.log(this.menuModel);
       },
       error: (err) => {
         this.isLoading = false;
@@ -161,34 +171,27 @@ export class Menu implements OnInit {
   }
 
   onUploadImg(): void {
-    this.image.nativeElement.click();
+    this.imageInput.nativeElement.click();
   }
 
   onImgChange(event: any): void {
-
-    if (this.image.nativeElement.value == '') {
+    if (this.imageInput.nativeElement.value == '') {
       this.imgName = 'None';
       return;
     }
 
-    if (this.checkValidExtension(this.image)) {
-
+    if (this.checkValidExtension(this.imageInput)) {
       const reader = new FileReader();
-
-      this.imgName = this.image.nativeElement.value;
-
+      this.imgName = this.imageInput.nativeElement.value.split('\\').pop() || '';
       const file: File = event.target.files[0];
       if (file) {
         this.menuService.convertBase64(file).subscribe((base64) => {
           this.imgBase64String = base64;
           this.menuForm.controls['menuImage'].setValue(base64);
-          console.log(this.imgBase64String);
         })
 
-        /* Show Image */
         reader.readAsDataURL(file);
         reader.onload = () => {
-          console.log(reader.result);
           this.imgSrc = reader.result as string;
           this.cdr.detectChanges();
         }
@@ -200,25 +203,23 @@ export class Menu implements OnInit {
     this.imgBase64String = '';
     this.imgSrc = '';
     this.imgName = '';
-    if (this.image && this.image.nativeElement) {
-      this.image.nativeElement.value = '';
+    if (this.imageInput && this.imageInput.nativeElement) {
+      this.imageInput.nativeElement.value = '';
     }
   }
 
   checkValidExtension(sender: ElementRef<HTMLInputElement>): boolean {
     let validExs: string[] = ['.jpg', '.png', '.jpeg'];
     let fileExt = sender.nativeElement.value;
-    fileExt = fileExt.substring(sender.nativeElement.value.toString().lastIndexOf('.'));
+    fileExt = fileExt.substring(sender.nativeElement.value.toString().lastIndexOf('.')).toLowerCase();
     if (validExs.indexOf(fileExt) < 0) {
       this.messageService.add({
-        key: 'globalMobileMessage',
+        key: 'globalMessage',
         severity: 'warn',
         summary: 'Warning',
         detail: "Please choose valid files. [Accepted file: Image]"
       });
-
       sender.nativeElement.value = '';
-
       return false;
     }
     else return true;
@@ -227,6 +228,7 @@ export class Menu implements OnInit {
   submit() {
     const formValue = this.menuForm.getRawValue();
     let menuData: any;
+    
     if (this.isEdited) {
       const currentMenuId = this.selectedMenu?.menuId ?? 0;
       menuData = {
@@ -237,7 +239,6 @@ export class Menu implements OnInit {
         description: formValue.description,
         isAvailable: formValue.isAvailable === 'true' || formValue.isAvailable === true,
         categoryId: Number(formValue.categoryId)
-
       }
       this.menuService.update(currentMenuId, menuData).subscribe({
         next: (res) => {
@@ -248,12 +249,10 @@ export class Menu implements OnInit {
             this.messageService.add({
               key: 'globalMessage',
               severity: 'success',
-              summary: 'success',
-              detail: 'Category Update Successfully'
+              summary: 'Success',
+              detail: 'Menu Updated Successfully'
             });
-
-          }
-          else {
+          } else {
             this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message });
           }
           this.selectedMenu = null;
@@ -261,17 +260,10 @@ export class Menu implements OnInit {
         error: (err) => {
           this.modalVisible = false;
           this.loadData();
-          this.messageService.add({
-            key: 'globalMessage',
-            severity: 'warn',
-            summary: 'Warning',
-            detail: 'Category Update Failed'
-          });
-        },
-        complete: () => { },
+          this.messageService.add({ key: 'globalMessage', severity: 'warn', summary: 'Warning', detail: 'Menu Update Failed' });
+        }
       })
-    }
-    else {
+    } else {
       menuData = {
         menuId: 0,
         menuName: formValue.menuName,
@@ -290,8 +282,8 @@ export class Menu implements OnInit {
             this.messageService.add({
               key: 'globalMessage',
               severity: 'success',
-              summary: 'success',
-              detail: 'Category Create Successfully'
+              summary: 'Success',
+              detail: 'Menu Created Successfully'
             });
           } else {
             this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message });
@@ -301,21 +293,23 @@ export class Menu implements OnInit {
         error: () => {
           this.modalVisible = false;
           this.loadData();
-          this.messageService.add({
-            key: 'globalMessage',
-            severity: 'warn',
-            summary: 'Warning',
-            detail: 'Category Create Fail'
-          });
-        },
-        complete: () => { },
+          this.messageService.add({ key: 'globalMessage', severity: 'warn', summary: 'Warning', detail: 'Menu Create Failed' });
+        }
       })
     }
-
   }
 
   create() {
-    this.menuForm.reset();
+    this.menuForm.reset({
+      id: 0,
+      menuName: '',
+      menuImage: '',
+      description: '',
+      price: 0,
+      isAvailable: true,
+      categoryId: null,
+      categoryName: ''
+    });
     this.resetImageFields();
     this.modalVisible = true;
     this.isEdited = false;
@@ -327,28 +321,27 @@ export class Menu implements OnInit {
     this.modalVisible = true;
     this.isEdited = true;
     this.selectedMenu = menu;
+    
+    // FIX: Match exact keys assigned on your FormGroup properties!
     this.menuForm.patchValue({
-      menuId: menu.menuId ?? 0,
+      id: menu.menuId ?? 0,
       menuName: menu.menuName ?? '',
       menuImage: menu.menuImage ?? '',
       price: menu.price ?? 0,
       description: menu.description ?? '',
-      is_available: menu.isAvailable ?? true,
-      categoryId: menu.categoryId
+      isAvailable: menu.isAvailable ?? true,
+      categoryId: menu.categoryId ?? null
     });
+
     if (menu.menuImage) {
       this.imgSrc = menu.menuImage;
-
-
       this.imgName = menu.menuImage.substring(menu.menuImage.lastIndexOf('/') + 1);
     } else {
       this.imgSrc = '';
       this.imgName = '';
     }
-
-    console.log(this.menuForm);
-
   }
+
   delete(menu: MenuModel): void {
     this.selectedMenu = menu;
     this.confirmationService.confirm({
@@ -358,60 +351,36 @@ export class Menu implements OnInit {
       accept: () => {
         this.menuService.delete(menu.menuId).subscribe({
           next: (res) => {
-            this.modalVisible = false;
-            this.messageService.add({
-              key: 'globalMessage',
-              severity: 'success',
-              summary: 'success',
-              detail: 'Menu delete Successfully'
-            });
+            this.loadData();
+            this.messageService.add({ key: 'globalMessage', severity: 'success', summary: 'Success', detail: 'Menu deleted Successfully' });
           },
           error: (err) => {
-            this.modalVisible = false;
-            this.messageService.add({
-              key: 'globalMessage',
-              severity: 'warn',
-              summary: 'Warning',
-              detail: 'Menu delete Failed'
-            });
+            this.messageService.add({ key: 'globalMessage', severity: 'warn', summary: 'Warning', detail: 'Menu delete Failed' });
           }
         });
       }
     });
   }
+
   viewDetail(rowData: any) {
     this.router.navigate(['/admin/menu/detail', rowData.menuId]);
   }
 
   toggleMenuAvailability(item: any) {
-    this.isLoading=true;
+    this.isLoading = true;
     this.menuService.changeStatus(item.menuId).subscribe({
-      next:(res)=>{
-        this.isLoading=false;
-        if(res.success){
-          item.isAvailable=!item.isAvailable;
-          this.messageService.add({
-              key: 'globalMessage',
-              severity: 'success',
-              summary: 'success',
-              detail: res.message || ' Successfully'
-            });
-        }else{
-          this.messageService.add({
-              key: 'globalMessage',
-              severity: 'error',
-              summary: 'Failed',
-              detail: ' failed'
-            });
+      next: (res) => {
+        this.isLoading = false;
+        if (res.success) {
+          item.isAvailable = !item.isAvailable;
+          this.messageService.add({ key: 'globalMessage', severity: 'success', summary: 'Success', detail: res.message || 'Status Updated' });
+        } else {
+          this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Failed', detail: 'Status change failed' });
         }
       },
-      error:(err)=>{
-        this.messageService.add({
-              key: 'globalMessage',
-              severity: 'error',
-              summary: 'Error',
-              detail: 'Something is wrong, Try again'
-            });
+      error: (err) => {
+        this.isLoading = false;
+        this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: 'Something went wrong' });
       }
     })
   }

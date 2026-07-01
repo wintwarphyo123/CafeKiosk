@@ -1,6 +1,7 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -15,10 +16,12 @@ import { ToastModule } from 'primeng/toast';
 import { OrderModel } from '../../cores/models/order.model';
 import { SortColumn } from '../../cores/models/root.model';
 import { OrderService } from '../../cores/services/order';
-import { Router } from '@angular/router';
+import { Subject, combineLatest } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-orders',
+  standalone: true,
   imports: [
     FormsModule,
     ToastModule,
@@ -29,7 +32,6 @@ import { Router } from '@angular/router';
     TableModule,
     ConfirmDialogModule,
     InputTextModule,
-    ToastModule,
     DialogModule,
     SelectModule,
     ImageModule,
@@ -40,24 +42,20 @@ import { Router } from '@angular/router';
   templateUrl: './orders.html',
   styleUrl: './orders.scss',
 })
-export class Orders implements OnInit {
+export class Orders implements OnInit, OnDestroy {
   
   orderModel: OrderModel[] = [];
+  filteredOrders: OrderModel[] = []; // Matches kitchen dashboard reactive trace array
   isLoading: boolean = false;
   modelVisible: boolean = false;
   selectedOrder: OrderModel | null = null;
   cols!: SortColumn[];
-
-  constructor(
-    private orderService: OrderService,
-    private messageService: MessageService,
-    private datePipe: DatePipe,
-    private cdr: ChangeDetectorRef,
-    private router: Router
-  ) { }
+  selectedStatus: string = 'All';
 
   private formBuilder = inject(FormBuilder);
-  //orderId,orderNumber,totalAmount,orderStatus,phoneNumber,note,createdAt
+  private destroy$ = new Subject<void>();
+  private ordersLoaded$ = new Subject<OrderModel[]>(); // Emits when API loads base elements
+
   public orderForm: FormGroup = this.formBuilder.group({
     orderId: [0],
     orderNumber: [''],
@@ -66,22 +64,38 @@ export class Orders implements OnInit {
     phoneNumber: [''],
     note: [''],
     createdAt: [new Date().toISOString().slice(0, 10)]
-
   });
+
+  constructor(
+    private orderService: OrderService,
+    private messageService: MessageService,
+    private datePipe: DatePipe,
+    private route: ActivatedRoute,
+    private cdr: ChangeDetectorRef,
+    private router: Router
+  ) { }
 
   ngOnInit(): void {
     this.cols = [
       { field: 'orderNumber', header: 'Order Number' },
       { field: 'totalAmount', header: 'Total Amount' },
       { field: 'phoneNumber', header: 'Phone Number' },
-      { field: 'note', header: 'Transition Note' },
+      { field: 'note', header: 'Transaction Note' },
       { field: 'createdAt', header: 'Ordered Date' },
-    ]
+    ];
+
+    this.initPipeline();
     this.loadData();
   }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   loadData() {
     this.isLoading = true;
-    this.orderService.get().subscribe({
+    this.orderService.get('All').pipe(takeUntil(this.destroy$)).subscribe({
       next: (res) => {
         this.isLoading = false;
         if (!res.success) {
@@ -89,15 +103,17 @@ export class Orders implements OnInit {
             key: 'globalMessage',
             severity: 'error',
             summary: 'Error',
-            detail: 'order does not exist'
+            detail: 'Order data could not be retrieved'
           });
+          return;
         }
         const rawItem = Array.isArray(res.data) ? res.data : [];
-        this.orderModel = rawItem.map((item) => {
-          const rawDate = item.createdAt ?? null;
-          // const formattedDate = rawDate
-          //   ? this.datePipe.transform(rawDate, 'yyyy MMMM dd')
-          //   : '';
+         this.orderModel = rawItem.map((item) => {
+          const rawDate = item.createdAt || null;
+          const formattedDate = rawDate
+            ? this.datePipe.transform(rawDate, 'yyyy MMMM dd')
+            : '';
+           
           return {
             orderId: item.orderId ?? 0,
             orderNumber: item.orderNumber ?? '',
@@ -105,18 +121,19 @@ export class Orders implements OnInit {
             orderStatus: item.orderStatus ?? '',
             phoneNumber: item.phoneNumber ?? '',
             note: item.note ?? '',
-            createdAt: item.createdAt ?? this.datePipe.transform(item.createdAt, 'yyy MMM dd'),
+            createdAt: formattedDate ??'', 
           };
         });
+
+        this.ordersLoaded$.next(this.orderModel);
         this.cdr.detectChanges();
-        console.log(this.orderModel)
       },
       error: (err) => {
         this.messageService.add({
           key: 'globalMessage',
           severity: 'error',
           summary: 'Error',
-          detail: 'order does not exist'
+          detail: 'An error occurred fetching orders'
         });
         this.isLoading = false;
         this.cdr.detectChanges();
@@ -124,7 +141,44 @@ export class Orders implements OnInit {
     });
   }
 
+  private initPipeline(): void {
+    combineLatest([
+      this.ordersLoaded$,
+      this.route.queryParams
+    ]).pipe(takeUntil(this.destroy$))
+      .subscribe(([orders, params]) => {
+        this.selectedStatus = params['status'] || 'All';
+        this.applyFilter(this.selectedStatus, orders);
+      });
+  }
+
+  applyFilter(statusKey: string, currentOrders: OrderModel[]): void {
+    let result = currentOrders;
+  
+    if (statusKey !== 'All') {
+      result = result.filter(o => o.orderStatus.toLowerCase() === statusKey.toLowerCase());
+    }
+
+    this.filteredOrders = result;
+    this.cdr.detectChanges();
+  }
+
   viewDetail(orderDetail: any) {
     this.router.navigate(['/admin/order/detail', orderDetail.orderId]);
+  }
+
+  changeStatus(status: string) {
+    this.selectedStatus = status;
+    this.onFilterChange();
+  }
+
+  onFilterChange() {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        status: this.selectedStatus
+      },
+      queryParamsHandling: 'merge'
+    });
   }
 }

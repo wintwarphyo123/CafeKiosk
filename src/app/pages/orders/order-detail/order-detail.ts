@@ -111,4 +111,7 @@ export class OrderDetail implements OnInit {
       default: return 'info';
     }
   }
+  goBack() {
+    this.router.navigate(['/admin/orders']);
+  }
 }

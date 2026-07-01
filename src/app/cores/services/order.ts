@@ -10,8 +10,8 @@ import { ConfirmPaymentRequest, OrderRequest } from '../models/order-detail.mode
 })
 export class OrderService {
   constructor (private http:HttpClient){}
-  get():Observable<RootModel>{
-    let url:string=`${environment.apiUrl}/api/order`;
+  get(status: string): Observable<RootModel> {
+    let url: string = `${environment.apiUrl}/api/order?orderStatus=${status}`;
     return this.http.get<RootModel>(url);
   }
 
