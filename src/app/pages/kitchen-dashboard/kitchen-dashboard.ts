@@ -151,6 +151,7 @@ export class KitchenDashboard implements OnInit, OnDestroy {
       this.route.queryParams
     ]).pipe(takeUntil(this.destroy$))
       .subscribe(([orders, params]) => {
+        this.searchText = params['search'] || '';
         const searchKey = params['search'] || '';
         const statusKey = params['status'] || 'All';
         this.applyFilter(searchKey, statusKey, orders);
@@ -158,7 +159,7 @@ export class KitchenDashboard implements OnInit, OnDestroy {
   }
 
   applyFilter(searchKey: string, statusKey: string, currentOrders: OrderResponseDto[]): void {
-    let cleanKey = searchKey.trim().toLowerCase();
+    let cleanKey = (searchKey || '').trim().toLowerCase();
 
     if (cleanKey.startsWith('#')) {
       cleanKey = cleanKey.substring(1);
@@ -168,7 +169,9 @@ export class KitchenDashboard implements OnInit, OnDestroy {
     if (statusKey !== 'All') {
       result = result.filter(o => o.orderStatus.toLowerCase() === statusKey.toLowerCase());
     }
-
+    if (statusKey && statusKey !== 'All') {
+      result = result.filter(o => o.orderStatus.toLowerCase() === statusKey.toLowerCase());
+    }
     if (cleanKey) {
       this.filteredOrders = currentOrders.filter(order =>
         order.orderNumber.toLowerCase().includes(cleanKey) ||

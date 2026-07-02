@@ -1,7 +1,6 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { ChangeDetectorRef, Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -13,16 +12,15 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
+import { combineLatest, Subject, takeUntil } from 'rxjs';
 import { OrderModel } from '../../cores/models/order.model';
+import { ActivatedRoute, Router } from '@angular/router';
 import { SortColumn } from '../../cores/models/root.model';
 import { OrderService } from '../../cores/services/order';
-import { Subject, combineLatest } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
 import { OrderNotificationService } from '../../cores/services/order-notification-service';
 
 @Component({
-  selector: 'app-orders',
-  standalone: true,
+  selector: 'app-reports',
   imports: [
     FormsModule,
     ToastModule,
@@ -40,11 +38,11 @@ import { OrderNotificationService } from '../../cores/services/order-notificatio
     DatePipe
   ],
   providers: [MessageService, ConfirmationService, DatePipe],
-  templateUrl: './orders.html',
-  styleUrl: './orders.scss',
+  templateUrl: './reports.html',
+  styleUrl: './reports.scss',
 })
-export class Orders implements OnInit, OnDestroy {
-  
+export class Reports {
+
   orderModel: OrderModel[] = [];
   filteredOrders: OrderModel[] = []; // Matches kitchen dashboard reactive trace array
   isLoading: boolean = false;
@@ -52,6 +50,11 @@ export class Orders implements OnInit, OnDestroy {
   selectedOrder: OrderModel | null = null;
   cols!: SortColumn[];
   selectedStatus: string = 'All';
+  startDate: Date | null = null;
+  endDate: Date | null = null;
+  searchValue: string = ''; 
+  sortField: string = 'createdAt';
+  sortOrder: number = -1;
 
   private formBuilder = inject(FormBuilder);
   private destroy$ = new Subject<void>();
@@ -66,6 +69,7 @@ export class Orders implements OnInit, OnDestroy {
     note: [''],
     createdAt: [new Date().toISOString().slice(0, 10)]
   });
+ 
 
   constructor(
     private orderService: OrderService,
@@ -120,12 +124,12 @@ export class Orders implements OnInit, OnDestroy {
           return;
         }
         const rawItem = Array.isArray(res.data) ? res.data : [];
-         this.orderModel = rawItem.map((item) => {
+        this.orderModel = rawItem.map((item) => {
           const rawDate = item.createdAt || null;
           const formattedDate = rawDate
             ? this.datePipe.transform(rawDate, 'yyyy MMMM dd')
             : '';
-           
+
           return {
             orderId: item.orderId ?? 0,
             orderNumber: item.orderNumber ?? '',
@@ -133,7 +137,7 @@ export class Orders implements OnInit, OnDestroy {
             orderStatus: item.orderStatus ?? '',
             phoneNumber: item.phoneNumber ?? '',
             note: item.note ?? '',
-            createdAt: formattedDate ??'', 
+            createdAt: formattedDate ?? '',
           };
         });
 
@@ -166,7 +170,7 @@ export class Orders implements OnInit, OnDestroy {
 
   applyFilter(statusKey: string, currentOrders: OrderModel[]): void {
     let result = currentOrders;
-  
+
     if (statusKey !== 'All') {
       result = result.filter(o => o.orderStatus.toLowerCase() === statusKey.toLowerCase());
     }
@@ -175,7 +179,7 @@ export class Orders implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  viewDetail(orderDetail: any) {
+  viewDetail(orderDetail: OrderModel) {
     this.router.navigate(['/admin/order/detail', orderDetail.orderId]);
   }
 
@@ -191,6 +195,124 @@ export class Orders implements OnInit, OnDestroy {
         status: this.selectedStatus
       },
       queryParamsHandling: 'merge'
+    });
+  }
+ exportToExcel() {
+    this.isLoading = true;
+
+    const startDateStr = this.startDate ? this.datePipe.transform(this.startDate, 'yyyy-MM-dd') : '';
+    const endDateStr = this.endDate ? this.datePipe.transform(this.endDate, 'yyyy-MM-dd') : '';
+
+
+    const columnsBody = this.cols.map(col => {
+    const pascalKey = col.field.charAt(0).toUpperCase() + col.field.slice(1);
+    return {
+      key: pascalKey, 
+      value: col.header
+    };
+  });
+
+    this.orderService.exportToExcel(
+      startDateStr,
+      endDateStr,
+      this.searchValue,
+      this.sortField,
+      this.sortOrder,
+      columnsBody
+    )
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (blob: Blob) => {
+        this.isLoading = false;
+        
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        
+        if (startDateStr && endDateStr) {
+          a.download = `Orders_Report_${startDateStr.replace(/-/g, '')}_to_${endDateStr.replace(/-/g, '')}.xlsx`;
+        } else {
+          a.download = `all_orders_${this.datePipe.transform(new Date(), 'yyyyMMdd')}.xlsx`;
+        }
+
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.messageService.add({
+          key: 'globalMessage',
+          severity: 'error',
+          summary: 'Export Failed',
+          detail: 'No orders found for the selected filter or failed to generate report.'
+        });
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+  
+  onDateChange() {
+    this.isLoading = true;
+    const startDateStr = (this.startDate ? this.datePipe.transform(this.startDate, 'yyyy-MM-dd') : '') as string;
+    const endDateStr = (this.endDate ? this.datePipe.transform(this.endDate, 'yyyy-MM-dd') : '') as string;
+
+    if (!startDateStr || !endDateStr) {
+      this.messageService.add({
+        key: 'globalMessage',
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Please select both start and end dates.'
+      });
+      this.isLoading = false;
+      return;
+    }
+
+    this.orderService.filterOrdersByDate(startDateStr, endDateStr).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res) => {
+        this.isLoading = false;
+        if (!res.success) {
+          this.messageService.add({
+            key: 'globalMessage',
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to filter orders by date.'
+          });
+          return;
+        }
+
+        const rawItem = Array.isArray(res.data) ? res.data : [];
+        this.filteredOrders = rawItem.map((item) => {
+          const rawDate = item.createdAt || null;
+          const formattedDate = rawDate
+            ? this.datePipe.transform(rawDate, 'yyyy MMMM dd')
+            : '';
+
+          return {
+            orderId: item.orderId ?? 0,
+            orderNumber: item.orderNumber ?? '',
+            totalAmount: item.totalAmount ?? '',
+            orderStatus: item.orderStatus ?? '',
+            phoneNumber: item.phoneNumber ?? '',
+            note: item.note ?? '',
+            createdAt: formattedDate ?? '',
+          };
+        });
+
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.messageService.add({
+          key: 'globalMessage',
+          severity: 'error',
+          summary: 'Error',
+          detail: 'An error occurred while filtering orders by date.'
+        });
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 }

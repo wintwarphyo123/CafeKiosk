@@ -13,6 +13,7 @@ import { MenuComponent } from './pages/customer/menu/menu';
 import { Orders } from './pages/orders/orders';
 import { OrderDetail } from './pages/orders/order-detail/order-detail';
 import { KitchenDashboard } from './pages/kitchen-dashboard/kitchen-dashboard';
+import { Reports } from './pages/reports/reports';
 
 export const routes: Routes = [
   // Default Application Entry Point
@@ -75,6 +76,10 @@ export const routes: Routes = [
       {
         path: 'order/detail/:id',
         component: OrderDetail
+      },
+      {
+        path:'reports',
+        component: Reports
       }
     ]
   },

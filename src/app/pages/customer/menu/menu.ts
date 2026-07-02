@@ -21,6 +21,7 @@ import { OrderService } from '../../../cores/services/order';
 import { ConfirmPaymentRequest, OrderRequest } from '../../../cores/models/order-detail.model';
 
 import { ActivatedRoute, Router } from '@angular/router';
+import { OrderNotificationService } from '../../../cores/services/order-notification-service';
 
 interface OptionItem {
   id: number;
@@ -88,6 +89,17 @@ export class MenuComponent implements OnInit {
   allOptionGroupList: any[] = [];
   cartItems: any[] = [];
   orderCount: number = 0;
+
+  currentOrder: any = {
+    orderNumber: 'N/A',
+    orderStatus: 'None'
+  };
+
+  statusSteps: any[] = [
+    { status: 'Pending', label: 'waiting', icon: 'pi pi-clock', color: '#ff9800', stepIndex: 1 },
+    { status: 'Preparing', label: 'preparing', icon: 'pi pi-cog', color: '#2196f3', stepIndex: 2 },
+    { status: 'Ready', label: 'ready', icon: 'pi pi-check-circle', color: '#4caf50', stepIndex: 3 }
+  ];
   
 
   constructor(
@@ -97,11 +109,38 @@ export class MenuComponent implements OnInit {
     private router: Router,
     private messageService: MessageService,
     private orderService: OrderService,
-    //private notificationService: NotificationService
+    private notificationService: OrderNotificationService
   ) { }
 
   ngOnInit() {
     this.loadCategory();
+    this.listenToOrderUpdates();
+
+    const savedPhone = localStorage.getItem('customerPhoneNumber');
+    if (savedPhone) {
+      this.currentOrder.orderNumber = `ID-${savedPhone.substring(savedPhone.length - 4)}`;
+      this.currentOrder.orderStatus = localStorage.getItem('lastOrderStatus') || 'Pending';
+    }
+  }
+  listenToOrderUpdates(): void {
+    this.notificationService.listenForOrderReady((data: any) => {
+      const mySavedPhoneNumber = localStorage.getItem('customerPhoneNumber');
+      
+      if (mySavedPhoneNumber && data.phoneNumber === mySavedPhoneNumber) {
+        this.currentOrder.orderStatus = data.orderStatus || 'Ready';
+        localStorage.setItem('lastOrderStatus', this.currentOrder.orderStatus);
+
+        this.messageService.add({
+          key: 'globalMessage',
+          severity: 'info',
+          summary: `🔔 Order Status: ${this.currentOrder.orderStatus}`,
+          detail: data.message || 'order is ready for pickup.',
+          sticky: true
+        });
+        
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   loadCategory(): void {
@@ -414,7 +453,7 @@ export class MenuComponent implements OnInit {
             },
             error: (err) => {
               this.isloading = false;
-              this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'order fail' });
+              this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'order fail' });
               this.cdr.detectChanges();
             }
           });

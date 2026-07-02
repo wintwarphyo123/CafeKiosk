@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -41,6 +41,33 @@ export class OrderService {
     return this.http.put<RootModel>(`${environment.apiUrl}/api/order/${orderId}/status`, { status });
   }
 
-  
+  filterOrdersByDate(startDate: string, endDate: string): Observable<RootModel> {
+    const url = `${environment.apiUrl}/api/order/filter?startDate=${startDate}&endDate=${endDate}`;
+    return this.http.get<RootModel>(url);
+  }
+
+  exportToExcel(
+    startDate: string | null | undefined,
+    endDate: string | null | undefined,
+    q: string | null | undefined,
+    sortField: string | null | undefined,
+    order: number,
+    columns: { key: string; value: string }[]
+  ): Observable<Blob> {
+    
+    let params = new HttpParams();
+    
+    if (startDate) params = params.set('startDate', startDate);
+    if (endDate) params = params.set('endDate', endDate);
+    
+    if (q) params = params.set('q', q);
+    if (sortField) params = params.set('sortfield', sortField);
+    params = params.set('order', order.toString());
+
+    return this.http.post(`${environment.apiUrl}/api/order/excel`, columns, {
+      params: params,
+      responseType: 'blob' 
+    });
+  }
 
 }
