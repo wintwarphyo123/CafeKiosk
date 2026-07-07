@@ -1,7 +1,7 @@
 export interface OrderItemRequest {
     menuId:number;
     quantity:number;
-   // optionItemSelectedId:number[];
+    optionItemSelectedIds:number[];
 }
 
 export interface OrderRequest{

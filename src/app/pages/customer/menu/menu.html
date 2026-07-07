@@ -1,39 +1,33 @@
 <div class="h-screen w-screen bg-[#FDF5ED] flex flex-col font-sans antialiased overflow-hidden">
 
-    <header
-        class="h-16 bg-white border-b border-orange-50 flex items-center justify-between px-6 shadow-sm shrink-0 z-30 gap-4">
+    <!-- HEADER NAVBAR -->
+    <header class="h-16 bg-white border-b border-orange-100/60 flex items-center justify-between px-6 shadow-xs shrink-0 z-30 gap-4">
         <div class="flex items-center gap-6 flex-1 max-w-xl">
-            <h1 class="text-lg font-black text-orange-600 shrink-0 flex items-center gap-1">
-                <img src="/Rori_Cafe.png" alt="Logo" class="w-13 h-13 object-contain" (click)="goToLogin()" />
-                Rori'Cafe
+            <h1 class="text-lg font-black text-orange-600 shrink-0 flex items-center gap-1.5 cursor-pointer" (click)="goToLogin()">
+                <img src="/Rori_Cafe.png" alt="Logo" class="w-10 h-10 object-contain" />
+                <span>Rori'Cafe</span>
             </h1>
 
             <div class="relative w-full">
                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                        stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.608 10.608Z" />
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.608 10.608Z" />
                     </svg>
                 </span>
-                <input type="text" placeholder="Search for coffee, bakery, treats..." [(ngModel)]="searchQuery"
-                    (input)="onSearchChange()"
+                <input type="text" placeholder="Search for coffee, bakery, treats..." [(ngModel)]="searchQuery" (input)="onSearchChange()"
                     class="w-full pl-9 pr-4 py-2 text-xs bg-gray-50 border border-orange-100 rounded-xl focus:outline-none focus:border-orange-400 focus:bg-white transition font-medium text-gray-700 placeholder-gray-400" />
             </div>
         </div>
 
         <div class="flex items-center gap-3">
             <button (click)="cartVisible = !cartVisible"
-                [ngClass]="cartVisible ? 'bg-orange-100 text-orange-600' : 'text-gray-700 hover:bg-orange-50'"
-                class="relative p-2 rounded-full transition">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                    stroke="currentColor" class="w-6 h-6">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+                [ngClass]="cartVisible ? 'bg-orange-100 text-orange-600' : 'text-gray-700 bg-gray-50 hover:bg-orange-50'"
+                class="relative p-2.5 rounded-full transition shadow-xs">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
                 </svg>
                 @if(cartCount > 0){
-                <span
-                    class="absolute -top-0.5 -right-0.5 bg-orange-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-black">
+                <span class="absolute -top-0.5 -right-0.5 bg-orange-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-black shadow-xs">
                     {{ cartCount }}
                 </span>
                 }
@@ -41,45 +35,50 @@
         </div>
     </header>
 
-    <nav
-        class="w-full bg-white border-b border-orange-100 px-6 py-3 shadow-sm flex items-center gap-2 overflow-x-auto no-scrollbar shrink-0 z-20">
-        <button (click)="selectCategory(null)"
-            class="flex items-center gap-2 px-4 py-2 rounded-xl transition duration-150 text-xs font-bold whitespace-nowrap shrink-0 shadow-sm border"
-            [ngClass]="selectedCategoryId === null ? 'bg-orange-500 text-white border-transparent' : 'bg-white hover:bg-orange-50 text-gray-700 border-orange-100/70'">
-            <span>✨ All Menus</span>
-        </button>
+    <!-- CATEGORY NAVIGATION BANNER -->
+    <nav class="w-full bg-white border-b border-orange-100/70 px-6 py-3 shadow-xs flex items-center gap-3 overflow-x-auto no-scrollbar shrink-0 z-20">
+    <button (click)="selectCategory(null)"
+        class="flex items-center gap-2 px-4 py-2 rounded-xl transition duration-150 text-xs font-bold whitespace-nowrap shrink-0 shadow-xs border"
+        [ngClass]="selectedCategoryId === null ? 'bg-orange-500 text-white border-transparent shadow-md' : 'bg-white hover:bg-orange-50 text-gray-700 border-orange-100/70'">
+        <span>✨ All Menus</span>
+    </button>
 
-        @for(cat of categoryModel; track cat.categoryId ){
-        <button (click)="selectCategory(cat.categoryId)"
-            class="flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-xs font-bold transition duration-150 border whitespace-nowrap shrink-0"
-            [ngClass]="selectedCategoryId === cat.categoryId ? 'bg-orange-500 text-white border-transparent shadow-sm' : 'hover:bg-orange-50 text-gray-700 border-orange-100/70'">
-            <img [src]="cat.categoryImage" [alt]="cat.categoryName" class="w-5 h-5 object-cover rounded-md" />
-            <span>{{ cat.categoryName }}</span>
-        </button>
-        }
-    </nav>
+    @for(cat of categoryModel; track cat.categoryId ){
+    <button (click)="selectCategory(cat.categoryId)"
+        class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition duration-150 border whitespace-nowrap shrink-0 shadow-xs"
+        [ngClass]="selectedCategoryId === cat.categoryId ? 'bg-orange-500 text-white border-transparent shadow-md' : 'bg-white hover:bg-orange-50 text-gray-700 border-orange-100/70'">
+        <img [src]="cat.categoryImage" [alt]="cat.categoryName" class="w-5 h-5 object-cover rounded-md shrink-0" />
+        <span class="block shrink-0">{{ cat.categoryName }}</span>
+    </button>
+    }
+</nav>
 
-    <div class="flex flex-1 overflow-hidden relative">
+    <!-- MAIN BODY GRID CONTAINER (COHESIVE COUPLING FRAME) -->
+    <div class="flex-1 w-full grid grid-cols-1" [ngClass]="cartVisible ? 'lg:grid-cols-[1fr_384px]' : 'grid-cols-1'" class="grid overflow-hidden relative">
 
-        <main class="flex-1 p-6 overflow-y-auto h-full">
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 justify-items-center">
-
+        <!-- PRODUCT GRID CANVASES WITH AUTOMATIC RE-BALANCING -->
+        <main class="w-full p-6 overflow-y-auto h-full border-r border-orange-100/30">
+            <div class="grid grid-cols-1 sm:grid-cols-2 justify-items-center gap-6 max-w-7xl mx-auto"
+                 [ngClass]="cartVisible ? 'md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4' : 'md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'">
+                
                 @for(item of filterMenuItem; track item.menuId){
-                <div
-                    class="bg-white rounded-xl p-3 shadow-sm border border-orange-50 flex flex-col justify-between w-full max-w-xs hover:shadow-md transition">
+                <div class="bg-white rounded-2xl border border-orange-100/50 flex flex-col justify-between w-full max-w-xs overflow-hidden group hover:shadow-md hover:border-orange-200 transition-all duration-300 shadow-xs">
                     <div>
-                        <div class="overflow-hidden rounded-lg cursor-pointer mb-2" (click)="openDetail(item)">
+                        <div class="overflow-hidden aspect-[4/3] bg-orange-50/30 cursor-pointer relative flex items-center justify-center border-b border-gray-50" (click)="openDetail(item)">
                             <img [src]="item.menuImage" [alt]="item.menuName"
-                                class="w-full h-32 object-cover hover:scale-105 transition duration-200" />
+                                (error)="handleImageError($event)"
+                                class="w-full h-full object-cover group-hover:scale-105 transition duration-500 ease-out" />
                         </div>
-                        <h3 class="text-sm font-bold text-gray-800 mb-0.5">{{ item.menuName }}</h3>
-                        <p class="text-xs text-gray-400 line-clamp-1 mb-2">{{ item.description }}</p>
+                        <div class="p-4 pb-2">
+                            <h3 class="text-sm font-bold text-gray-800 line-clamp-1 group-hover:text-orange-600 transition-colors">{{ item.menuName }}</h3>
+                            <p class="text-xs text-gray-400 line-clamp-2 mt-1 leading-relaxed h-8">{{ item.description }}</p>
+                        </div>
                     </div>
 
-                    <div class="flex items-center justify-between mt-1">
-                        <span class="text-base font-extrabold text-orange-600">${{ item.price | number:'1.2-2' }}</span>
+                    <div class="p-4 pt-2 flex items-center justify-between gap-2 border-t border-gray-50 mt-2 bg-gray-50/30">
+                        <span class="text-sm font-black text-orange-600 tracking-tight">{{ item.price | number:'1.2-2' }} MMK</span>
                         <button (click)="openDetail(item)"
-                            class="bg-[#A47551] hover:bg-[#8B5E3C] text-white text-xs px-2.5 py-1.5 rounded-lg font-medium transition">
+                            class="bg-[#A47551] hover:bg-[#8B5E3C] text-white text-xs px-4 py-2 rounded-xl font-bold transition shadow-xs active:scale-95">
                             Choose
                         </button>
                     </div>
@@ -88,82 +87,78 @@
             </div>
         </main>
 
+        <!-- CART SIDEBAR CONTAINER -->
         @if(cartVisible){
-        <aside
-            class="h-full w-80 bg-white border-l border-orange-100 flex flex-col shadow-xl shrink-0 z-20 transition-all duration-300">
-            <div class="p-4 border-b border-gray-100 flex items-center justify-between bg-orange-50/30">
+        <aside class="fixed inset-y-0 right-0 w-80 sm:w-96 lg:static lg:w-full bg-white border-l border-orange-100 flex flex-col shadow-2xl lg:shadow-none h-full shrink-0 z-40 lg:z-10 animate-slide-in-right">
+            <div class="p-4 border-b border-gray-100 flex items-center justify-between bg-orange-50/20">
                 <div class="flex items-center gap-2">
-                    <span class="text-base font-black text-gray-800">My Order</span>
-                    <span class="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+                    <span class="text-sm font-black text-gray-800">My Order</span>
+                    <span class="bg-orange-500 text-white text-xs px-2.5 py-0.5 rounded-full font-bold">
                         {{ cartItems.length || 0 }}
                     </span>
                 </div>
-                <button (click)="cartVisible = false" class="p-1 text-gray-400 hover:text-gray-600 rounded-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
-                        stroke="currentColor" class="w-5 h-5">
+                <button (click)="cartVisible = false" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
 
+            <!-- Scrollable Items Area -->
             <div class="flex-1 overflow-y-auto p-4 space-y-4">
                 @if(cartItems.length === 0) {
-                <div class="h-full flex flex-col items-center justify-center text-center p-6 text-gray-400">
-                    <span class="text-4xl mb-2">🛒</span>
-                    <p class="text-xs font-bold">Your cart is empty</p>
-                    <p class="text-[11px] mt-0.5 max-w-[180px]">Pick some drinks and treats to start your order!</p>
+                <div class="h-full flex flex-col items-center justify-center text-center p-6 text-gray-400 my-auto">
+                    <span class="text-4xl mb-3">🛒</span>
+                    <p class="text-xs font-bold text-gray-700">Your cart is empty</p>
+                    <p class="text-[11px] text-gray-400 mt-1 max-w-[180px] leading-relaxed">Pick some drinks and treats to start your order!</p>
                 </div>
                 } @else {
                 @for(cartItem of cartItems; track $index; let idx = $index) {
-                <div class="flex flex-col gap-2 pb-3 border-b border-gray-100 last:border-none">
-                    <div class="flex items-start justify-between gap-2">
+                <div class="flex flex-col gap-2.5 pb-4 border-b border-gray-100 last:border-none last:pb-0">
+                    <div class="flex items-start justify-between gap-3">
                         <div class="flex-1">
-                            <h4 class="text-xs font-bold text-gray-800 leading-tight">{{ cartItem.menuName }}</h4>
+                            <h4 class="text-xs font-bold text-gray-800 leading-snug">{{ cartItem.menuName }}</h4>
                             <div class="mt-1 flex flex-wrap gap-1">
                                 @for(opt of cartItem.selectedOptions | keyvalue; track $index) {
-                                <span class="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-md">
+                                <span class="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md font-medium">
                                     {{ opt.value.itemName }}
                                 </span>
                                 }
                             </div>
                         </div>
-                        <span class="text-xs font-black text-gray-800 shrink-0">
-                            ${{ cartItem.calculatedPrice | number:'1.2-2' }}
+                        <span class="text-xs font-bold text-gray-800 shrink-0">
+                            {{ cartItem.calculatedPrice | number:'1.2-2'}} MMK
                         </span>
                     </div>
 
                     <div class="flex items-center justify-between mt-1">
-                        <div class="flex items-center bg-gray-100 rounded-lg p-0.5 border border-gray-200">
-                            <button (click)="updateCartQty(idx, -1)"
-                                class="w-6 h-6 flex items-center justify-center bg-white rounded-md text-gray-600 font-bold active:scale-95 shadow-sm">-</button>
-                            <span class="text-xs font-black text-gray-800 w-6 text-center">{{ cartItem.quantity
-                                }}</span>
-                            <button (click)="updateCartQty(idx, 1)"
-                                class="w-6 h-6 flex items-center justify-center bg-white rounded-md text-gray-600 font-bold active:scale-95 shadow-sm">+</button>
+                        <div class="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-200/60">
+                            <button (click)="updateCartQty(idx, -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded-lg text-gray-600 hover:text-gray-900 font-extrabold active:scale-95 shadow-xs border border-gray-100">-</button>
+                            <span class="text-xs font-bold text-gray-800 w-7 text-center">{{ cartItem.quantity }}</span>
+                            <button (click)="updateCartQty(idx, 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded-lg text-gray-600 hover:text-gray-900 font-extrabold active:scale-95 shadow-xs border border-gray-100">+</button>
                         </div>
-                        <button (click)="removeCartItem(idx)"
-                            class="text-[11px] text-gray-400 hover:text-red-500 font-medium">Remove</button>
+                        <button (click)="removeCartItem(idx)" class="text-xs text-gray-400 hover:text-rose-500 hover:underline font-semibold transition">Remove</button>
                     </div>
                 </div>
                 }
                 }
             </div>
 
-            <div class="p-4 bg-white border-t border-gray-100 space-y-3">
-                <div class="space-y-1.5">
-                    <div class="flex justify-between text-xs text-gray-500 font-semibold">
+            <!-- Bottom Pricing Bar -->
+            <div class="p-4 bg-white border-t border-gray-100 space-y-4 shadow-lg">
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs text-gray-500 font-medium">
                         <span>Subtotal</span>
-                        <span>${{ orderSubtotal | number:'1.2-2' }}</span>
+                        <span>{{ orderSubtotal | number:'1.2-2' }} MMK</span>
                     </div>
-                    <div
-                        class="flex justify-between text-sm font-black text-gray-800 pt-1.5 border-t border-dashed border-gray-200">
+                    <div class="flex justify-between items-center text-sm font-bold text-gray-800 pt-2 border-t border-dashed border-gray-200">
                         <span>Total Price</span>
-                        <span class="text-orange-600 text-base">${{ orderSubtotal | number:'1.2-2' }}</span>
+                        <span class="text-orange-600 text-base font-black tracking-tight">{{ orderSubtotal | number:'1.2-2' }} MMK</span>
                     </div>
                 </div>
 
                 <button [disabled]="cartItems.length === 0" (click)="openPhoneDialog()"
-                    class="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-200 disabled:cursor-not-allowed text-white text-sm py-3 rounded-xl font-bold transition shadow-sm active:scale-[0.98] text-center block">
+                    class="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white text-xs py-3.5 rounded-xl font-bold transition shadow-md active:scale-[0.99] text-center block">
                     Proceed to Payment
                 </button>
             </div>
@@ -171,7 +166,8 @@
         }
     </div>
 </div>
-<!--pop up dialog-->
+
+<!-- POPUP COMPONENT DIALOG DETAILS -->
 <p-dialog [(visible)]="displayDetail" [modal]="true" [header]="selectedItem?.menuName"
     [style]="{ width: '90vw', maxWidth: '440px' }" [breakpoints]="{ '960px': '75vw', '641px': '90vw' }"
     [draggable]="false" [resizable]="false">
@@ -179,7 +175,7 @@
     @if(selectedItem){
     <div class="flex flex-col gap-4 pt-2 max-h-[75vh] overflow-y-auto">
         <div class="w-full flex justify-center">
-            <img [src]="selectedItem.menuImage" class="w-full h-40 object-cover rounded-xl shadow-inner" />
+            <img [src]="selectedItem.menuImage" class="w-full h-40 object-cover rounded-xl shadow-inner" (error)="handleImageError($event)" />
         </div>
 
         <div>
@@ -196,17 +192,16 @@
             <div class="flex flex-col gap-2">
                 @if(group.items && group.items.length > 0){
                 @for(option of group.items; track $index){
-                <div
-                    class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl text-sm transition hover:bg-gray-100">
+                <div class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl text-sm transition hover:bg-gray-100">
                     <div class="flex items-center gap-3 cursor-pointer">
-                        <p-radioButton [name]="group.groupName" [value]="option"
-                            [(ngModel)]="selectedOptions[group.groupName]" (onClick)="calculateTotalPrice()">
+                        <p-radioButton [name]="group.groupId.toString()" [value]="option"
+                            [(ngModel)]="selectedOptions[group.groupId.toString()]" (onClick)="calculateTotalPrice()">
                         </p-radioButton>
                         <label class="text-gray-700 text-xs font-semibold cursor-pointer">{{ option.itemName }}</label>
                     </div>
                     @if(option.extraPrice > 0){
                     <span class="text-xs font-bold text-green-600">
-                        +${{ option.extraPrice | number:'1.2-2' }}
+                        {{ option.extraPrice | number:'1.2-2' }} MMK
                     </span>
                     }
                 </div>
@@ -220,8 +215,7 @@
             <div class="flex items-center bg-gray-100 rounded-xl p-1 border border-gray-200">
                 <button (click)="decrementQuantity()"
                     class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-gray-600 hover:bg-gray-50 active:scale-95 transition font-bold shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
-                        stroke="currentColor" class="w-4 h-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
                     </svg>
                 </button>
@@ -230,8 +224,7 @@
 
                 <button (click)="incrementQuantity()"
                     class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-gray-600 hover:bg-gray-50 active:scale-95 transition font-bold shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
-                        stroke="currentColor" class="w-4 h-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                     </svg>
                 </button>
@@ -241,7 +234,7 @@
                 <div class="flex flex-col text-right">
                     <span class="text-[10px] text-gray-400 font-bold uppercase">Total Price</span>
                     <span class="text-base font-black text-orange-600">
-                        ${{ ((selectedItem.price + totalExtraPrice) * quantity) | number:'1.2-2' }}
+                        {{ ((selectedItem.price + totalExtraPrice) * quantity) | number:'1.2-2'}} MMK
                     </span>
                 </div>
                 <button (click)="confirmAddToCart()"
@@ -253,7 +246,8 @@
     </div>
     }
 </p-dialog>
-<!--to insert Phone number-->
+
+<!-- PHONE INPUT DIALOG -->
 <p-dialog [(visible)]="displayDialogPhone" [modal]="true" header="to know order status"
     [style]="{ width: '90vw', maxWidth: '400px' }" [draggable]="false" [resizable]="false">
 
@@ -267,14 +261,9 @@
         <div class="flex flex-col gap-1.5">
             <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Enter phone Number</label>
             <div class="relative w-full">
-                <span
-                    class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 font-bold text-xs border-r border-gray-200 pr-2">
-                    🇲🇲 +95
-                </span>
-
                 <input type="tel" placeholder="09xxxxxxxxx" [(ngModel)]="customerPhone" #phoneInput="ngModel" required
                     pattern="^(09|9)[0-9]{7,9}$"
-                    class="w-full pl-16 pr-4 py-3 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:bg-white transition font-black tracking-wide text-gray-800" />
+                    class="w-full pl-4 pr-4 py-3 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:bg-white transition font-black tracking-wide text-gray-800" />
                 @if (phoneInput.touched && phoneInput.invalid) {
                 <span class="text-red-500 text-[10px]">
                     Invalid phone number! Please enter a valid Myanmar phone number (e.g., 09xxxxxxxxx).
@@ -293,13 +282,13 @@
         </div>
     </div>
 </p-dialog>
-<!--payment dialog-->
+
+<!-- PAYMENT STATUS DIALOG -->
 <p-dialog [(visible)]="displayPaymentDialog" [modal]="true" header="payment"
     [style]="{ width: '90vw', maxWidth: '400px' }" [draggable]="false" [resizable]="false">
     <div class="flex flex-col gap-4 pt-2 text-center">
 
-        <div
-            class="flex flex-col items-center justify-center p-3 bg-gray-50 border border-dashed border-gray-200 rounded-xl">
+        <div class="flex flex-col items-center justify-center p-3 bg-gray-50 border border-dashed border-gray-200 rounded-xl">
             <div class="w-40 h-40 bg-gray-200 flex items-center justify-center rounded-lg mb-2">
                 <span class="text-xs text-gray-500">[ Scan QR Code ]</span>
             </div>
@@ -323,3 +312,111 @@
     </div>
 </p-dialog>
 
+@if (currentOrder?.orderStatus === 'Paid') {
+    <div class="m-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-center animate-pulse">
+        <p class="text-xs font-semibold text-amber-800">
+            ⚠️ There are orders ahead of you. 
+        </p>
+        <span class="text-[11px] text-amber-600 block mt-0.5">
+            Please wait inside the queue until the current order is done.
+        </span>
+    </div>
+}
+
+@if (currentOrder) {
+<div class="fixed bottom-6 right-6 z-50">
+    <button (click)="statusExpanded = !statusExpanded"
+        [ngClass]="statusExpanded ? 'bg-gray-800 rotate-90' : 'bg-orange-600 hover:bg-orange-700 active:scale-95 animate-bounce'"
+        class="w-12 h-12 rounded-full text-white flex items-center justify-center shadow-2xl transition-all duration-300 focus:outline-none relative">
+
+        @if (!statusExpanded) {
+        <i class="pi pi-receipt text-lg"></i>
+        <span class="absolute -top-1 -right-1 flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+        </span>
+        } @else {
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+        </svg>
+        }
+    </button>
+</div>
+}
+
+@if (statusExpanded && currentOrder) {
+<div (click)="statusExpanded = false" class="fixed inset-0 bg-black/40 z-40 transition-opacity duration-300"></div>
+
+<div class="fixed bottom-20 right-6 w-[calc(100vw-3rem)] sm:w-96 bg-white rounded-2xl shadow-2xl z-45 border border-orange-100 flex flex-col overflow-hidden animate-fade-in-up">
+
+    <div class="p-4 border-b border-gray-100 bg-orange-50/40 flex items-center justify-between">
+        <div>
+            <span class="text-[10px] text-orange-600 font-bold uppercase tracking-wider block">Live Kitchen Tracking</span>
+            <h4 class="text-sm font-black text-gray-800 mt-0.5">Order #{{ currentOrder.orderNumber }}</h4>
+        </div>
+        <span class="bg-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-wide">
+            {{ currentOrder.orderStatus }}
+        </span>
+    </div>
+
+    @if (isAnotherOrderWaiting) {
+    <div class="mx-4 mt-3 p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-center animate-pulse">
+        <p class="text-[11px] font-bold text-amber-800 flex items-center justify-center gap-1">
+            ⚠️ Next Order is Waiting in Queue
+        </p>
+        <span class="text-[10px] text-amber-600 block mt-0.5 font-medium">
+            Please wait! The kitchen will start the next order immediately after this one is done.
+        </span>
+    </div>
+    }
+
+    <div class="p-5 space-y-5 max-h-[60vh] overflow-y-auto bg-white">
+        @for (step of statusSteps; track step.status; let i = $index; let isLast = $last) {
+        <div class="relative flex gap-4">
+            
+            @if (!isLast) {
+            <div [ngClass]="isStepCompleted(statusSteps[i+1].status) ? 'bg-orange-500' : 'bg-gray-200'"
+                class="absolute left-3.5 top-7 bottom-[-20px] w-0.5 -ml-[1px] z-0 transition-colors duration-300">
+            </div>
+            }
+
+            <div [style.backgroundColor]="isStepCompleted(step.status) ? step.color : '#F3F4F6'"
+                [ngClass]="isStepCompleted(step.status) ? 'text-white scale-105 shadow ring-4 ring-orange-50' : 'text-gray-400'"
+                class="w-7 h-7 rounded-full flex items-center justify-center shrink-0 z-10 transition-all duration-300">
+                <i [class]="step.icon" class="text-[10px]"></i>
+            </div>
+
+            <div class="flex flex-col pt-0.5">
+                <span [ngClass]="isStepCompleted(step.status) ? 'text-gray-800 font-black' : 'text-gray-400 font-medium'"
+                    class="text-xs transition-colors duration-300">
+                    {{ step.label }}
+                </span>
+                <small class="text-[10px] text-gray-400">{{ step.status }}</small>
+
+                @if (currentOrder.orderStatus === step.status) {
+                    @if (step.status === 'Paid') {
+                    <span class="text-[10px] text-amber-600 font-bold mt-1 inline-flex items-center gap-1 animate-pulse">
+                        ⏳ In Queue - Waiting for kitchen to start...
+                    </span>
+                    }
+                    @if (step.status === 'Preparing') {
+                    <span class="text-[10px] text-orange-600 font-bold mt-1 inline-flex items-center gap-1 animate-pulse">
+                        👨‍🍳 Kitchen is preparing your order now!
+                    </span>
+                    }
+                    @if (step.status === 'Ready') {
+                    <span class="text-[10px] text-green-600 font-bold mt-1 inline-flex items-center gap-1">
+                        ✅ Done! Please collect your order.
+                    </span>
+                    }
+                }
+            </div>
+        </div>
+        }
+    </div>
+
+    <div class="p-3 bg-gray-50 border-t border-gray-100 text-center text-[10px] font-medium text-gray-400">
+        Will update in real-time. Thank you! 🙏
+    </div>
+</div>
+}

@@ -2,17 +2,6 @@
 <p-confirmDialog></p-confirmDialog>
 
 <div class="w-full max-w-7xl mx-auto p-6 text-xs font-sans selection:bg-orange-100">
-
-    <div class="mb-6 flex justify-between items-end border-b border-gray-200 pb-4">
-        <div>
-            <h2 class="text-base font-black text-gray-800 tracking-wide flex items-center gap-2">
-                📦 Order Management
-            </h2>
-            <p class="text-gray-500 text-[11px] mt-0.5">Monitor incoming checkout records, real-time transaction
-                receipts, and payment logs.</p>
-        </div>
-    </div>
-
     <div class="bg-white rounded-xl shadow-sm border border-gray-200/80 overflow-hidden">
         <p-table #dt2 [value]="filteredOrders" [columns]="cols" [paginator]="true" [rows]="10"
             [rowsPerPageOptions]="[10, 20, 50]" styleClass="p-datatable-sm custom-table" [loading]="isLoading"
@@ -87,8 +76,7 @@
                         }
 
                         @else if(col.field === 'totalAmount') {
-                        <span class="font-extrabold text-gray-900">{{ rowData[col.field] |
-                            currency:'USD':'symbol':'1.0-0' }}</span>
+                        <span class="font-extrabold text-gray-900">{{ rowData[col.field] }} MMK</span>
                         }
 
                         @else if(col.field === 'phoneNumber') {

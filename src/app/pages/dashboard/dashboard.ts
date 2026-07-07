@@ -5,6 +5,8 @@ import { ChartModule } from 'primeng/chart';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { DashboardService } from '../../cores/services/dashboard';
 import { DashboardModel, TrendingItemResponseModel } from '../../cores/models/dashboard.model';
+import { TagModule } from "primeng/tag";
+import { SelectModule } from 'primeng/select';
 
 @Component({
   selector: 'app-dashboard',
@@ -12,8 +14,10 @@ import { DashboardModel, TrendingItemResponseModel } from '../../cores/models/da
   imports: [
     CommonModule,
     FormsModule,
-    ChartModule
-  ],
+    ChartModule,
+    TagModule,
+    SelectModule,
+],
   providers: [MessageService, ConfirmationService, DatePipe],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
@@ -38,14 +42,21 @@ export class Dashboard implements OnInit {
 
   chartData: any;
   chartOptions: any;
+  firstFiveOrders: any[] = [];
   selectedPeriod: string = 'month';
   isLoading: boolean = false;
+  periodOptions: { label: string, value: string }[] = [
+    { label: 'Today', value: 'day' },
+    { label: 'This Month', value: 'month' },
+    { label: 'This Year', value: 'year' }
+  ];
 
   ngOnInit() {
     this.loadData();
     this.initChartOptions();
     this.loadChartData();
     this.loadingTrendItems();
+    this.loadOrderData();
   }
 
   loadData() {
@@ -65,6 +76,27 @@ export class Dashboard implements OnInit {
           revenue: res.data.totalRevenue || 0,
           users: res.data.totalStaff || 0
         };
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: 'Network error occurred.' });
+        this.cdr.detectChanges();
+      }
+    })
+  }
+
+  loadOrderData() {
+    this.isLoading = true;
+    this.dashboardService.getFirstFiveOrder().subscribe({
+      next: (res) => {
+        this.isLoading = false;
+        if (!res.success) {
+          this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to load orders.' });
+          return;
+        }
+        // Assuming you have a property to hold the first five orders
+        this.firstFiveOrders = res.data; // Uncomment and define firstFiveOrders if needed
         this.cdr.detectChanges();
       },
       error: (err) => {

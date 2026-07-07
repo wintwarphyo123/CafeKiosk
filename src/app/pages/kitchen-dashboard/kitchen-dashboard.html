@@ -30,11 +30,19 @@
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     @for (order of filteredOrders; track order.orderId) {
     <div
-      class="bg-white rounded-xl shadow-sm border border-slate-100 flex flex-col justify-between p-5 hover:shadow-md transition">
+      class="bg-white rounded-xl shadow-sm border border-slate-100 flex flex-col justify-between p-5 hover:shadow-md transition"
+      [class.border-slate-100]="!isLatestIncoming(order.orderId)"
+      [class.border-emerald-500]="isLatestIncoming(order.orderId)" [class.ring-4]="isLatestIncoming(order.orderId)"
+      [class.ring-emerald-100]="isLatestIncoming(order.orderId)" [class.shadow-lg]="isLatestIncoming(order.orderId)">
 
       <div class="flex justify-between items-start mb-4">
         <div>
           <h3 class="font-bold text-slate-700 text-base">#{{ order.orderNumber }}</h3>
+          @if (isLatestIncoming(order.orderId)) {
+          <span class="bg-emerald-500 text-white text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider animate-pulse">
+            Just Arrived
+          </span>
+        }
           <p class="text-xs text-slate-400 font-mono">{{ order.createdAt | date:'mediumTime' }}</p>
         </div>
         <p-tag [severity]="getPaymentSeverity(order.orderStatus)" [value]="order.orderStatus"></p-tag>
@@ -44,7 +52,7 @@
         @for (item of order.orderItems.slice(0, 3); track item.orderItemId) {
         <div class="flex justify-between text-sm text-slate-600">
           <span>{{ item.quantity }}x {{ item.menuName }}</span>
-          <span class="font-mono text-slate-400">{{ item.priceAtOrder | currency }}</span>
+          <span class="font-mono text-slate-400">{{ item.priceAtOrder }} MMK</span>
         </div>
         }
         @if (order.orderItems.length > 3) {
@@ -55,15 +63,12 @@
       <div class="flex justify-between items-center pt-2">
         <div>
           <span class="text-xs text-slate-400 block uppercase font-bold tracking-wider">Total</span>
-          <span class="text-lg font-bold text-slate-800 font-mono">{{ order.totalAmount | currency }}</span>
+          <span class="text-lg font-bold text-slate-800 font-mono">{{ order.totalAmount}}MMK</span>
         </div>
 
         <div class="flex gap-2 w-full justify-end">
-         
           <button pButton label="See Details" class="p-button-outlined p-button-sm p-button-secondary"
             (click)="viewDetail(order)"></button>
-          
-          
         </div>
       </div>
 
@@ -95,7 +100,8 @@
         Lifecycle</span>
       <div class="flex flex-wrap gap-2">
         @for (status of statusOptions; track status) {
-        <button pButton [label]="status" [disabled]="isUpdatingStatus || (selectedOrder.orderStatus === 'Pending' && status !== 'Paid' && status !== 'Cancelled' && status !== 'Pending')"
+        <button pButton [label]="status"
+          [disabled]="isUpdatingStatus || (selectedOrder.orderStatus === 'Pending' && status !== 'Paid' && status !== 'Cancelled' && status !== 'Pending')"
           [class]="selectedOrder.orderStatus === status ? 'p-button-sm font-semibold' : 'p-button-sm p-button-outlined p-button-secondary'"
           (click)="updateStatus(status)">
         </button>
@@ -103,60 +109,61 @@
       </div>
     </div>
 
-    
-      <div class="divide-y divide-slate-100 border border-slate-100 rounded-xl px-4 bg-white shadow-sm">
-        <div class="space-y-3 max-h-60 overflow-y-auto pr-1">
-          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Kitchen Item Checklist</h4>
 
-          <div class="divide-y divide-slate-100 border border-slate-100 rounded-xl px-4 bg-white shadow-sm">
-            @for (item of selectedOrder.orderItems; track item.orderItemId) {
-            <div class="py-3.5 first:pt-3 last:pb-3 flex justify-between items-start">
-              <div>
-                <div class="flex items-center gap-2">
-                  <span class="font-bold text-slate-800 text-base">{{ item.quantity }}x</span>
-                  <span class="font-semibold text-slate-700 text-base">{{ item.menuName }}</span>
-                </div>
+    <div
+      class="divide-y divide-slate-100 border border-slate-100 rounded-xl px-4 bg-white shadow-sm max-h-60 overflow-y-auto">
+      <div class="py-3">
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Kitchen Item Checklist</h4>
 
-                @if (item.selectedOptions && item.selectedOptions.length > 0) {
-                <div class="mt-1.5 flex flex-wrap gap-1.5 pl-1">
-                  @for (opt of item.selectedOptions; track opt.optionItemName) {
-                  <span
-                    class="bg-blue-50 border border-blue-100 text-[11px] text-blue-700 font-medium px-2 py-0.5 rounded-md shadow-2xs">
-                    {{ opt.optionGroupName }}: <strong class="text-blue-900 font-semibold">{{ opt.optionItemName
-                      }}</strong>
-                  </span>
-                  }
-                </div>
-                }
+        <div class="divide-y divide-slate-100">
+          @for (item of selectedOrder.orderItems; track item.orderItemId) {
+          <div class="py-3.5 flex justify-between items-start">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-800 text-base">{{ item.quantity }}x</span>
+                <span class="font-semibold text-slate-700 text-base">{{ item.menuName }}</span>
               </div>
 
-              <span class="font-mono font-bold text-slate-600 text-sm mt-0.5">
-                {{ (item.priceAtOrder * item.quantity) | currency }}
-              </span>
+              @if (item.selectedOptions && item.selectedOptions.length > 0) {
+              <div class="mt-1.5 flex flex-wrap gap-1.5 pl-1">
+                @for (opt of item.selectedOptions; track opt.optionItemName) {
+                <span
+                  class="bg-blue-50 border border-blue-100 text-[11px] text-blue-700 font-medium px-2 py-0.5 rounded-md shadow-2xs">
+                  {{ opt.optionGroupName }}: <strong class="text-blue-900 font-semibold">{{ opt.optionItemName
+                    }}</strong>
+                </span>
+                }
+              </div>
+              }
             </div>
-            } @empty {
-            <div class="text-center py-6 text-sm text-slate-400 italic">
-              No items found inside this order payload.
-            </div>
-            }
+
+            <span class="font-mono font-bold text-slate-600 text-sm mt-0.5">
+              {{ (item.priceAtOrder * item.quantity)}} MMK
+            </span>
           </div>
+          } @empty {
+          <div class="text-center py-6 text-sm text-slate-400 italic">
+            No items found inside this order payload.
+          </div>
+          }
         </div>
       </div>
     </div>
+  </div>
 
-    <div class="border-t border-slate-100 pt-3">
-      <div
-        class="flex justify-between items-center text-slate-700 mb-3 bg-emerald-50/40 border border-emerald-100/70 p-3 rounded-xl">
-        <span class="text-sm font-medium text-emerald-800">Aggregate Total Value</span>
-        <span class="font-mono text-xl font-black text-emerald-700">{{ selectedOrder.totalAmount | currency }}</span>
-      </div>
-
-      <div class="text-xs text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-200">
-        <span class="font-bold block text-slate-400 uppercase tracking-wide mb-0.5">Staff Transaction Remarks</span>
-        {{ selectedOrder.note || 'No custom notes provided for this transaction sequence.' }}
-      </div>
+  <div class="border-t border-slate-100 pt-3">
+    <div
+      class="flex justify-between items-center text-slate-700 mb-3 bg-emerald-50/40 border border-emerald-100/70 p-3 rounded-xl">
+      <span class="text-sm font-medium text-emerald-800">Aggregate Total Value</span>
+      <span class="font-mono text-xl font-black text-emerald-700">{{ selectedOrder.totalAmount}} MMK</span>
     </div>
 
- 
+    <div class="text-xs text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-200">
+      <span class="font-bold block text-slate-400 uppercase tracking-wide mb-0.5">Staff Transaction Remarks</span>
+      {{ selectedOrder.note || 'No custom notes provided for this transaction sequence.' }}
+    </div>
+  </div>
+
+
   }
 </p-dialog>

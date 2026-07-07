@@ -2,46 +2,28 @@
 <p-confirmDialog></p-confirmDialog>
 
 <div class="w-full max-w-7xl mx-auto p-4 text-[11px] font-sans selection:bg-amber-100">
-    
-    <div class="mb-4 flex justify-between items-end border-b border-stone-200 pb-2">
-        <div>
-            <h2 class="text-sm font-bold text-stone-800 tracking-wide uppercase">☕ Category Management</h2>
-            <p class="text-stone-500 text-[10px]">Manage and organize your kiosk food & beverage categories.</p>
-        </div>
-        <div>
-            <button (click)="create()" 
-                    class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-3 py-1.5 rounded text-[11px] flex items-center gap-1.5 shadow-sm transition-all">
-                <i class="pi pi-plus text-[10px]"></i> Create Category
-            </button>
-        </div>
-    </div>
-
     <div class="bg-white rounded-lg shadow-xs border border-stone-200 overflow-hidden">
-        <p-table #dt2 
-                 [value]="categoryModel" 
-                 [columns]="cols" 
-                 [paginator]="true" 
-                 [rows]="10"
-                 [rowsPerPageOptions]="[10, 20, 50]" 
-                 styleClass="p-datatable-sm p-datatable-striped" 
-                 [loading]="isLoading"
-                 [globalFilterFields]="['categoryId', 'categoryName', 'status']" 
-                 [tableStyle]="{ 'min-width': '40rem' }"
-                 selectionMode="single" 
-                 dataKey="categoryId">
+        <p-table #dt2 [value]="categoryModel" [columns]="cols" [paginator]="true" [rows]="10"
+            [rowsPerPageOptions]="[10, 20, 50]" styleClass="p-datatable-sm p-datatable-striped" [loading]="isLoading"
+            [globalFilterFields]="['categoryId', 'categoryName', 'status']" [tableStyle]="{ 'min-width': '40rem' }"
+            selectionMode="single" dataKey="categoryId">
 
             <ng-template pTemplate="caption">
-                <div class="flex w-full justify-end items-center py-1 bg-stone-50/50 px-2 border-b border-stone-100">
+                <div class="flex w-full justify-between items-center py-1 bg-stone-50/50 px-2 border-b border-stone-100">
                     <p-iconfield iconPosition="left">
                         <p-inputicon>
                             <i class="pi pi-search text-stone-400 text-[10px]"></i>
                         </p-inputicon>
-                        <input pInputText 
-                               type="text" 
-                               (input)="dt2.filterGlobal($event.target.value, 'contains')"
-                               placeholder="Quick search..." 
-                               class="text-[11px] py-1 px-2.5 border border-stone-200 rounded bg-white w-48 focus:outline-none focus:border-amber-600 transition-colors" />
+                        <input pInputText type="text" (input)="dt2.filterGlobal($event.target.value, 'contains')"
+                            placeholder="Quick search..."
+                            class="text-[11px] py-1 px-2.5 border border-stone-200 rounded bg-white w-48 focus:outline-none focus:border-amber-600 transition-colors" />
                     </p-iconfield>
+                    <div>
+                        <button (click)="create()"
+                            class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-3 py-1.5 rounded text-[11px] flex items-center gap-1.5 shadow-sm transition-all">
+                            <i class="pi pi-plus text-[10px]"></i> Create Category
+                        </button>
+                    </div>
                 </div>
             </ng-template>
 
@@ -49,9 +31,9 @@
                 <tr class="bg-stone-100 text-stone-700 text-[11px] font-bold border-b border-stone-200">
                     <th class="w-20 py-2">Image</th>
                     @for(col of columns; track col.field) {
-                        <th [pSortableColumn]="col.field" class="py-2 px-3 text-left">
-                            {{col.header}} <p-sortIcon [field]="col.field" class="text-[9px]"></p-sortIcon>
-                        </th>
+                    <th [pSortableColumn]="col.field" class="py-2 px-3 text-left">
+                        {{col.header}} <p-sortIcon [field]="col.field" class="text-[9px]"></p-sortIcon>
+                    </th>
                     }
                     <th class="w-24 text-center py-2">Status</th>
                     <th class="w-24 text-center py-2">Actions</th>
@@ -59,41 +41,41 @@
             </ng-template>
 
             <ng-template pTemplate="body" let-rowData let-columns="columns">
-                <tr [pSelectableRow]="rowData" class="border-b border-stone-100 text-stone-600 text-[11px] hover:bg-amber-50/30 transition-colors">
-                    
+                <tr [pSelectableRow]="rowData"
+                    class="border-b border-stone-100 text-stone-600 text-[11px] hover:bg-amber-50/30 transition-colors">
+
                     <td class="py-1">
-                        <p-image [src]="rowData.categoryImage ?? '' " 
-                                 alt="{{ rowData.categoryName }}"
-                                 [style]="{ width: '40px', height: '30px' }"
-                                 [imageStyle]="{ width: '40px', height: '30px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #e7e5e4' }"
-                                 preview="true" 
-                                 (onImageError)="handleImageError($event)">
-                        </p-image>
-                    </td>
-                    
+                        <p-image [src]="rowData.categoryImage ?? '' " alt="{{ rowData.categoryName }}"
+                            [style]="{ width: '40px', height: '30px' }"
+                            [imageStyle]="{ width: '40px', height: '30px', objectFit: 'cover','border-radius': '100%', border: '1px solid #e7e5e4' }" [preview]="true" (onImageError)="handleImageError($event)">
+                                preview="true" (onImageError)="handleImageError($event)">
+                            </p-image>
+                    </td>   
+
                     @for(col of columns; track col.field) {
-                        <td class="py-1.5 px-3 font-medium text-stone-800">{{ rowData[col.field] }}</td>
+                    <td class="py-1.5 px-3 font-medium text-stone-800">{{ rowData[col.field] }}</td>
                     }
-                    
+
                     <td class="text-center py-1.5">
                         <button (click)="changeStatus(rowData)" pTooltip="Change Status" tooltipPosition="top">
-                            <span [class]="rowData.isActive ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-stone-100 text-stone-400 border-stone-200'" 
-                              class="px-2 py-0.5 rounded text-[10px] font-semibold border inline-block tracking-wider">
-                            {{ rowData.isActive ? 'ACTIVE' : 'DISABLED' }}
-                        </span>
+                            <span
+                                [class]="rowData.isActive ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-stone-100 text-stone-400 border-stone-200'"
+                                class="px-2 py-0.5 rounded text-[10px] font-semibold border inline-block tracking-wider">
+                                {{ rowData.isActive ? 'ACTIVE' : 'DISABLED' }}
+                            </span>
                         </button>
                     </td>
-                    
+
                     <td class="text-center py-1.5">
                         <div class="flex gap-1 justify-center">
-                            <button (click)="update(rowData)" 
-                                    class="text-stone-600 hover:text-amber-700 p-1 rounded hover:bg-stone-100 transition-colors"
-                                    pTooltip="Edit" tooltipPosition="top">
+                            <button (click)="update(rowData)"
+                                class="text-stone-600 hover:text-amber-700 p-1 rounded hover:bg-stone-100 transition-colors"
+                                pTooltip="Edit" tooltipPosition="top">
                                 <i class="pi pi-pencil text-[11px]"></i>
                             </button>
-                            <button (click)="delete(rowData)" 
-                                    class="text-stone-400 hover:text-rose-600 p-1 rounded hover:bg-stone-100 transition-colors"
-                                    pTooltip="Delete" tooltipPosition="top">
+                            <button (click)="delete(rowData)"
+                                class="text-stone-400 hover:text-rose-600 p-1 rounded hover:bg-stone-100 transition-colors"
+                                pTooltip="Delete" tooltipPosition="top">
                                 <i class="pi pi-trash text-[11px]"></i>
                             </button>
                         </div>
@@ -104,67 +86,56 @@
     </div>
 </div>
 
-<p-dialog header="{{ isEdit ? '☕ Edit Category Details' : '☕ Create New Category' }}" 
-          [(visible)]="modalVisible"
-          maskStyleClass="backdrop-blur-xs bg-stone-900/10"
-          [breakpoints]="{ '1440px': '30vw', '1024px': '45vw', '768px': '65vw', '576px': '90vw' }" 
-          [modal]="true"
-          [style]="{ 'min-width': '22vw' }" 
-          [draggable]="false" 
-          [resizable]="false"
-          styleClass="custom-coffee-dialog">
-    
+<p-dialog header="{{ isEdit ? '☕ Edit Category Details' : '☕ Create New Category' }}" [(visible)]="modalVisible"
+    maskStyleClass="backdrop-blur-xs bg-stone-900/10"
+    [breakpoints]="{ '1440px': '30vw', '1024px': '45vw', '768px': '65vw', '576px': '90vw' }" [modal]="true"
+    [style]="{ 'min-width': '22vw' }" [draggable]="false" [resizable]="false" styleClass="custom-coffee-dialog">
+
     <form [formGroup]="categoryForm" (submit)="submit()">
         <div class="grid grid-cols-1 gap-y-3 p-1 text-[11px] font-sans">
-            
+
             <div class="flex flex-col gap-1">
                 <label for="categoryName" class="font-bold text-stone-700 tracking-wide">
                     Category Name <span class="text-rose-500">*</span>
                 </label>
-                <input pInputText 
-                       id="categoryName"
-                       formControlName="categoryName" 
-                       class="w-full text-[11px] p-2 border border-stone-200 rounded bg-stone-50/30 focus:outline-none focus:border-amber-700 transition-colors" 
-                       autocomplete="off" 
-                       placeholder="e.g., Hot Coffees, Iced Teas" />
+                <input pInputText id="categoryName" formControlName="categoryName"
+                    class="w-full text-[11px] p-2 border border-stone-200 rounded bg-stone-50/30 focus:outline-none focus:border-amber-700 transition-colors"
+                    autocomplete="off" placeholder="e.g., Hot Coffees, Iced Teas" />
             </div>
-            
+
             <div class="flex flex-col gap-1 mt-1">
                 <label class="font-bold text-stone-700 tracking-wide">Category Image</label>
-                
-                <div class="border border-dashed border-stone-300 hover:border-amber-600 bg-stone-50/50 p-3 rounded text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-1" 
-                     (click)="onUploadImg()">
-                    
+
+                <div class="border border-dashed border-stone-300 hover:border-amber-600 bg-stone-50/50 p-3 rounded text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-1"
+                    (click)="onUploadImg()">
+
                     @if(!imgName) {
-                        <div class="text-stone-400 py-1">
-                            <i class="pi pi-upload text-[12px] mr-1"></i>
-                            <span>Click to browse photo</span>
-                        </div>
+                    <div class="text-stone-400 py-1">
+                        <i class="pi pi-upload text-[12px] mr-1"></i>
+                        <span>Click to browse photo</span>
+                    </div>
                     } @else {
-                        <div class="text-amber-800 font-semibold flex items-center gap-1">
-                            <i class="pi pi-file-check text-[12px]"></i>
-                            <span class="truncate max-w-[180px]">Selected: {{ imgName }}</span>
-                        </div>
+                    <div class="text-amber-800 font-semibold flex items-center gap-1">
+                        <i class="pi pi-file-check text-[12px]"></i>
+                        <span class="truncate max-w-[180px]">Selected: {{ imgName }}</span>
+                    </div>
                     }
                 </div>
 
                 <div class="mt-1.5 bg-stone-100 p-1.5 rounded border border-stone-200 flex justify-center items-center">
-                    <img [src]="imgSrc || ''" 
-                         class="w-full max-h-36 object-cover rounded shadow-xs border border-white"
-                         (error)="handleImageError($event)" 
-                         alt="Category Cover Preview" />
+                    <img [src]="imgSrc || ''" class="w-full max-h-36 object-cover rounded shadow-xs border border-white"
+                        (error)="handleImageError($event)" alt="Category Cover Preview" />
                 </div>
             </div>
 
             <div class="flex justify-end gap-1.5 mt-3 pt-2.5 border-t border-stone-100">
-                <button type="button"
-                        (click)="modalVisible = false;selectedCategory=null"
-                        class="px-3 py-1.5 rounded text-stone-500 hover:bg-stone-100 font-medium transition-colors">
+                <button type="button" (click)="modalVisible = false;selectedCategory=null"
+                    class="px-3 py-1.5 rounded text-stone-500 hover:bg-stone-100 font-medium transition-colors">
                     Cancel
                 </button>
-                
+
                 <button type="submit"
-                        class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-4 py-1.5 rounded shadow-xs transition-colors">
+                    class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-4 py-1.5 rounded shadow-xs transition-colors">
                     {{ isEdit ? 'Update Changes' : 'Save Category' }}
                 </button>
             </div>

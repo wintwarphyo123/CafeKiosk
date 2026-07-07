@@ -1,21 +1,22 @@
-<div class="flex h-screen w-full overflow-hidden bg-stone-50/50 relative font-sans text-[11px] selection:bg-amber-100 antialiased">
+<div
+  class="flex h-screen w-full overflow-hidden bg-stone-50/50 relative font-sans text-[11px] selection:bg-amber-100 antialiased">
 
-  <div class="lg:hidden fixed top-0 left-0 right-0 h-14 text-white flex items-center justify-between px-4 z-40 shadow-sm"
-       style="background-color: #1A110B;">
+  <div
+    class="lg:hidden fixed top-0 left-0 right-0 h-14 text-white flex items-center justify-between px-4 z-40 shadow-sm"
+    style="background-color: #1A110B;">
     <div class="flex items-center gap-2">
       <i class="pi pi-coffee text-amber-400 text-base"></i>
       <span class="font-bold text-sm tracking-wide">SmartCafe Admin</span>
     </div>
     <button (click)="isMobileMenuOpen = !isMobileMenuOpen"
-            class="w-9 h-9 flex items-center justify-center rounded-lg bg-stone-800 text-stone-200 active:scale-95 transition-all">
+      class="w-9 h-9 flex items-center justify-center rounded-lg bg-stone-800 text-stone-200 active:scale-95 transition-all">
       <i class="pi" [ngClass]="isMobileMenuOpen ? 'pi-times' : 'pi-bars'"></i>
     </button>
   </div>
 
-  <div [class.translate-x-0]="isMobileMenuOpen" 
-       [class.-translate-x-full]="!isMobileMenuOpen" 
-       class="w-60 h-screen text-white flex flex-col justify-between p-4 text-[12px] shrink-0 fixed lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 pt-20 lg:pt-4 border-r border-stone-900/10"
-       style="background-color: #1A110B;">
+  <div [class.translate-x-0]="isMobileMenuOpen" [class.-translate-x-full]="!isMobileMenuOpen"
+    class="w-60 h-screen text-white flex flex-col justify-between p-4 text-[12px] shrink-0 fixed lg:relative lg:translate-x-0 transition-transform duration-300 ease-in-out z-50 pt-20 lg:pt-4 border-r border-stone-900/10"
+    style="background-color: #1A110B;">
 
     <div>
       <div class="hidden lg:flex items-center gap-3 px-2 pb-4 mb-4 border-b border-stone-800/40">
@@ -24,36 +25,44 @@
       </div>
 
       <div class="py-2 flex flex-col gap-1 overflow-y-auto">
-        <a routerLink="/admin/dashboard" routerLinkActive="bg-stone-800 text-amber-400 font-semibold" (click)="isMobileMenuOpen = false"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-stone-300 hover:bg-stone-800/40 hover:text-white transition-all">
+        <a routerLink="/admin/dashboard" routerLinkActive="bg-stone-800 text-amber-400 font-semibold"
+          (click)="isMobileMenuOpen = false"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-stone-300 hover:bg-stone-800/40 hover:text-white transition-all">
           <i class="pi pi-chart-bar text-[11px]"></i> <span>Dashboard</span>
         </a>
-        <a routerLink="/admin/menu" routerLinkActive="bg-stone-800 text-amber-400 font-semibold" (click)="isMobileMenuOpen = false"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-stone-300 hover:bg-stone-800/40 hover:text-white transition-all">
-          <i class="pi pi-book text-[11px]"></i> <span>Menus</span>
-        </a>
-        <a routerLink="/admin/category" routerLinkActive="bg-stone-800 text-amber-400 font-semibold" (click)="isMobileMenuOpen = false"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-stone-300 hover:bg-stone-800/40 hover:text-white transition-all">
+        <a routerLink="/admin/category" routerLinkActive="bg-stone-800 text-amber-400 font-semibold"
+          (click)="isMobileMenuOpen = false"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-stone-300 hover:bg-stone-800/40 hover:text-white transition-all">
           <i class="pi pi-tags text-[11px]"></i> <span>Categories</span>
         </a>
-        <a routerLink="/admin/option-group" routerLinkActive="bg-stone-800 text-amber-400 font-semibold" (click)="isMobileMenuOpen = false"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-stone-300 hover:bg-stone-800/40 hover:text-white transition-all">
+        <a routerLink="/admin/menu" routerLinkActive="bg-stone-800 text-amber-400 font-semibold"
+          (click)="isMobileMenuOpen = false"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-stone-300 hover:bg-stone-800/40 hover:text-white transition-all">
+          <i class="pi pi-book text-[11px]"></i> <span>Menus</span>
+        </a>
+        <a routerLink="/admin/option-group" routerLinkActive="bg-stone-800 text-amber-400 font-semibold"
+          (click)="isMobileMenuOpen = false"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-stone-300 hover:bg-stone-800/40 hover:text-white transition-all">
           <i class="pi pi-folder text-[11px]"></i> <span>Option Groups</span>
         </a>
-        <a routerLink="/admin/option-items" routerLinkActive="bg-stone-800 text-amber-400 font-semibold" (click)="isMobileMenuOpen = false"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-stone-300 hover:bg-stone-800/40 hover:text-white transition-all">
+        <a routerLink="/admin/option-items" routerLinkActive="bg-stone-800 text-amber-400 font-semibold"
+          (click)="isMobileMenuOpen = false"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-stone-300 hover:bg-stone-800/40 hover:text-white transition-all">
           <i class="pi pi-list text-[11px]"></i> <span>Option Items</span>
         </a>
-        <a routerLink="/admin/orders" routerLinkActive="bg-stone-800 text-amber-400 font-semibold" (click)="isMobileMenuOpen = false"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-stone-300 hover:bg-stone-800/40 hover:text-white transition-all">
+        <a routerLink="/admin/orders" routerLinkActive="bg-stone-800 text-amber-400 font-semibold"
+          (click)="isMobileMenuOpen = false"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-stone-300 hover:bg-stone-800/40 hover:text-white transition-all">
           <i class="pi pi-shopping-bag text-[11px]"></i> <span>Orders</span>
         </a>
-        <a routerLink="/admin/users" routerLinkActive="bg-stone-800 text-amber-400 font-semibold" (click)="isMobileMenuOpen = false"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-stone-300 hover:bg-stone-800/40 hover:text-white transition-all">
+        <a routerLink="/admin/users" routerLinkActive="bg-stone-800 text-amber-400 font-semibold"
+          (click)="isMobileMenuOpen = false"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-stone-300 hover:bg-stone-800/40 hover:text-white transition-all">
           <i class="pi pi-users text-[11px]"></i> <span>Users / Staff</span>
         </a>
-        <a routerLink="/admin/reports" routerLinkActive="bg-stone-800 text-amber-400 font-semibold" (click)="isMobileMenuOpen = false"
-           class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-stone-300 hover:bg-stone-800/40 hover:text-white transition-all">
+        <a routerLink="/admin/reports" routerLinkActive="bg-stone-800 text-amber-400 font-semibold"
+          (click)="isMobileMenuOpen = false"
+          class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-stone-300 hover:bg-stone-800/40 hover:text-white transition-all">
           <i class="pi pi-chart-bar text-[11px]"></i> <span>Reports</span>
         </a>
       </div>
@@ -61,38 +70,43 @@
 
     <div class="border-t border-stone-800/40 pt-4">
       <button (click)="onLogout()"
-              class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-all text-left font-medium">
+        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-all text-left font-medium">
         <i class="pi pi-sign-out text-[11px]"></i> <span>Logout</span>
       </button>
     </div>
   </div>
 
   @if(isMobileMenuOpen) {
-    <div (click)="isMobileMenuOpen = false" class="lg:hidden fixed inset-0 bg-black/50 z-40 transition-opacity"></div>
+  <div (click)="isMobileMenuOpen = false" class="lg:hidden fixed inset-0 bg-black/50 z-40 transition-opacity"></div>
   }
 
   <div class="flex-1 flex flex-col h-screen overflow-hidden pt-16 lg:pt-0">
-    
-    <div class="h-14 bg-white px-6 flex items-center justify-end gap-4 border-b border-stone-200/60 shrink-0 shadow-2xs">
+
+    <div
+      class="h-14 bg-white px-6 flex items-center justify-end gap-4 border-b border-stone-200/60 shrink-0 shadow-2xs">
       <div class="flex items-center gap-4">
-        
+
         <div class="flex items-center gap-2">
           <button (click)="clearNotifications()"
-                  class="relative w-7 h-7 flex items-center justify-center bg-amber-50 text-amber-800 rounded-md border border-amber-100/70 hover:bg-amber-100 transition-colors">
+            class="relative w-7 h-7 flex items-center justify-center bg-amber-50 text-amber-800 rounded-md border border-amber-100/70 hover:bg-amber-100 transition-colors">
             <i class="pi pi-bell text-[10px]"></i>
             @if (notificationCount > 0) {
-              <span class="absolute -top-1 -right-1 bg-amber-700 text-white font-bold text-[8px] h-3.5 w-3.5 rounded-full flex items-center justify-center animate-pulse">
-                {{ notificationCount }}
-              </span>
+            <span
+              class="absolute -top-1 -right-1 bg-amber-700 text-white font-bold text-[8px] h-3.5 w-3.5 rounded-full flex items-center justify-center animate-pulse">
+              {{ notificationCount }}
+            </span>
             }
           </button>
 
-          <button class="relative w-7 h-7 flex items-center justify-center bg-stone-50 text-stone-600 rounded-md border border-stone-200/40 hover:bg-stone-100 transition-colors">
+          <button
+            class="relative w-7 h-7 flex items-center justify-center bg-stone-50 text-stone-600 rounded-md border border-stone-200/40 hover:bg-stone-100 transition-colors">
             <i class="pi pi-envelope text-[10px]"></i>
-            <span class="absolute -top-1 -right-1 bg-amber-700 text-white font-bold text-[8px] h-3.5 w-3.5 rounded-full flex items-center justify-center">1</span>
+            <span
+              class="absolute -top-1 -right-1 bg-amber-700 text-white font-bold text-[8px] h-3.5 w-3.5 rounded-full flex items-center justify-center">1</span>
           </button>
 
-          <button class="w-7 h-7 flex items-center justify-center bg-stone-50 text-stone-600 rounded-md border border-stone-200/40 hover:bg-stone-100 transition-colors">
+          <button
+            class="w-7 h-7 flex items-center justify-center bg-stone-50 text-stone-600 rounded-md border border-stone-200/40 hover:bg-stone-100 transition-colors">
             <i class="pi pi-cog text-[10px]"></i>
           </button>
         </div>
@@ -103,40 +117,132 @@
           <div (click)="toggleProfile()" class="flex items-center gap-2.5 cursor-pointer group select-none">
             <div class="text-right hidden sm:block">
               <span class="text-stone-400 text-[9px] block font-medium leading-none mb-0.5">Hello,</span>
-              <span class="text-stone-800 font-bold block text-[11px] group-hover:text-amber-800 transition-colors leading-none">
+              <span
+                class="text-stone-800 font-bold block text-[11px] group-hover:text-amber-800 transition-colors leading-none">
                 {{ userProfile?.userName || 'Loading...' }}
               </span>
             </div>
-            <div class="w-8 h-8 rounded-full bg-amber-50 border border-amber-200/60 flex items-center justify-center text-sm shadow-2xs overflow-hidden">
-              {{ userProfile?.role === 'Admin' ? '💼' : '👩‍🍳' }}
+            <div
+              class="w-8 h-8 rounded-full bg-amber-50 border border-amber-200/60 flex items-center justify-center text-sm shadow-2xs overflow-hidden">
+              @if(userProfile.profileImage){
+              <img [src]="getImageUrl(userProfile.profileImage)" (error)="handleImageError($event)" alt="Profile Photo"
+                class="w-full h-full object-cover" />
+              }@else {
+              <img src="/thumbnail.jpg" alt="Default Avatar" class="w-full h-full object-cover opacity-80" />
+              }
+              
             </div>
           </div>
 
           @if(isProfileOpen){
-            <div class="absolute right-0 mt-2 w-52 bg-white rounded-lg border border-stone-200 shadow-lg py-2.5 z-50 animate-fade-in">
-              <div class="px-3.5 py-2 border-b border-stone-100">
-                <p class="font-bold text-stone-800 text-[12px]">{{ userProfile?.userName }}</p>
-                <p class="text-stone-400 text-[10px] truncate">{{ userProfile?.email }}</p>
-                <span class="inline-block bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded text-[8px] uppercase mt-1">
-                  {{ userProfile?.role }}
-                </span>
-              </div>
-              <div class="p-1 space-y-0.5">
-                <a routerLink="/admin/users" (click)="isProfileOpen = false"
-                   class="flex items-center gap-2 px-3 py-1.5 rounded text-stone-600 hover:bg-stone-50 transition-colors">
-                  <i class="pi pi-user text-[10px]"></i> <span>Manage Profiles</span>
-                </a>
-                <button (click)="onLogout()"
-                        class="w-full flex items-center gap-2 px-3 py-1.5 rounded text-rose-600 hover:bg-rose-50 transition-colors text-left font-semibold">
-                  <i class="pi pi-sign-out text-[10px]"></i> <span>Sign Out</span>
-                </button>
-              </div>
+          <div
+            class="absolute right-0 mt-2 w-52 bg-white rounded-lg border border-stone-200 shadow-lg py-2.5 z-50 animate-fade-in">
+            <div class="px-3.5 py-2 border-b border-stone-100">
+              <p class="font-bold text-stone-800 text-[12px]">{{ userProfile?.userName }}</p>
+              <p class="text-stone-400 text-[10px] truncate">{{ userProfile?.email }}</p>
+              <span
+                class="inline-block bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded text-[8px] uppercase mt-1">
+                {{ userProfile?.role }}
+              </span>
             </div>
+            <div class="p-1 space-y-0.5">
+              <a routerLink="/admin/users" (click)="displayUserDialog();isProfileOpen = false"
+                class="flex items-center gap-2 px-3 py-1.5 rounded text-stone-600 hover:bg-stone-50 transition-colors">
+                <i class="pi pi-user text-[10px]"></i> <span>Manage Profiles</span>
+              </a>
+              <button (click)="onLogout()"
+                class="w-full flex items-center gap-2 px-3 py-1.5 rounded text-rose-600 hover:bg-rose-50 transition-colors text-left font-semibold">
+                <i class="pi pi-sign-out text-[10px]"></i> <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
           )}
         </div>
 
       </div>
     </div>
+
+    <p-dialog header="☕ Edit Your Profile" [(visible)]="modelVisible" maskStyleClass="backdrop-blur-xs bg-stone-900/10"
+      [breakpoints]="{ '1440px': '30vw', '1024px': '45vw', '768px': '70vw', '576px': '95vw' }" [modal]="true"
+      [style]="{ width: '28rem', 'max-width': '95vw' }" [draggable]="false" [resizable]="false"
+      styleClass="custom-coffee-dialog">
+
+      <form [formGroup]="userForm" (ngSubmit)="submit()">
+        <div class="grid grid-cols-12 gap-x-4 gap-y-3 p-1 text-[11px] font-sans">
+
+          <div class="col-span-12 flex flex-col gap-1">
+            <label for="userName" class="font-bold text-stone-700 tracking-wide">User Name <span
+                class="text-rose-500">*</span></label>
+            <input pInputText id="userName" formControlName="userName" autocomplete="off"
+              class="w-full text-[11px] p-2 border border-stone-200 rounded bg-stone-50/30 focus:outline-none focus:border-amber-700 transition-colors" />
+            @if (userForm.get('userName')?.touched && userForm.get('userName')?.invalid) {
+            <small class="text-rose-500 text-[10px]">Username is required.</small>
+            }
+          </div>
+
+          <div class="col-span-12 flex flex-col gap-1">
+            <label for="email" class="font-bold text-stone-700 tracking-wide">Email <span
+                class="text-rose-500">*</span></label>
+            <input pInputText id="email" type="email" formControlName="email" autocomplete="off"
+              class="w-full text-[11px] p-2 border border-stone-200 rounded bg-stone-50/30 focus:outline-none focus:border-amber-700 transition-colors" />
+            @if (userForm.get('email')?.touched && userForm.get('email')?.invalid) {
+            <small class="text-rose-500 text-[10px]">Please enter a valid email address.</small>
+            }
+          </div>
+
+          <div class="col-span-12 flex flex-col gap-1">
+            <label for="phoneNumber" class="font-bold text-stone-700 tracking-wide">Phone Number</label>
+            <input pInputText id="phoneNumber" formControlName="phoneNumber" autocomplete="off"
+              class="w-full text-[11px] p-2 border border-stone-200 rounded bg-stone-50/30 focus:outline-none focus:border-amber-700 transition-colors" />
+          </div>
+
+          <div class="col-span-12 flex flex-col gap-1">
+            <label for="password" class="font-bold text-stone-700 tracking-wide">Change Password</label>
+            <input pInputText id="password" type="password" formControlName="password" autocomplete="off"
+              placeholder="Leave blank to keep your current password"
+              class="w-full text-[11px] p-2 border border-stone-200 rounded bg-stone-50/30 focus:outline-none focus:border-amber-700 transition-colors placeholder:text-stone-400 placeholder:text-[10px]" />
+          </div>
+
+          <div class="col-span-12 flex flex-col gap-1 mt-1">
+            <label class="font-bold text-stone-700 tracking-wide">Profile Photo</label>
+
+            <div
+              class="border border-dashed border-stone-300 hover:border-amber-600 bg-stone-50/50 p-3 rounded text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-1"
+              (click)="onUploadImg()">
+
+              @if(!imgName) {
+              <div class="text-stone-400 py-1">
+                <i class="pi pi-upload text-[12px] mr-1"></i>
+                <span>Click to upload new photo</span>
+              </div>
+              } @else {
+              <div class="text-amber-800 font-semibold flex items-center gap-1">
+                <i class="pi pi-file-check text-[12px]"></i>
+                <span class="truncate max-w-[240px]">{{ imgName }}</span>
+              </div>
+              }
+            </div>
+
+            <div class="mt-1.5 bg-stone-100 p-1.5 rounded border border-stone-200 flex justify-center items-center">
+              <img [src]="imgSrc || 'assets/images/default-avatar.png'"
+                class="max-h-24 w-24 object-cover rounded-full shadow-xs border-2 border-white"
+                (error)="handleImageError($event)" alt="User Preview Thumbnail" />
+            </div>
+          </div>
+
+          <div class="col-span-12 flex justify-end gap-1.5 mt-3 pt-2.5 border-t border-stone-100">
+            <button type="button" (click)="modelVisible = false"
+              class="px-3 py-1.5 rounded text-stone-500 hover:bg-stone-100 font-medium transition-colors text-[11px]">
+              Cancel
+            </button>
+            <button type="submit" [disabled]="userForm.invalid"
+              class="bg-amber-700 hover:bg-amber-800 disabled:bg-stone-200 disabled:text-stone-400 text-white font-bold px-4 py-1.5 rounded shadow-xs transition-colors text-[11px]">
+              Update My Profile
+            </button>
+          </div>
+        </div>
+      </form>
+    </p-dialog>
 
     <div class="flex-1 overflow-y-auto p-5 bg-stone-50/40">
       <router-outlet></router-outlet>

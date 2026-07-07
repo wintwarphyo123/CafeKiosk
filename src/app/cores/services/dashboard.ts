@@ -16,6 +16,10 @@ export class DashboardService {
   getAllTrendingItem():Observable<RootModel>{
     return this.http.get<RootModel>(`${environment.apiUrl}/api/dashboard/trending_item`);
   }
+
+  getFirstFiveOrder():Observable<RootModel>{
+    return this.http.get<RootModel>(`${environment.apiUrl}/api/dashboard/first_five_orders`);
+  }
   getRevenue(period:string):Observable<RootModel>{
     return this.http.get<RootModel>(`${environment.apiUrl}/api/dashboard/Revenue_Overview?period=${period}`);
   }

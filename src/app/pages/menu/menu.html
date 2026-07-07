@@ -2,20 +2,6 @@
 <p-confirmDialog></p-confirmDialog>
 
 <div class="w-full max-w-7xl mx-auto p-4 text-[11px] font-sans selection:bg-amber-100">
-
-    <div class="mb-4 flex justify-between items-end border-b border-stone-200 pb-2">
-        <div>
-            <h2 class="text-sm font-bold text-stone-800 tracking-wide uppercase">☕ Menu Management</h2>
-            <p class="text-stone-500 text-[10px]">Create, edit and optimize your food and beverage menu lists.</p>
-        </div>
-        <div>
-            <button (click)="create()"
-                class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-3 py-1.5 rounded text-[11px] flex items-center gap-1.5 shadow-sm transition-all">
-                <i class="pi pi-plus text-[10px]"></i> Create Menu
-            </button>
-        </div>
-    </div>
-
     <div class="bg-white rounded-lg shadow-xs border border-stone-200 overflow-hidden">
         <p-table #dt2 [value]="menuModel" [columns]="cols" [paginator]="true" [rows]="10"
             [rowsPerPageOptions]="[10, 20, 50]" styleClass="p-datatable-sm p-datatable-striped" [loading]="isLoading"
@@ -23,7 +9,8 @@
             [tableStyle]="{ 'min-width': '50rem' }" selectionMode="single" dataKey="menuId">
 
             <ng-template pTemplate="caption">
-                <div class="flex w-full justify-end items-center py-1 bg-stone-50/50 px-2 border-b border-stone-100">
+                <div
+                    class="flex w-full justify-between items-center py-1 bg-stone-50/50 px-2 border-b border-stone-100">
                     <p-iconfield iconPosition="left">
                         <p-inputicon>
                             <i class="pi pi-search text-stone-400 text-[10px]"></i>
@@ -32,6 +19,12 @@
                             placeholder="Search menu..."
                             class="text-[11px] py-1 px-2.5 border border-stone-200 rounded bg-white w-48 focus:outline-none focus:border-amber-600 transition-colors" />
                     </p-iconfield>
+                    <div>
+                        <button (click)="create()"
+                            class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-3 py-1.5 rounded text-[11px] flex items-center gap-1.5 shadow-sm transition-all">
+                            <i class="pi pi-plus text-[10px]"></i> Create Menu
+                        </button>
+                    </div>
                 </div>
             </ng-template>
 
@@ -70,7 +63,7 @@
                     <td class="py-1">
                         <p-image [src]="rowData.menuImage ?? ''" alt="{{ rowData.menuName }}"
                             [style]="{ width: '40px', height: '30px' }"
-                            [imageStyle]="{ width: '40px', height: '30px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #e7e5e4' }"
+                            [imageStyle]="{ width: '40px', height: '30px', objectFit: 'cover', 'border-radius': '100%', border: '1px solid #e7e5e4' }"
                             preview="true" (onImageError)="handleImageError($event)">
                         </p-image>
                     </td>
@@ -96,7 +89,7 @@
                             </span>
                         </button>
                     </td>
-                    
+
 
                     @if(userRole === 'ADMIN') {
                     <td class="text-center py-1.5">
@@ -135,6 +128,13 @@
         <div class="grid grid-cols-1 gap-y-3 p-1 text-[11px] font-sans">
 
             <div class="flex flex-col gap-1">
+                <label class="font-bold text-stone-700">Category Name <span class="text-rose-500">*</span></label>
+                <p-select formControlName="categoryId" [options]="allCategories" optionLabel="name" optionValue="id"
+                    class="w-full compact-dropdown text-[11px]" placeholder="Choose a category" filterBy="name" [filter]="true" [showClear]="true" appendTo="body">
+                </p-select>
+            </div>
+
+            <div class="flex flex-col gap-1">
                 <label class="font-bold text-stone-700">Menu Name <span class="text-rose-500">*</span></label>
                 <input pInputText formControlName="menuName"
                     class="w-full text-[11px] p-2 border border-stone-200 rounded focus:outline-none focus:border-amber-700"
@@ -155,12 +155,6 @@
                     placeholder="Type comprehensive ingredient listings, notes, or detailed preparation processes..."></textarea>
             </div>
 
-            <div class="flex flex-col gap-1">
-                <label class="font-bold text-stone-700">Category Name <span class="text-rose-500">*</span></label>
-                <p-select formControlName="categoryId" [options]="allCategories" optionLabel="name" optionValue="id"
-                    class="w-full compact-dropdown text-[11px]" placeholder="Choose a category">
-                </p-select>
-            </div>
 
             <div class="flex flex-col gap-1">
                 <label class="font-bold text-stone-700">Is Available <span class="text-rose-500">*</span></label>
@@ -180,7 +174,8 @@
                     </div>
                     } @else {
                     <div class="text-amber-800 font-semibold flex items-center gap-1">
-                        <i class="pi pi-file-check text-[11px]"></i><span class="truncate max-w-[180px]">{{ imgName }}</span>
+                        <i class="pi pi-file-check text-[11px]"></i><span class="truncate max-w-[180px]">{{ imgName
+                            }}</span>
                     </div>
                     }
                 </div>

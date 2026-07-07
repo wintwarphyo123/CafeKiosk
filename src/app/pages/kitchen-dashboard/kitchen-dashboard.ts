@@ -20,6 +20,7 @@ import { SortColumn } from '../../cores/models/root.model';
 import { OrderService } from '../../cores/services/order';
 import { Observable, Subject, combineLatest } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { OrderNotificationService } from '../../cores/services/order-notification-service';
 
 @Component({
   selector: 'app-kitchen-dashboard',
@@ -55,6 +56,8 @@ export class KitchenDashboard implements OnInit, OnDestroy {
   cols!: SortColumn[];
   searchText: string = '';
   selectedStatus: string = 'All';
+  shouldHighlightNew: boolean = false;
+  latestIncomingOrderId: number | null = null;
 
   statusOptions: string[] = ['Pending', 'Paid', 'Preparing', 'Ready', 'Cancelled'];
 
@@ -79,6 +82,7 @@ export class KitchenDashboard implements OnInit, OnDestroy {
     private messageService: MessageService,
     private route: ActivatedRoute,
     private cdr: ChangeDetectorRef,
+    private orderNotificationService: OrderNotificationService,
     private router: Router
   ) { }
 
@@ -91,15 +95,55 @@ export class KitchenDashboard implements OnInit, OnDestroy {
       { field: 'createdAt', header: 'Ordered Date' },
     ];
 
+    this.route.queryParams
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(params => {
+        if (params['highlightNewOrder'] === 'true') {
+          this.shouldHighlightNew = true;
+
+          // Clear highlight condition cleanly after 5 seconds
+          setTimeout(() => {
+            this.shouldHighlightNew = false;
+          }, 5000);
+        }
+      });
 
     this.initSearchPipeline();
-
     this.loadData();
+    this.listenForRefreshSignals();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+  private listenForRefreshSignals(): void {
+    this.orderNotificationService.orderRefresh$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.orderService.get('Paid').pipe(takeUntil(this.destroy$)).subscribe(res => {
+          if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+            
+            const latestPaid = res.data.reduce((latest: any, current: any) => {
+              return new Date(current.createdAt).getTime() > new Date(latest.createdAt).getTime() ? current : latest;
+            });
+
+            // 3. AUTO-TRIGGER the flash ring highlight instantly when it arrives
+            this.latestIncomingOrderId = latestPaid.orderId;
+            this.cdr.detectChanges();
+
+            // 4. Clear the highlight automatically after 8 seconds 
+            setTimeout(() => {
+              this.latestIncomingOrderId = null;
+              this.cdr.detectChanges();
+            }, 8000);
+          }
+        });
+      });
+  }
+
+  isLatestIncoming(orderId: number): boolean {
+    return this.latestIncomingOrderId === orderId;
   }
 
   loadData(): void {
@@ -169,9 +213,9 @@ export class KitchenDashboard implements OnInit, OnDestroy {
     if (statusKey !== 'All') {
       result = result.filter(o => o.orderStatus.toLowerCase() === statusKey.toLowerCase());
     }
-    if (statusKey && statusKey !== 'All') {
-      result = result.filter(o => o.orderStatus.toLowerCase() === statusKey.toLowerCase());
-    }
+    // if (statusKey && statusKey !== 'All') {
+    //   result = result.filter(o => o.orderStatus.toLowerCase() === statusKey.toLowerCase());
+    // }
     if (cleanKey) {
       this.filteredOrders = currentOrders.filter(order =>
         order.orderNumber.toLowerCase().includes(cleanKey) ||
@@ -180,9 +224,9 @@ export class KitchenDashboard implements OnInit, OnDestroy {
     }
     else {
 
-      this.filteredOrders = [...currentOrders];
+      this.filteredOrders = [...result];
     }
-    this.filteredOrders = result;
+    //this.filteredOrders = result;
     this.cdr.detectChanges();
   }
 
@@ -195,8 +239,15 @@ export class KitchenDashboard implements OnInit, OnDestroy {
 
           this.selectedOrder = {
             ...res.data,
-            orderItems: res.data.orderItems ?? []
+           orderItems: (res.data.orderItems ?? []).map((subItem: any) => ({
+              orderItemId: subItem.orderItemId,
+              quantity: subItem.quantity,
+              menuName: subItem.menuName ?? subItem.itemName ?? '',
+              priceAtOrder: subItem.priceAtOrder ?? subItem.price ?? 0,
+              selectedOptions: subItem.selectedOptions ?? [] 
+            }))
           };
+          console.log('Selected Order Details:', this.selectedOrder);
           this.sidebarVisible = true;
 
           this.orderForm.patchValue({
@@ -233,6 +284,29 @@ export class KitchenDashboard implements OnInit, OnDestroy {
 
   updateStatus(newStatus: string): void {
     if (!this.selectedOrder) return;
+    const activeKitchenQueue = this.orderModel
+    .filter(o => ['paid', 'preparing'].includes(o.orderStatus.toLowerCase()))
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+    if (activeKitchenQueue.length > 0 && activeKitchenQueue[0].orderId !== this.selectedOrder.orderId) {
+    if (['preparing', 'ready'].includes(newStatus.toLowerCase())) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Queue Order Enforced',
+        detail: `Please finish cooking Order #${activeKitchenQueue[0].orderNumber} first.`
+      });
+      return;
+    }
+  }
+
+    if(newStatus==='Ready' && this.selectedOrder.orderStatus !== 'Preparing'){
+      this.messageService.add({
+      severity: 'warn',
+      summary: 'Action Blocked',
+      detail: 'This order must be in "Preparing" status before it can be marked as Ready.'
+    });
+    return;
+    }
 
     this.isUpdatingStatus = true;
     const orderId = this.selectedOrder.orderId;
@@ -253,6 +327,7 @@ export class KitchenDashboard implements OnInit, OnDestroy {
     statusObservable$.pipe(takeUntil(this.destroy$)).subscribe({
       next: (res) => {
         this.isUpdatingStatus = false;
+        console.log('Status update response:', res);
         if (res.success) {
           this.selectedOrder!.orderStatus = newStatus;
 
@@ -318,6 +393,11 @@ export class KitchenDashboard implements OnInit, OnDestroy {
       },
       queryParamsHandling: 'merge'
     });
+  }
+
+  isNewOrder(order: any): boolean {
+    // Example condition: Highlight if the flag is active AND order status is 'Pending'/'New'
+    return this.shouldHighlightNew && order.status === 'New'; 
   }
 
 }

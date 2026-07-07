@@ -16,6 +16,7 @@ import { SortColumn } from '../../cores/models/root.model';
 import { UserService } from '../../cores/services/user';
 import { environment } from '../../../environments/environment';
 import { ImageModule } from "primeng/image";
+import { AdminLayout } from '../../layouts/admin-layout/admin-layout';
 
 @Component({
   selector: 'app-user',
@@ -75,7 +76,8 @@ export class User implements OnInit {
     private messageService: MessageService,
     private cdr: ChangeDetectorRef,
     private datePipe: DatePipe,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    public adminLayout:AdminLayout
   ) { }
 
   ngOnInit(): void {

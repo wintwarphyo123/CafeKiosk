@@ -18,6 +18,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { SortColumn } from '../../cores/models/root.model';
 import { OrderService } from '../../cores/services/order';
 import { OrderNotificationService } from '../../cores/services/order-notification-service';
+import { TagModule } from "primeng/tag";
+import { TooltipModule } from 'primeng/tooltip';
+import { DatePickerModule } from 'primeng/datepicker';
 
 @Component({
   selector: 'app-reports',
@@ -35,8 +38,11 @@ import { OrderNotificationService } from '../../cores/services/order-notificatio
     SelectModule,
     ImageModule,
     CurrencyPipe,
-    DatePipe
-  ],
+    DatePipe,
+    TagModule,
+    TooltipModule,
+    DatePickerModule
+],
   providers: [MessageService, ConfirmationService, DatePipe],
   templateUrl: './reports.html',
   styleUrl: './reports.scss',

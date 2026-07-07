@@ -93,6 +93,67 @@
         </div>
         }
       </div>
+    </div>
+    <div class="bg-white p-5 rounded-xl border border-stone-100 shadow-xs">
+      <div class="mb-4 border-b border-stone-100 pb-3 flex items-center justify-between">
+        <div>
+          <h3 class="text-xs font-bold text-stone-800 tracking-wide uppercase flex items-center gap-1.5">
+            🔥 First Five Orders
+          </h3>
+          <p class="text-stone-400 text-[10px]">Recent orders with highest values.</p>
+        </div>
+        <span
+          class="text-[10px] bg-stone-50 text-stone-500 font-medium px-2 py-0.5 rounded-full border border-stone-200/60">
+          Top 5
+        </span>
+      </div>
+
+      <div class="space-y-3 max-h-72 overflow-y-auto pr-1">
+        @for (item of firstFiveOrders; track item.orderId; let i = $index) {
+        <div
+          class="flex items-center justify-between p-2.5 rounded-xl hover:bg-stone-50 border border-transparent hover:border-stone-100/70 transition-all duration-200">
+
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-extrabold text-stone-400 w-5 text-center">
+              #{{ i + 1 }}
+            </span>
+
+            <div
+              class="w-9 h-9 bg-amber-50 border border-amber-100 rounded-lg flex items-center justify-center text-amber-700 text-sm shadow-2xs">
+              📦
+            </div>
+
+            <div>
+              <div class="font-bold text-stone-800 text-[13px] tracking-tight">
+                {{ item.orderNumber }}
+              </div>
+              <div class="text-[10px] text-stone-400 mt-0.5 font-medium">
+                {{ item.createdAt | date:'shortTime' }} • {{ item.createdAt | date:'dd MMM' }}
+              </div>
+            </div>
+          </div>
+
+          <div class="text-right flex flex-col items-end gap-1.5">
+            <span class="font-bold text-stone-900 text-[13px] tracking-tight">
+              {{ item.totalAmount | currency:'MMK':'symbol':'1.0-0' }}
+            </span>
+
+            <p-tag [value]="item.orderStatus?.toUpperCase() || 'PAID'"
+              [severity]="item.orderStatus?.toLowerCase() === 'paid' ? 'success' : item.orderStatus?.toLowerCase() === 'preparing' ? 'warn' : item.orderStatus?.toLowerCase() === 'ready' ? 'info' : 'secondary'"
+              [style]="{ 'font-size': '9px', 'font-weight': '700', 'padding': '2px 6px' }">
+            </p-tag>
+          </div>
+
+        </div>
+        } @empty {
+        <div
+          class="text-center py-10 text-stone-400 italic text-[10px] flex flex-col items-center justify-center gap-2">
+          <span class="text-lg">📋</span>
+          No trending items recorded for this timeframe.
+        </div>
+        }
+      </div>
+    </div>
   </div>
   <div class="bg-white p-5 rounded-xl border border-stone-100 shadow-xs">
     <div class="flex justify-between items-center mb-4 border-b border-stone-100 pb-3">
@@ -101,12 +162,11 @@
         <p class="text-stone-400 text-[10px]">F&B earnings timeline insights.</p>
       </div>
       <div>
-        <select [(ngModel)]="selectedPeriod" (change)="onPeriodChange()"
-          class="text-[10px] font-semibold py-1 px-2.5 border border-stone-200 rounded-lg bg-stone-50 text-stone-700 focus:outline-none focus:border-amber-700 transition-colors cursor-pointer">
-          <option value="day">Today</option>
-          <option value="month">This Month</option>
-          <option value="year">This Year</option>
-        </select>
+        <p-select [(ngModel)]="selectedPeriod" [options]="periodOptions" optionLabel="label" optionValue="value"
+          (onChange)="onPeriodChange()"
+          class="text-[10px] font-semibold py-1 px-2.5 border border-stone-200 rounded-lg bg-stone-50 text-stone-400 focus:outline-none focus:border-amber-400 transition-colors cursor-pointer"
+          [style]="{ 'font-size': '11px', 'padding': '2px 6px', 'height': '30px', 'display': 'inline-flex', 'align-items': 'center' }">
+        </p-select>
       </div>
     </div>
 
@@ -114,6 +174,4 @@
       <p-chart type="line" [data]="chartData" [options]="chartOptions"></p-chart>
     </div>
   </div>
-
-</div>
 </div>

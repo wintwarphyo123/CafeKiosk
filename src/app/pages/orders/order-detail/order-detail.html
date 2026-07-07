@@ -51,7 +51,7 @@
                   <span class="text-slate-400 font-normal mr-1">{{ opt.optionGroupName }}:</span>
                   <strong>{{ opt.optionItemName }}</strong>
                   @if(opt.extraPrice > 0) {
-                  <span class="ml-1 text-emerald-600">(+{{ opt.extraPrice | currency }})</span>
+                  <span class="ml-1 text-emerald-600">(+{{ opt.extraPrice}}MMK)</span>
                   }
                 </span>
                 }
@@ -70,12 +70,12 @@
       <div class="space-y-2 text-sm text-gray-600 pb-4 border-b border-dashed border-slate-300">
         <div class="flex justify-between">
           <span>Subtotal</span>
-          <span class="font-mono">{{ selectedOrder.totalAmount | currency }}</span>
+          <span class="font-mono">{{ selectedOrder.totalAmount}}MMK</span>
         </div>
 
         <div class="flex justify-between text-lg font-bold text-gray-900 pt-1">
           <span>Total Amount</span>
-          <span class="font-mono text-xl text-emerald-700">{{ selectedOrder.totalAmount | currency }}</span>
+          <span class="font-mono text-xl text-emerald-700">{{ selectedOrder.totalAmount }}MMK</span>
         </div>
       </div>
 

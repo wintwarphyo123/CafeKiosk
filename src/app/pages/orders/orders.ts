@@ -36,7 +36,6 @@ import { OrderNotificationService } from '../../cores/services/order-notificatio
     DialogModule,
     SelectModule,
     ImageModule,
-    CurrencyPipe,
     DatePipe
   ],
   providers: [MessageService, ConfirmationService, DatePipe],
@@ -45,7 +44,7 @@ import { OrderNotificationService } from '../../cores/services/order-notificatio
 })
 export class Orders implements OnInit, OnDestroy {
   
-  orderModel: OrderModel[] = [];
+  orderModel: any[] = [];
   filteredOrders: OrderModel[] = []; // Matches kitchen dashboard reactive trace array
   isLoading: boolean = false;
   modelVisible: boolean = false;
@@ -97,7 +96,6 @@ export class Orders implements OnInit, OnDestroy {
   }
 
   private listenForRefreshSignals(): void {
-    // Whenever a new order hits the service socket, reload table entries automatically
     this.orderNotificationService.orderRefresh$
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
@@ -119,23 +117,23 @@ export class Orders implements OnInit, OnDestroy {
           });
           return;
         }
-        const rawItem = Array.isArray(res.data) ? res.data : [];
-         this.orderModel = rawItem.map((item) => {
-          const rawDate = item.createdAt || null;
-          const formattedDate = rawDate
-            ? this.datePipe.transform(rawDate, 'yyyy MMMM dd')
-            : '';
+        const rawItems = Array.isArray(res.data) ? res.data : [];
+        //  this.orderModel = rawItem.map((item) => {
+        //   const rawDate = item.createdAt || null;
+        //   const formattedDate = rawDate
+        //     ? this.datePipe.transform(rawDate, 'yyyy MMMM dd')
+        //     : '';
            
-          return {
-            orderId: item.orderId ?? 0,
-            orderNumber: item.orderNumber ?? '',
-            totalAmount: item.totalAmount ?? '',
-            orderStatus: item.orderStatus ?? '',
-            phoneNumber: item.phoneNumber ?? '',
-            note: item.note ?? '',
-            createdAt: formattedDate ??'', 
-          };
-        });
+          this.orderModel = rawItems.map((item) =>({
+            ...item,
+          orderId: item.orderId ?? 0,
+          orderNumber: item.orderNumber ?? '',
+          totalAmount: item.totalAmount ?? 0,
+          orderStatus: item.orderStatus ?? '',
+          phoneNumber: item.phoneNumber ?? '',
+          note: item.note ?? '',
+          createdAt: item.createdAt ?? ''
+          }));
 
         this.ordersLoaded$.next(this.orderModel);
         this.cdr.detectChanges();

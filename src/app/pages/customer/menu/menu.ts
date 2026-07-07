@@ -19,9 +19,10 @@ import { environment } from '../../../../environments/environment';
 import { MenuService } from '../../../cores/services/menu';
 import { OrderService } from '../../../cores/services/order';
 import { ConfirmPaymentRequest, OrderRequest } from '../../../cores/models/order-detail.model';
-
-import { ActivatedRoute, Router } from '@angular/router';
+import { TimelineModule } from 'primeng/timeline';
+import { Router } from '@angular/router';
 import { OrderNotificationService } from '../../../cores/services/order-notification-service';
+import { BadgeModule } from 'primeng/badge';
 
 interface OptionItem {
   id: number;
@@ -32,6 +33,7 @@ interface OptionItem {
 }
 
 interface GroupedOptions {
+  groupId:number;
   groupName: string;
   items: OptionItem[];
 }
@@ -53,26 +55,32 @@ interface GroupedOptions {
     DialogModule,
     SelectModule,
     ImageModule,
-    RadioButtonModule
+    RadioButtonModule,
+    TimelineModule, // HTML Timeline အတွက်
+    BadgeModule
   ],
   providers: [MessageService, ConfirmationService, DatePipe],
   templateUrl: './menu.html',
   styleUrls: ['./menu.scss']
 })
 export class MenuComponent implements OnInit {
+
   cartVisible: boolean = false;
   orderSubtotal: number = 1;
+  thumbnailUrl: string = '/thumbnail.jpg';
 
   sidebarVisible: boolean = false;
   cartCount: number = 0;
   isloading: boolean = false;
   displayDialogPhone: boolean = false;
   displayPaymentDialog: boolean = false;
+  statusExpanded: boolean = false;
   customerPhone: string = '';
   transitionNote: string = '';
   quantity: number = 1;
   pendingOrderPayload: any = null;
-  searchQuery:string='';
+  isAnotherOrderWaiting: boolean = true;
+  searchQuery: string = '';
 
   displayDetail: boolean = false;
   selectedItem: any = null;
@@ -96,11 +104,11 @@ export class MenuComponent implements OnInit {
   };
 
   statusSteps: any[] = [
-    { status: 'Pending', label: 'waiting', icon: 'pi pi-clock', color: '#ff9800', stepIndex: 1 },
+    { status: 'Paid', label: 'waiting', icon: 'pi pi-clock', color: '#ff9800', stepIndex: 1 },
     { status: 'Preparing', label: 'preparing', icon: 'pi pi-cog', color: '#2196f3', stepIndex: 2 },
     { status: 'Ready', label: 'ready', icon: 'pi pi-check-circle', color: '#4caf50', stepIndex: 3 }
   ];
-  
+
 
   constructor(
     private categoryService: CategoryService,
@@ -116,31 +124,97 @@ export class MenuComponent implements OnInit {
     this.loadCategory();
     this.listenToOrderUpdates();
 
-    const savedPhone = localStorage.getItem('customerPhoneNumber');
-    if (savedPhone) {
-      this.currentOrder.orderNumber = `ID-${savedPhone.substring(savedPhone.length - 4)}`;
-      this.currentOrder.orderStatus = localStorage.getItem('lastOrderStatus') || 'Pending';
+    const savedOrderId = localStorage.getItem('currentKioskOrderId');
+    if (savedOrderId) {
+      this.currentOrder = {
+        orderId: Number(savedOrderId),
+        orderNumber: localStorage.getItem('currentKioskOrderNumber') || 'N/A',
+        orderStatus: localStorage.getItem('lastOrderStatus') || 'Paid'
+      };
     }
   }
+
   listenToOrderUpdates(): void {
     this.notificationService.listenForOrderReady((data: any) => {
-      const mySavedPhoneNumber = localStorage.getItem('customerPhoneNumber');
-      
-      if (mySavedPhoneNumber && data.phoneNumber === mySavedPhoneNumber) {
-        this.currentOrder.orderStatus = data.orderStatus || 'Ready';
-        localStorage.setItem('lastOrderStatus', this.currentOrder.orderStatus);
+      const savedOrderId = localStorage.getItem('currentKioskOrderId');
 
-        this.messageService.add({
-          key: 'globalMessage',
-          severity: 'info',
-          summary: `🔔 Order Status: ${this.currentOrder.orderStatus}`,
-          detail: data.message || 'order is ready for pickup.',
-          sticky: true
-        });
+      if (savedOrderId && Number(data.orderId) === Number(savedOrderId)) {
+        this.currentOrder.orderStatus = data.orderStatus;
+        localStorage.setItem('lastOrderStatus', data.orderStatus);
         
+        console.log("Current Kiosk Order is Ready:", savedOrderId);
+        if (data.orderStatus === 'Ready') {
+          this.isAnotherOrderWaiting = false;
+        }
         this.cdr.detectChanges();
+        return; 
+      }
+
+      if (data.orderStatus === 'Preparing') {
+        const currentLocalStatus = localStorage.getItem('lastOrderStatus');
+        
+        if (!savedOrderId || currentLocalStatus === 'Ready' || currentLocalStatus === 'None') {
+          
+          if (data.hasOrdersInQueue === true) {
+            this.isAnotherOrderWaiting = true;
+            this.cdr.detectChanges();
+            return; 
+          }
+
+          this.currentOrder = {
+            orderId: data.orderId,
+            orderNumber: data.orderNumber || ('ORD-' + data.orderId),
+            orderStatus: 'Preparing'
+          };
+          localStorage.setItem('currentKioskOrderId', data.orderId.toString());
+          localStorage.setItem('currentKioskOrderNumber', this.currentOrder.orderNumber);
+          localStorage.setItem('lastOrderStatus', 'Preparing');
+          this.isAnotherOrderWaiting = false;
+          
+          this.messageService.add({
+            key: 'globalMessage',
+            severity: 'success',
+            summary: 'Queue Switched',
+            detail: `Displaying active Kitchen Order #${this.currentOrder.orderNumber}`,
+            life: 4000
+          });
+          this.cdr.detectChanges();
+        }
       }
     });
+
+    this.notificationService.listenForNewOrder((data: any) => {
+      const savedOrderId = localStorage.getItem('currentKioskOrderId');
+      if (savedOrderId && Number(data.orderId) !== Number(savedOrderId)) {
+        if (this.currentOrder.orderStatus === 'Preparing' || this.currentOrder.orderStatus === 'Paid') {
+          this.isAnotherOrderWaiting = true;
+          this.messageService.add({
+            key: 'globalMessage',
+            severity: 'info',
+            summary: 'Queue Alert',
+            detail: 'A new order has been queued! Please wait until the active order is finished.',
+            life: 6000
+          });
+          this.cdr.detectChanges();
+        }
+      }
+    });
+  }
+
+  isStepCompleted(stepStatus: string): boolean {
+    const currentStatus = this.currentOrder.orderStatus;
+
+    const statusWeights: { [key: string]: number } = {
+      'None': 0,
+      'Paid': 1,
+      'Preparing': 2,
+      'Ready': 3
+    };
+
+    const currentWeight = statusWeights[currentStatus] || 1;
+    const targetWeight = statusWeights[stepStatus] || 0;
+
+    return currentWeight >= targetWeight;
   }
 
   loadCategory(): void {
@@ -186,16 +260,25 @@ export class MenuComponent implements OnInit {
 
     return `${base}/images/category/${path}`;
   }
+  handleImageError(event: any) {
+    event.target.src = this.thumbnailUrl;
+  }
 
   getMenuDetailOption(): void {
+    this.isloading = true;
     this.menuService.getAllOptionGroups().subscribe({
       next: (res) => {
-        this.allOptionGroupList = res.data ? res.data : (Array.isArray(res) ? res : []);
-        this.loadMenu();
+        this.isloading = false;
+        if (res.success) {
+          this.allOptionGroupList = res.data ? res.data : (Array.isArray(res) ? res : []);
+          this.loadMenu();
+        }
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'Failed to load category.' });
         this.loadMenu();
+        this.cdr.detectChanges();
       }
     })
   }
@@ -223,7 +306,6 @@ export class MenuComponent implements OnInit {
           categoryName: item.categoryName ?? ''
         }));
         this.filterMenuByCategory();
-
         this.cdr.detectChanges();
         console.log(this.menuModel);
       },
@@ -250,43 +332,55 @@ export class MenuComponent implements OnInit {
   }
 
   openDetail(item: any) {
-    if (!item || !item.menuId) {
-      console.error("Cannot open detail: menuId is missing", item);
-      return;
-    }
-    this.selectedItem = item;
-    this.selectedOptions = {};
-    this.totalExtraPrice = 0;
-    this.quantity = 1;
-    this.groupedOptions = [];
-    this.menuService.getMenudetail(item.menuId).subscribe({
-      next: (res) => {
-        if (res.success && res.data) {
-          const linkedGroup = res.data.optionGroups || [];
-          const linkedGroupIds = linkedGroup.map((g: any) => Number(g.groupId || g.id));
-          this.groupedOptions = this.allOptionGroupList.filter(group => group && linkedGroupIds.includes(Number(group.groupId || group.id))
-          ).map(group => ({
+  if (!item || !item.menuId) {
+    console.error("Cannot open detail: menuId is missing", item);
+    return;
+  }
+  this.selectedItem = item;
+  this.selectedOptions = {};
+  this.totalExtraPrice = 0;
+  this.quantity = 1;
+  this.groupedOptions = [];
+
+  this.menuService.getMenudetail(item.menuId).subscribe({
+    next: (res) => {
+      if (res.success && res.data) {
+        const linkedGroup = res.data.optionGroups || [];
+        const linkedGroupIds = linkedGroup.map((g: any) => Number(g.groupId || g.id));
+        
+        this.groupedOptions = this.allOptionGroupList
+          .filter(group => group && linkedGroupIds.includes(Number(group.groupId || group.id)))
+          .map(group => ({
             groupId: group.groupId || group.id,
             groupName: group.groupName || group.name,
-            items: group.items || group.options || group.optionItems || []
+            // Ensure child items match database column keys (id vs optionItemId)
+            items: (group.items || group.options || group.optionItems || []).map((oi: any) => ({
+              id: oi.id ?? oi.itemId ?? oi.optionItemId,
+              itemName: oi.itemName ?? oi.name,
+              extraPrice: oi.extraPrice ?? 0,
+              optionGroupId: group.groupId || group.id,
+              groupName: group.groupName || group.name
+            }))
           }));
-          this.groupedOptions.forEach(group => {
-            if (group.items.length > 0) {
-              this.selectedOptions[group.groupName] = group.items[0];
-            }
-          });
 
-          this.calculateTotalPrice();
-          this.displayDetail = true;
-        }
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'Failed to load category.' });
-        this.cdr.detectChanges();
+        // ✔️ Fix: Initialize default selection keys cleanly using Group IDs to avoid string casing issues
+        // this.groupedOptions.forEach(group => {
+        //   if (group.items && group.items.length > 0) {
+        //     this.selectedOptions[group.groupId.toString()] = group.items[0];//groupid
+        //   }
+        // });
+
+        this.calculateTotalPrice();
+        this.displayDetail = true;
       }
-    })
-  }
+      this.cdr.detectChanges();
+    },
+    error: (err) => {
+      this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'Failed to load options.' });
+      this.cdr.detectChanges();
+    }
+  });
+}
 
   incrementQuantity() {
     this.quantity++;
@@ -383,42 +477,47 @@ export class MenuComponent implements OnInit {
   }
 
   gotoPayment() {
-    if (!this.customerPhone || this.customerPhone.trim() === '') {
-      this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: 'phone number is required' });
-      return;
-    }
-
-    const phoneRegex = /^(09|\+959)[0-9]{7,10}$/;
-    if(!phoneRegex.test(this.customerPhone.trim())){
-      this.messageService.add({ 
-        key: 'globalMessage', 
-        severity: 'error', 
-        summary: 'Invalid Phone', 
-        detail: 'Please enter a valid Myanmar phone number (e.g., 09xxxxxxxxx)' 
-      });
-      return;
-    }
-
-    this.pendingOrderPayload = {
-      phoneNumber: this.customerPhone.trim(),
-      note: '',
-      items: this.cartItems.map(item => {
-        const optionIds: number[] = Object.keys(item.selectedOptions).map(
-          key => item.selectedOptions[key].id || item.selectedOptions[key].optionItemId
-        ).filter(id => id !== undefined);
-
-        return {
-          menuId: item.menuId,
-          quantity: item.quantity,
-          optionItemSelectedIds: optionIds
-        };
-      })
-    };
-    this.displayDialogPhone = false;
-    this.displayPaymentDialog = true;
-    this.cdr.detectChanges();
-    console.log(this.pendingOrderPayload);
+  if (!this.customerPhone || this.customerPhone.trim() === '') {
+    this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: 'phone number is required' });
+    return;
   }
+
+  const phoneRegex = /^(09|\+959)[0-9]{7,10}$/;
+  if (!phoneRegex.test(this.customerPhone.trim())) {
+    this.messageService.add({
+      key: 'globalMessage',
+      severity: 'error',
+      summary: 'Invalid Phone',
+      detail: 'Please enter a valid Myanmar phone number (e.g., 09xxxxxxxxx)'
+    });
+    return;
+  }
+
+  this.pendingOrderPayload = {
+    phoneNumber: this.customerPhone.trim(),
+    note: '',
+    items: this.cartItems.map(item => {
+      // ✔️ Fix: Map option IDs comprehensively from whatever key format was resolved
+      const optionIds: number[] = Object.keys(item.selectedOptions)
+        .map(key => {
+          const opt = item.selectedOptions[key];
+          return opt ? (opt.id ?? opt.itemId ?? opt.optionItemId) : null;
+        })
+        .filter((id): id is number => id !== null && id !== undefined);
+
+      return {
+        menuId: item.menuId,
+        quantity: item.quantity,
+        optionItemSelectedIds: optionIds // Plural matching backend setup
+      };
+    })
+  };
+
+  this.displayDialogPhone = false;
+  this.displayPaymentDialog = true;
+  this.cdr.detectChanges();
+  console.log('Final Prepared Payload:', this.pendingOrderPayload);
+}
 
   orderAndPayment() {
     if (!this.transitionNote || this.transitionNote.trim() === '') {
@@ -426,28 +525,68 @@ export class MenuComponent implements OnInit {
       return;
     }
 
-    this.isloading=true;
+    this.isloading = true;
     this.cdr.detectChanges();
     this.orderService.create(this.pendingOrderPayload).subscribe({
       next: (res) => {
-        this.isloading=false;
         if (res.success && res.data) {
-          const createdOrderid = res.data.orderId ?? res.data.OrderId;
+          const createdOrderid = res.data.orderId ?? res.data.OrderId ?? res.data.id;
+          const createdOrderNumber = res.data.orderNumber ?? res.data.OrderNumber;
+
           const paymentPayload: ConfirmPaymentRequest = {
             orderId: createdOrderid,
             transitionId: this.transitionNote.trim(),
           };
+
           this.orderService.confirmPayment(paymentPayload).subscribe({
-            next: (res) => {
+            next: (payRes) => {
               this.isloading = false;
-              if (res.success) {
-                this.messageService.add({ key: 'globalMessage', severity: 'success', summary: 'Success', detail: res.message || 'order success' });
+              if (payRes.success && payRes.data) {
+                const serverCalculatedStatus = payRes.data.orderStatus ?? payRes.data.OrderStatus;
+                const hasOtherOrdersInQueue = payRes.data.hasOrdersInQueue; // Backend မှ Flag သစ်
+                
+                const savedOrderId = localStorage.getItem('currentKioskOrderId');
+                const lastStatus = localStorage.getItem('lastOrderStatus');
+
+                if (hasOtherOrdersInQueue) {
+                  this.isAnotherOrderWaiting = true;
+                  this.messageService.add({
+                    key: 'globalMessage',
+                    severity: 'info',
+                    summary: 'Queued Success',
+                    detail: 'Your order is placed into the queue!'
+                  });
+                } 
+                else if (savedOrderId && lastStatus !== 'Ready' && lastStatus !== 'None') {
+                  this.isAnotherOrderWaiting = true;
+                  this.messageService.add({
+                    key: 'globalMessage',
+                    severity: 'success',
+                    summary: 'Queued Success',
+                    detail: 'Your order is placed into the queue!'
+                  });
+                }
+                else if (serverCalculatedStatus === 'Preparing' || !savedOrderId || lastStatus === 'None') {
+                  this.currentOrder = {
+                    orderId: createdOrderid,
+                    orderNumber: createdOrderNumber,
+                    orderStatus: serverCalculatedStatus || 'Paid'
+                  };
+                  localStorage.setItem('currentKioskOrderId', createdOrderid.toString());
+                  localStorage.setItem('currentKioskOrderNumber', createdOrderNumber);
+                  localStorage.setItem('lastOrderStatus', serverCalculatedStatus);
+                  this.isAnotherOrderWaiting = false;
+                } else {
+                  this.isAnotherOrderWaiting = true;
+                }
+
                 this.clearCart();
                 this.transitionNote = '';
                 this.customerPhone = '';
                 this.displayPaymentDialog = false;
+                this.statusExpanded = true;
               } else {
-                this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'order fail' });
+                this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: payRes.message || 'order fail' });
               }
               this.cdr.detectChanges();
             },
@@ -457,17 +596,17 @@ export class MenuComponent implements OnInit {
               this.cdr.detectChanges();
             }
           });
-        }else{
-          this.isloading = false; 
-        this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Order creation failed' });
-        this.cdr.detectChanges();
+        } else {
+          this.isloading = false;
+          this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Order creation failed' });
+          this.cdr.detectChanges();
         }
       },
       error: (err) => {
-      this.isloading = false;
-      this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'order fail' });
-      this.cdr.detectChanges();
-    }
+        this.isloading = false;
+        this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'order fail' });
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -480,9 +619,9 @@ export class MenuComponent implements OnInit {
     }
 
     if (keyword) {
-      this.filterMenuItem = baseItems.filter(item => 
-        item.menuName.toLowerCase().includes(keyword) || 
-        (item.description && item.description.toLowerCase().includes(keyword)) 
+      this.filterMenuItem = baseItems.filter(item =>
+        item.menuName.toLowerCase().includes(keyword) ||
+        (item.description && item.description.toLowerCase().includes(keyword))
       );
     } else {
       this.filterMenuItem = baseItems;
