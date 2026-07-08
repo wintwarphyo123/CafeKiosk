@@ -52,16 +52,13 @@ export class OrderDetail implements OnInit {
     private router: Router,
     private cdr: ChangeDetectorRef,
     private orderService: OrderService,
-    private datePipe: DatePipe,
   ) { }
 
   ngOnInit(): void {
     this.statusOptions = [
-      { label: 'Pending', value: 'Pending' },
       { label: 'Paid', value: 'Paid' },
       { label: 'Preparing', value: 'Preparing' },
       { label: 'Ready', value: 'Ready' },
-      { label: 'Cancelled', value: 'Cancelled' }
     ];
     this.orderId = Number(this.route.snapshot.paramMap.get('id'));
     if (this.orderId) {
@@ -82,6 +79,7 @@ export class OrderDetail implements OnInit {
             orderId: Item.orderId ?? 0,
             orderNumber: Item.orderNumber ?? '',
             createdAt: Item.createdAt ?? new Date(), 
+            updatedAt:Item.updatedAt ?? new Date(),
             orderStatus: Item.orderStatus ?? 'Pending',
             phoneNumber:Item.phoneNumber ?? '',
             note: Item.note ?? '',
@@ -101,11 +99,9 @@ export class OrderDetail implements OnInit {
   getPaymentSeverity(status: string): 'success' | 'warn' | 'danger' | 'info' {
     switch (status) {
       case 'Paid': return 'success';
-      case 'Pending': 
       case 'Preparing':
       case 'Ready': 
         return 'warn'; 
-      case 'Cancelled': 
       case 'Failed': 
         return 'danger';
       default: return 'info';

@@ -46,6 +46,8 @@ export class OptionItem implements OnInit {
   selectedOptionItem: OptionItemModel | null = null;
   dropDownOptions: any[] = [];
   cols!: SortColumn[];
+  filterItemModel:OptionItemModel[]=[];
+    selectedState:string='All';
   
   constructor(
     private optionItemService: OptionItemService,
@@ -115,10 +117,12 @@ export class OptionItem implements OnInit {
             extraPrice: item.extraPrice ?? 0,
             optionGroupId: item.optionGroupId ?? 0, // 💡 FIX: Menu component ရဲ့ categoryId ကဲ့သို့ default ကို 0 ပေးလိုက်ပါတယ်
             groupName: item.groupName ?? '',
+            status:item.status?? ''
           }));
         } else {
           this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to load items.' });
         }
+        this.filterItemState(this.selectedState);
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -127,6 +131,22 @@ export class OptionItem implements OnInit {
         this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: 'Failed to fetch data from server.' });
       }
     });
+  }
+
+  changeState(state:string):void{
+    this.selectedState=state;
+    this.filterItemState(state);
+  }
+  filterItemState(state:string){
+    if(state==='Active'){
+      this.filterItemModel= this.optionItemModel.filter(g=>g.status  === true);
+    }
+    else if(state=='InActive'){
+      this.filterItemModel = this.optionItemModel.filter(g=>g.status=== false);
+    }else{
+      this.filterItemModel=[...this.optionItemModel];
+    }
+
   }
 
   create(): void {
@@ -263,4 +283,32 @@ export class OptionItem implements OnInit {
       }
     });
   }
+  changeStatus(optionItem:OptionItemModel): void {
+       this.isLoading=true;
+        this.optionItemService.changeStatus(optionItem.id).subscribe({
+          next: (res) => {
+            this.isLoading=false;
+            if (res.success) {
+              optionItem.status=!optionItem.status;
+              this.messageService.add({
+                key: 'globalMessage',
+                severity: 'success',
+                summary: 'success',
+                detail: 'option group status updated successfully'
+              });
+            } else {
+              this.messageService.add({ key:'globalMessage',severity: 'error', summary: 'Error', detail: res.message });
+            }
+          },
+          error: (err) => {
+            this.isLoading=false;
+            this.messageService.add({
+              key: 'globalMessage',
+              severity: 'warn',
+              summary: 'Warning',
+              detail: 'option group status update failed'
+            });
+          }
+        }); 
+      }
 }

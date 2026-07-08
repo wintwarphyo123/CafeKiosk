@@ -3,5 +3,6 @@ export interface OptionItemModel {
     itemName:string | '',
     extraPrice:number | 0,
     optionGroupId:number | 0,
-    groupName: string |''
+    groupName: string |'',
+    status:boolean|null
 }

@@ -56,6 +56,9 @@ export class User implements OnInit {
   roleOption: string[] = [];
   cols!: SortColumn[];
   errorMessage = signal<any[]>([]);
+  filterUserModel:UserModel[]=[];
+  selectedState:string='All';
+  
 
   private formBuilder = inject(FormBuilder);
   
@@ -81,7 +84,7 @@ export class User implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.cols = [
+    this.cols = [//username,email,role,phoneNumber,joinDate
       { field: 'userName', header: 'UserName' },
       { field: 'email', header: 'Email' },
       { field: 'role', header: 'Role' },
@@ -116,12 +119,12 @@ export class User implements OnInit {
             password: user.password ?? '',
             status: typeof user.status === 'string' ? user.status === 'true' : Boolean(user.status),
             role: String(user.role ?? user.userRole ?? '').trim(),
-            joinDate: formattedDate, 
+            joinDate: formattedDate,
             phoneNumber: user.phoneNumber ?? '',
             profileImage: user.profileImage ? this.getImageUrl(user.profileImage) : null,
           };
         });
-
+        this.filterUserState(this.selectedState);
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -129,6 +132,22 @@ export class User implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  changeState(state:string):void{
+    this.selectedState=state;
+    this.filterUserState(state);
+  }
+  filterUserState(state:string){
+    if(state==='Active'){
+      this.filterUserModel= this.userModel.filter(user => user.status === true);
+    }
+    else if(state=='InActive'){
+      this.filterUserModel = this.userModel.filter(user => user.status === false);
+    }else{
+      this.filterUserModel=[...this.userModel];
+    }
+
   }
 
   handleImageError(event: any) {

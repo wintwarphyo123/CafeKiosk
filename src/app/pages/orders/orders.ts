@@ -1,4 +1,4 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import {  DatePipe } from '@angular/common';
 import { ChangeDetectorRef, Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -63,7 +63,8 @@ export class Orders implements OnInit, OnDestroy {
     orderStatus: [''],
     phoneNumber: [''],
     note: [''],
-    createdAt: [new Date().toISOString().slice(0, 10)]
+    createdAt: [new Date().toISOString().slice(0, 10)],
+    updatedAt:[new Date().toISOString().slice(0, 10)]
   });
 
   constructor(
@@ -83,6 +84,7 @@ export class Orders implements OnInit, OnDestroy {
       { field: 'phoneNumber', header: 'Phone Number' },
       { field: 'note', header: 'Transaction Note' },
       { field: 'createdAt', header: 'Ordered Date' },
+      { field: 'updatedAt', header: 'Updated Date' },
     ];
 
     this.initPipeline();
@@ -132,7 +134,8 @@ export class Orders implements OnInit, OnDestroy {
           orderStatus: item.orderStatus ?? '',
           phoneNumber: item.phoneNumber ?? '',
           note: item.note ?? '',
-          createdAt: item.createdAt ?? ''
+          createdAt: item.createdAt ?? '',
+          updatedAt:item.updatedAt?? ''
           }));
 
         this.ordersLoaded$.next(this.orderModel);

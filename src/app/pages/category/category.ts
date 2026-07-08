@@ -62,6 +62,8 @@ export class Category implements OnInit {
   isEdit: boolean = false;
   errorMessage = signal<any[]>([]);
   cols!:SortColumn[];
+  filterCategoryModel:CategoryModel[]=[];
+  selectedState:string='All';
   constructor(
    
     private categoryService: CategoryService,
@@ -103,7 +105,7 @@ export class Category implements OnInit {
           isActive: item.active===1 || item.isActive === 'true' || item.isActive===true,
           categoryImage: item.categoryImage ? this.getImageUrl(item.categoryImage) : null,
         }));
-
+        this.filterCategoryState(this.selectedState);
         this.cdr.detectChanges();
         console.log('categoryModel', this.categoryModel);
 
@@ -114,6 +116,21 @@ export class Category implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+  changeState(state:string):void{
+    this.selectedState=state;
+    this.filterCategoryState(state);
+  }
+  filterCategoryState(state:string){
+    if(state==='Active'){
+      this.filterCategoryModel= this.categoryModel.filter(cat =>cat.isActive  === true);
+    }
+    else if(state=='InActive'){
+      this.filterCategoryModel = this.categoryModel.filter(cat =>cat.isActive === false);
+    }else{
+      this.filterCategoryModel=[...this.categoryModel];
+    }
+
   }
 
   handleImageError(event: any) {

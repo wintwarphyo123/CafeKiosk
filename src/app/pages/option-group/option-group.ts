@@ -46,6 +46,9 @@ export class OptionGroup implements OnInit {
   selectedGroup:OptionGroupModel| null=null;
   cols!:SortColumn[];
 
+  filterGroupModel:OptionGroupModel[]=[];
+  selectedState:string='All';
+
   constructor(
     private optionGroupService:OptionGroupService,
     private messageService:MessageService,
@@ -56,12 +59,14 @@ export class OptionGroup implements OnInit {
   private formBuilder=inject(FormBuilder);
   public optionGroupForm:FormGroup=this.formBuilder.group({
     id:[0],
-    groupName:['']
+    groupName:[''],
+    status:[true]
   });
 
   ngOnInit(): void {
     this.cols=[
       {field:'groupName',header:'Option Group Name'}
+      
     ]
    this.loadData();
   }
@@ -75,6 +80,8 @@ export class OptionGroup implements OnInit {
           this.messageService.add({key:'globalMessage', severity: 'error', summary: 'Error', detail: res.message });
         }
         this.isLoading = false;
+        console.log(this.optionGroupModel);
+        this.filterGroupState(this.selectedState);
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -83,6 +90,21 @@ export class OptionGroup implements OnInit {
         this.cdr.detectChanges();
       },
     });
+  }
+  changeState(state:string):void{
+    this.selectedState=state;
+    this.filterGroupState(state);
+  }
+  filterGroupState(state:string){
+    if(state==='Active'){
+      this.filterGroupModel= this.optionGroupModel.filter(g=>g.status  === true);
+    }
+    else if(state=='InActive'){
+      this.filterGroupModel = this.optionGroupModel.filter(g=>g.status=== false);
+    }else{
+      this.filterGroupModel=[...this.optionGroupModel];
+    }
+
   }
 
   create():void{
@@ -98,7 +120,8 @@ export class OptionGroup implements OnInit {
     this.selectedGroup=optionGroup;
     this.optionGroupForm.patchValue({
       id:optionGroup.id,
-      groupName:optionGroup.groupName
+      groupName:optionGroup.groupName,
+      status:optionGroup.status
     });
   }
 
@@ -107,6 +130,7 @@ export class OptionGroup implements OnInit {
       const model:OptionGroupModel={
         id:this.optionGroupForm.controls['id'].value ?? 0,
         groupName:this.optionGroupForm.controls['groupName'].value ?? '',
+        status:this.optionGroupForm.controls['status'].value ?? ''
       };
       this.optionGroupService.update(model.id,model).subscribe({
         next: (res) => {
@@ -196,5 +220,34 @@ export class OptionGroup implements OnInit {
       }
     });
   }
+
+  changeStatus(optionGroup:OptionGroupModel): void {
+     this.isLoading=true;
+      this.optionGroupService.changeStatus(optionGroup.id).subscribe({
+        next: (res) => {
+          this.isLoading=false;
+          if (res.success) {
+            optionGroup.status=!optionGroup.status;
+            this.messageService.add({
+              key: 'globalMessage',
+              severity: 'success',
+              summary: 'success',
+              detail: 'option group status updated successfully'
+            });
+          } else {
+            this.messageService.add({ key:'globalMessage',severity: 'error', summary: 'Error', detail: res.message });
+          }
+        },
+        error: (err) => {
+          this.isLoading=false;
+          this.messageService.add({
+            key: 'globalMessage',
+            severity: 'warn',
+            summary: 'Warning',
+            detail: 'option group status update failed'
+          });
+        }
+      }); 
+    }
 
 }

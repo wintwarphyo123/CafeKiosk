@@ -1,3 +1,5 @@
+<p-confirmDialog></p-confirmDialog>
+<p-toast></p-toast>
 <div
   class="flex h-screen w-full overflow-hidden bg-stone-50/50 relative font-sans text-[11px] selection:bg-amber-100 antialiased">
 
@@ -57,16 +59,16 @@
       class="h-14 bg-white px-6 flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-stone-200/60 shrink-0 shadow-2xs z-30">
 
       @if(showKitchenSearch) {
-        <div class="relative w-full sm:w-64">
+      <div class="relative w-full sm:w-64">
         <input type="text" placeholder="Search orders..." [(ngModel)]="searchText" (keyup.enter)="onSearch()"
           (input)="onSearch()" (search)="onSearch()"
           class="w-full text-[11px] bg-stone-50 text-stone-700 placeholder-stone-400 pl-8 pr-3 py-1.5 rounded-md border border-stone-200 focus:outline-none focus:border-amber-700 focus:bg-white transition-all" />
         <i class="pi pi-search absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400 text-[10px]"></i>
       </div>
       }@else{
-        <div></div>
+      <div></div>
       }
-      
+
       <div class="flex items-center gap-4 w-full sm:w-auto justify-end">
         <div class="flex items-center gap-2">
 
@@ -79,11 +81,6 @@
               {{ notificationCount }}
             </span>
             }
-          </button>
-
-          <button
-            class="w-7 h-7 flex items-center justify-center bg-stone-50 text-stone-600 rounded-md border border-stone-200/40 hover:bg-stone-100 transition-colors">
-            <i class="pi pi-cog text-[10px]"></i>
           </button>
         </div>
 
@@ -106,7 +103,7 @@
               }@else {
               <img src="/thumbnail.jpg" alt="Default Avatar" class="w-full h-full object-cover opacity-80" />
               }
-              
+
             </div>
           </div>
 

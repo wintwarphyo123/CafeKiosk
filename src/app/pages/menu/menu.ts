@@ -58,6 +58,8 @@ export class Menu implements OnInit {
   isEdited: boolean = false;
   allCategories: any[] = [];
   cols!: SortColumn[];
+  filteredMenu:MenuModel[]=[];
+  selectedState:string='All';
 
   constructor(
     private menuService: MenuService,
@@ -83,7 +85,6 @@ export class Menu implements OnInit {
     this.cols = [
       { field: 'menuName', header: 'Menu Name' },
       { field: 'price', header: 'Price' },
-      { field: 'description', header: 'Description' },
       { field: 'categoryName', header: 'Category Name' }
     ]
     const savedRole = localStorage.getItem('userRole') || '';
@@ -142,7 +143,7 @@ export class Menu implements OnInit {
           categoryId: item.categoryId ?? 0,
           categoryName: item.categoryName ?? ''
         }));
-
+        this.filterMenuState(this.selectedState);
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -152,6 +153,19 @@ export class Menu implements OnInit {
     })
   }
 
+  changeState(state:string):void{
+    this.selectedState=state;
+    this.filterMenuState(state);
+  }
+  filterMenuState(state:string):void{
+    if(state==='Available'){
+      this.filteredMenu= this.menuModel.filter(menu => menu.isAvailable === true);
+    }else if(state==='Out_Of_Stock'){
+      this.filteredMenu= this.menuModel.filter(menu => menu.isAvailable === false);
+    }else{
+      this.filteredMenu=[...this.menuModel];
+    }
+  }
   handleImageError(event: any) {
     event.target.src = this.thumbnailUrl;
   }

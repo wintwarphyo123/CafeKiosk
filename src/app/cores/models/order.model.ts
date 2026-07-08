@@ -6,4 +6,5 @@ export interface OrderModel {
     phoneNumber: string | null;
     note: string | null;
     createdAt: string;
+    updatedAt:string;
 }//orderId,orderNumber,totalAmount,orderStatus,phoneNumber,note,createdAt

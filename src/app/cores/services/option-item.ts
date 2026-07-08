@@ -26,4 +26,7 @@ export class OptionItemService {
   delete(id:number):Observable<RootModel>{
     return this.http.delete<RootModel>(`${environment.apiUrl}/api/optionItem/${id}`,{})
   }
+  changeStatus(id:number):Observable<RootModel>{
+    return this.http.put<RootModel>(`${environment.apiUrl}/api/optionItem/${id}/update-status`,{})
+  }
 }

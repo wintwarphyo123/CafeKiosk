@@ -3,104 +3,142 @@
 
 <div class="w-full max-w-7xl mx-auto p-4 text-[11px] font-sans selection:bg-amber-100">
 
-    <div class="bg-white rounded-lg shadow-xs border border-stone-200 overflow-hidden">
-        <p-table #dt2 [value]="userModel" [columns]="cols" [paginator]="true" [rows]="10"
-            [rowsPerPageOptions]="[10, 20, 50]" styleClass="p-datatable-sm p-datatable-striped"
-            [globalFilterFields]="['userName', 'role', 'status', 'joinDate', 'phoneNumber']"
-            [tableStyle]="{ 'min-width': '50rem' }" dataKey="userId" responsiveLayout="scroll">
+    <div class="bg-white rounded-lg shadow-sm border border-stone-200 overflow-hidden">
+        <p-table #dt2 [value]="filterUserModel" [columns]="cols" [paginator]="true" [rows]="10"
+            [rowsPerPageOptions]="[10, 20, 50]" [tableStyle]="{ 'min-width': '50rem' }"
+            [globalFilterFields]="['userName','email', 'role', 'phoneNumber', 'joinDate']"
+            [tableStyle]="{ 'min-width': '50rem' }" dataKey="userId" size="small" [stripedRows]="true">
 
             <ng-template pTemplate="caption">
-                <div
-                    class="flex w-full justify-between items-center py-1 bg-stone-50/50 px-2 border-b border-stone-100">
-                    <p-iconfield iconPosition="left">
-                        <p-inputicon>
-                            <i class="pi pi-search"></i>
-                        </p-inputicon>
-                        <input pInputText type="text" (input)="dt2.filterGlobal($event.target.value, 'contains')"
-                            placeholder="Quick search..."
-                            class="w-full text-[11px] bg-stone-50 text-stone-700 placeholder-stone-400 pl-8 pr-3 py-1.5 rounded-lg border border-stone-200 focus:outline-none focus:border-amber-700 focus:bg-white transition-all" />
-                    </p-iconfield>
-                    <div>
-                        <button (click)="create()"
-                            class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-3 py-1.5 rounded text-[11px] flex items-center gap-1.5 shadow-sm transition-all">
+                <div class="flex flex-wrap items-center gap-3 p-3 bg-stone-50/80 border-b border-stone-200/60 w-full">
+
+                    <div class="w-full sm:w-auto">
+                        <p-iconfield iconPosition="left">
+                            <p-inputicon class="flex items-center">
+                                <i class="pi pi-search text-stone-400 text-[11px]"></i>
+                            </p-inputicon>
+                            <input pInputText type="text"
+                                (input)="dt2.filterGlobal($any($event.target).value, 'contains')"
+                                placeholder="Quick search..."
+                                class="text-[11px] h-[30px] pl-7 pr-2.5 border border-stone-200 rounded-lg bg-white w-full sm:w-48 focus:outline-none focus:border-amber-700 focus:ring-1 focus:ring-amber-700/20 transition-all text-stone-700 shadow-xs placeholder:text-stone-400" />
+                        </p-iconfield>
+                    </div>
+
+                    <div
+                        class="flex items-center gap-0.5 bg-stone-100 p-0.5 rounded-lg border border-stone-200/40 shadow-inner h-[30px]">
+                        <button type="button"
+                            class="px-3.5 h-full text-xs font-semibold rounded-md transition-all duration-200"
+                            [class]="selectedState === 'All' ? 'bg-white text-stone-800 shadow-xs' : 'text-stone-500 hover:text-stone-800'"
+                            (click)="changeState('All')">
+                            All
+                        </button>
+                        <button type="button"
+                            class="px-3.5 h-full text-xs font-semibold rounded-md transition-all duration-200"
+                            [class]="selectedState === 'Active' ? 'bg-emerald-600 text-white shadow-xs' : 'text-stone-500 hover:text-emerald-600'"
+                            (click)="changeState('Active')">
+                            Active
+                        </button>
+                        <button type="button"
+                            class="px-3.5 h-full text-xs font-semibold rounded-md transition-all duration-200"
+                            [class]="selectedState === 'InActive' ? 'bg-rose-600 text-white shadow-xs' : 'text-stone-500 hover:text-rose-600'"
+                            (click)="changeState('InActive')">
+                            Inactive
+                        </button>
+                    </div>
+
+                    <div class="w-full sm:w-auto sm:ml-auto">
+                        <button type="button" (click)="create()"
+                            class="bg-amber-700 hover:bg-amber-800 text-white font-semibold px-3 h-[30px] rounded-lg text-[11px] flex items-center justify-center gap-1.5 shadow-sm transition-all whitespace-nowrap w-full sm:w-auto">
                             <i class="pi pi-plus text-[10px]"></i> Create User
                         </button>
                     </div>
+
                 </div>
             </ng-template>
 
             <ng-template pTemplate="header" let-columns>
-                <tr class="bg-stone-100 text-stone-700 text-[11px] font-bold border-b border-stone-200">
-                    <th class="w-20 py-2">Image</th>
+                <tr class="bg-stone-100 text-stone-700 font-bold border-b border-stone-200">
+                    <th class="w-16 py-2.5 px-3 text-left">Avatar</th>
+
                     @for (col of columns; track col.field) {
+                    @if (col.field !== 'status') {
                     <th [pSortableColumn]="col.field"
-                        class="py-2 px-3 text-left select-none cursor-pointer hover:bg-stone-200/50 transition-colors">
+                        class="py-2.5 px-3 text-left select-none cursor-pointer hover:bg-stone-200/50 transition-colors">
                         <div class="flex items-center gap-1 whitespace-nowrap">
                             {{ col.header }}
-                            <p-sortIcon [field]="col.field" class="text-[9px]"></p-sortIcon>
+                            <p-sortIcon [field]="col.field" class="text-[9px] opacity-60"></p-sortIcon>
                         </div>
                     </th>
                     }
-                    <th class="w-24 text-center py-2">Status</th>
-                    <th class="w-24 text-center py-2">Actions</th>
+                    }
+
+                    <th class="w-28 text-center py-2.5 px-3">Status</th>
+                    <th class="w-24 text-center py-2.5 px-3">Actions</th>
                 </tr>
             </ng-template>
 
             <ng-template pTemplate="body" let-rowData let-columns="columns">
-                <tr class="border-b border-stone-100 text-stone-600 text-[11px] hover:bg-amber-50/30 transition-colors">
+                <tr class="border-b border-stone-100 text-stone-600 hover:bg-amber-50/20 transition-colors">
 
-                    <td class="py-1">
-                        <p-image [src]="rowData.profileImage ?? ''" alt="{{ rowData.userName }}"
-                            [style]="{ width: '40px', height: '30px' }"
-                            [imageStyle]="{ width: '40px', height: '30px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #e7e5e4' }"
-                            preview="true" (onImageError)="handleImageError($event)">
-                        </p-image>
+                    <td class="py-2 px-3">
+                        <div class="flex items-center">
+                            <p-image [src]="rowData.profileImage ?? ''" alt="{{ rowData.userName }}"
+                                [style]="{ width: '32px', height: '32px' }"
+                                [imageStyle]="{ width: '32px', height: '32px', objectFit: 'cover', borderRadius: '9999px', border: '1px solid #e7e5e4' }"
+                                [preview]="true" (onImageError)="handleImageError($event)">
+                            </p-image>
+                        </div>
                     </td>
 
                     @for (col of columns; track col.field) {
-                    <td class="py-1.5 px-3 font-medium text-stone-800">
+                    @if (col.field !== 'status') {
+                    <td class="py-2 px-3 font-medium text-stone-800 vertical-align-middle">
                         @if(col.field === 'joinDate'){
-                        {{ rowData[col.field] | date: 'yyyy MMMM dd' }}
+                        <span class="text-stone-500 font-mono">{{ rowData[col.field] | date: 'yyyy MMMM dd' }}</span>
+                        }
+                        @else if(col.field === 'phoneNumber') {
+                        <span class="tracking-wide font-mono text-stone-600">{{ rowData[col.field] }}</span>
                         }
                         @else {
                         {{ rowData[col.field] }}
                         }
                     </td>
                     }
+                    }
 
-                    <td class="text-center py-1.5">
-                        <button (click)="UserStatus(rowData)" pTooltip="Change Status" tooltipPosition="top">
+                    <td class="text-center py-2 px-3">
+                        <button (click)="UserStatus(rowData)" class="focus:outline-none" pTooltip="Change Status"
+                            tooltipPosition="top">
                             <span
-                                [class]="rowData.status ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-stone-100 text-stone-400 border-stone-200'"
-                                class="px-2 py-0.5 rounded text-[10px] font-semibold border inline-block tracking-wider">
+                                [class]="rowData.status ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-stone-50 text-stone-400 border-stone-200'"
+                                class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border inline-block tracking-wider transition-colors">
                                 {{ rowData.status ? 'ACTIVE' : 'INACTIVE' }}
                             </span>
                         </button>
                     </td>
 
-                    <td class="text-center py-1.5">
-                        <div class="flex gap-1 justify-center">
+                    <td class="text-center py-2 px-3">
+                        <div class="flex gap-1 justify-center items-center">
                             <button (click)="update(rowData)"
-                                class="text-stone-600 hover:text-amber-700 p-1 rounded hover:bg-stone-100 transition-colors"
+                                class="text-stone-500 hover:text-amber-700 p-1 rounded-md hover:bg-stone-100 transition-colors"
                                 pTooltip="Edit" tooltipPosition="top">
                                 <i class="pi pi-pencil text-[11px]"></i>
                             </button>
+
                             @if (rowData.userId === adminLayout.userProfile?.userId) {
-                            <!-- Self-Account Protective Indicator -->
                             <span
-                                class="inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-200 font-bold px-2 py-1 rounded text-[10px]">
+                                class="inline-flex items-center justify-center bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-1 rounded-md text-[10px]"
+                                pTooltip="Your Account Profile Locked" tooltipPosition="top">
                                 <i class="pi pi-lock text-[9px]"></i>
                             </span>
-                            }@else {
+                            } @else {
                             <button [disabled]="rowData.userId === adminLayout.userProfile?.userId"
-                                [title]="rowData.userId === adminLayout.userProfile?.userId ? 'You cannot delete yourself' : 'Delete User'"
                                 (click)="delete(rowData)"
-                                class="text-stone-400 hover:text-rose-600 p-1 rounded hover:bg-stone-100 transition-colors"
+                                class="text-stone-400 hover:text-rose-600 p-1 rounded-md hover:bg-stone-100 transition-colors"
                                 pTooltip="Delete" tooltipPosition="top">
                                 <i class="pi pi-trash text-[11px]"></i>
                             </button>
                             }
-
                         </div>
                     </td>
                 </tr>
@@ -116,53 +154,52 @@
     styleClass="custom-coffee-dialog">
 
     <form [formGroup]="userForm" (submit)="submit()">
-        <div class="grid grid-cols-12 gap-x-4 gap-y-3 p-1 text-[11px] font-sans">
+        <div class="grid grid-cols-12 gap-x-4 gap-y-3.5 p-1 text-[11px] font-sans">
 
-            <div class="col-span-12 sm:col-span-6 flex flex-col gap-1">
-                <label for="userName" class="font-bold text-stone-700 tracking-wide">User Name <span
+            <div class="col-span-12 sm:col-span-6 flex flex-col gap-1.5">
+                <label for="userName" class="font-semibold text-stone-700">User Name <span
                         class="text-rose-500">*</span></label>
                 <input pInputText id="userName" formControlName="userName" autocomplete="off"
-                    class="w-full text-[11px] p-2 border border-stone-200 rounded bg-stone-50/30 focus:outline-none focus:border-amber-700 transition-colors" />
+                    class="w-full text-[11px] p-2 border border-stone-200 rounded-md bg-stone-50/40 focus:outline-none focus:border-amber-700 transition-colors" />
             </div>
 
-            <div class="col-span-12 sm:col-span-6 flex flex-col gap-1">
-                <label for="password" class="font-bold text-stone-700 tracking-wide">Password</label>
+            <div class="col-span-12 sm:col-span-6 flex flex-col gap-1.5">
+                <label for="password" class="font-semibold text-stone-700">Password</label>
                 <input pInputText id="password" type="password" formControlName="password" autocomplete="off"
                     [placeholder]="isEditMode ? 'Leave blank to keep current' : 'Enter password'"
-                    class="w-full text-[11px] p-2 border border-stone-200 rounded bg-stone-50/30 focus:outline-none focus:border-amber-700 transition-colors placeholder:text-stone-400 placeholder:text-[10px]" />
+                    class="w-full text-[11px] p-2 border border-stone-200 rounded-md bg-stone-50/40 focus:outline-none focus:border-amber-700 transition-colors placeholder:text-stone-400 placeholder:text-[10px]" />
             </div>
 
-            <div class="col-span-12 sm:col-span-6 flex flex-col gap-1">
-                <label for="email" class="font-bold text-stone-700 tracking-wide">Email</label>
+            <div class="col-span-12 sm:col-span-6 flex flex-col gap-1.5">
+                <label for="email" class="font-semibold text-stone-700">Email</label>
                 <input pInputText id="email" formControlName="email" autocomplete="off"
-                    class="w-full text-[11px] p-2 border border-stone-200 rounded bg-stone-50/30 focus:outline-none focus:border-amber-700 transition-colors" />
+                    class="w-full text-[11px] p-2 border border-stone-200 rounded-md bg-stone-50/40 focus:outline-none focus:border-amber-700 transition-colors" />
             </div>
 
-            <div class="col-span-12 sm:col-span-6 flex flex-col gap-1">
-                <label for="phoneNumber" class="font-bold text-stone-700 tracking-wide">Phone Number</label>
+            <div class="col-span-12 sm:col-span-6 flex flex-col gap-1.5">
+                <label for="phoneNumber" class="font-semibold text-stone-700">Phone Number</label>
                 <input pInputText id="phoneNumber" formControlName="phoneNumber" autocomplete="off"
-                    class="w-full text-[11px] p-2 border border-stone-200 rounded bg-stone-50/30 focus:outline-none focus:border-amber-700 transition-colors" />
+                    class="w-full text-[11px] p-2 border border-stone-200 rounded-md bg-stone-50/40 focus:outline-none focus:border-amber-700 transition-colors" />
             </div>
 
             @if(isEditMode){
-            <div class="col-span-12 sm:col-span-6 flex flex-col gap-1">
-                <label for="joinDate" class="font-bold text-stone-700 tracking-wide">Join Date</label>
+            <div class="col-span-12 sm:col-span-6 flex flex-col gap-1.5">
+                <label for="joinDate" class="font-semibold text-stone-700">Join Date</label>
                 <input pInputText type="date" id="joinDate" formControlName="joinDate" autocomplete="off"
-                    class="w-full text-[11px] p-2 border border-stone-200 rounded bg-stone-50/30 focus:outline-none focus:border-amber-700 transition-colors" />
+                    class="w-full text-[11px] p-2 border border-stone-200 rounded-md bg-stone-50/40 focus:outline-none focus:border-amber-700 transition-colors" />
             </div>
             }
 
             @if(isEditMode){
-            <div class="col-span-12 sm:col-span-6 flex flex-col gap-1">
-                <label for="status" class="font-bold text-stone-700 tracking-wide">Status</label>
+            <div class="col-span-12 sm:col-span-6 flex flex-col gap-1.5">
+                <label for="status" class="font-semibold text-stone-700">Status</label>
                 <input pInputText id="status" formControlName="status" autocomplete="off"
-                    class="w-full text-[11px] p-2 border border-stone-200 rounded bg-stone-50/30 focus:outline-none focus:border-amber-700 transition-colors" />
+                    class="w-full text-[11px] p-2 border border-stone-200 rounded-md bg-stone-50/40 focus:outline-none focus:border-amber-700 transition-colors" />
             </div>
             }
 
-            <div class="col-span-12 flex flex-col gap-1">
-                <label for="role" class="font-bold text-stone-700 tracking-wide">Role <span
-                        class="text-rose-500">*</span></label>
+            <div class="col-span-12 flex flex-col gap-1.5">
+                <label for="role" class="font-semibold text-stone-700">Role <span class="text-rose-500">*</span></label>
                 <p-select formControlName="role" [options]="roleOption" appendTo="body"
                     class="w-full md:w-56 text-[11px]" placeholder="Select a Role"></p-select>
                 @if (userForm.get('role')?.touched && userForm.get('role')?.invalid) {
@@ -170,10 +207,10 @@
                 }
             </div>
 
-            <div class="col-span-12 flex flex-col gap-1 mt-1">
-                <label class="font-bold text-stone-700 tracking-wide">User Profile Image</label>
+            <div class="col-span-12 flex flex-col gap-1.5 mt-1">
+                <label class="font-semibold text-stone-700">User Profile Image</label>
 
-                <div class="border border-dashed border-stone-300 hover:border-amber-600 bg-stone-50/50 p-3 rounded text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-1"
+                <div class="border border-dashed border-stone-300 hover:border-amber-700 bg-stone-50/50 p-4 rounded-md text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-1"
                     (click)="onUploadImg()">
 
                     @if(!imgName) {
@@ -189,19 +226,19 @@
                     }
                 </div>
 
-                <div class="mt-1.5 bg-stone-100 p-1.5 rounded border border-stone-200 flex justify-center items-center">
-                    <img [src]="imgSrc || ''" class="max-h-36 object-cover rounded shadow-xs border border-white"
+                <div class="mt-2 bg-stone-100 p-2 rounded-md border border-stone-200 flex justify-center items-center">
+                    <img [src]="imgSrc || ''" class="max-h-32 object-cover rounded-md shadow-xs border border-white"
                         (error)="handleImageError($event)" alt="User Preview Thumbnail" />
                 </div>
             </div>
 
-            <div class="col-span-12 flex justify-end gap-1.5 mt-3 pt-2.5 border-t border-stone-100">
+            <div class="col-span-12 flex justify-end gap-1.5 mt-3 pt-3 border-t border-stone-100">
                 <button type="button" (click)="modelVisible = false; selectedUser=null"
-                    class="px-3 py-1.5 rounded text-stone-500 hover:bg-stone-100 font-medium transition-colors">
+                    class="px-3 py-1.5 rounded-md text-stone-500 hover:bg-stone-100 font-medium transition-colors">
                     Cancel
                 </button>
                 <button type="submit"
-                    class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-4 py-1.5 rounded shadow-xs transition-colors">
+                    class="bg-amber-700 hover:bg-amber-800 text-white font-semibold px-4 py-1.5 rounded-md shadow-sm transition-colors">
                     {{ isEditMode ? 'Update Changes' : 'Save User' }}
                 </button>
             </div>

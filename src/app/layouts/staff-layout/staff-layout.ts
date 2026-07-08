@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, ElementRef, inject, OnInit, ViewChild } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { UserService } from '../../cores/services/user';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { filter, Subject, takeUntil } from 'rxjs';
@@ -8,6 +8,8 @@ import { OrderNotificationService } from '../../cores/services/order-notificatio
 import { CommonModule } from '@angular/common';
 import { environment } from '../../../environments/environment';
 import { DialogModule } from "primeng/dialog";
+import { ConfirmDialogModule } from "primeng/confirmdialog";
+import { ToastModule } from "primeng/toast";
 
 @Component({
   selector: 'app-staff-layout',
@@ -19,9 +21,11 @@ import { DialogModule } from "primeng/dialog";
     CommonModule,
     DialogModule,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    ConfirmDialogModule,
+    ToastModule
 ],
-  providers: [MessageService],
+  providers: [MessageService,ConfirmationService],
   templateUrl: './staff-layout.html',
   styleUrl: './staff-layout.scss',
 })
@@ -61,6 +65,7 @@ export class StaffLayout implements OnInit {
   constructor(
     private userService: UserService,
     private messageService: MessageService,
+    private confirmationService:ConfirmationService,
     private cdr: ChangeDetectorRef,
     private orderNotificationService: OrderNotificationService,
     private router: Router
@@ -220,9 +225,29 @@ export class StaffLayout implements OnInit {
   }
 
   onLogout() {
-    localStorage.removeItem('token');
-    this.router.navigate(['/login']);
-  }
+  this.confirmationService.confirm({
+    message: 'Are you sure you want to sign out of your account?',
+    header: 'Sign Out Confirmation',
+    icon: 'pi pi-sign-out text-amber-700', 
+    accept: () => {
+      
+      localStorage.removeItem('token');
+      //localStorage.removeItem('userRole'); 
+      
+      this.router.navigate(['/login']);
+      
+      this.messageService.add({
+        key: 'globalMessage',
+        severity: 'success',
+        summary: 'Signed Out',
+        detail: 'You have been logged out successfully.'
+      });
+    },
+    reject: () => {
+      console.log('Logout cancelled by user.');
+    }
+  });
+}
   onSearch() {
     this.router.navigate(['/staff/kitchen-dashboard'], {
       queryParams: { search: this.searchText },

@@ -88,12 +88,13 @@ export class Reports {
   ) { }
 
   ngOnInit(): void {
-    this.cols = [
+    this.cols = [//orderNumber,totalAmount,phoneNumber,note,createdAt,updatedAt
       { field: 'orderNumber', header: 'Order Number' },
       { field: 'totalAmount', header: 'Total Amount' },
       { field: 'phoneNumber', header: 'Phone Number' },
       { field: 'note', header: 'Transaction Note' },
       { field: 'createdAt', header: 'Ordered Date' },
+      { field: 'updatedAt', header: 'Updated Date' },
     ];
 
     this.initPipeline();
@@ -135,6 +136,8 @@ export class Reports {
           const formattedDate = rawDate
             ? this.datePipe.transform(rawDate, 'yyyy MMMM dd')
             : '';
+            const updateD=item.updatedAt || null;
+          const updatedDate=updateD? this.datePipe.transform(rawDate,'yyyy MMMM dd') : '';
 
           return {
             orderId: item.orderId ?? 0,
@@ -144,6 +147,7 @@ export class Reports {
             phoneNumber: item.phoneNumber ?? '',
             note: item.note ?? '',
             createdAt: formattedDate ?? '',
+            updatedAt:updatedDate ?? '',
           };
         });
 
@@ -304,6 +308,7 @@ export class Reports {
             phoneNumber: item.phoneNumber ?? '',
             note: item.note ?? '',
             createdAt: formattedDate ?? '',
+            updatedAt:formattedDate ?? ''
           };
         });
 

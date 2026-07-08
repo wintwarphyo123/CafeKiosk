@@ -22,6 +22,7 @@ export interface OrderResponseDto{
     phoneNumber:string;
     note:string;
     createdAt:string;
+    updatedAt:string;
     orderItems:OrderItemResponseDto[]
 }
 
