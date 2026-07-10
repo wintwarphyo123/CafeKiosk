@@ -23,20 +23,7 @@ import { TimelineModule } from 'primeng/timeline';
 import { Router } from '@angular/router';
 import { OrderNotificationService } from '../../../cores/services/order-notification-service';
 import { BadgeModule } from 'primeng/badge';
-
-interface OptionItem {
-  id: number;
-  itemName: string;
-  extraPrice: number;
-  optionGroupId: number;
-  groupName: string;
-}
-
-interface GroupedOptions {
-  groupId:number;
-  groupName: string;
-  items: OptionItem[];
-}
+import { OptionGroupDto, OptionItemDto } from '../../../cores/models/menu-detail.model';
 
 @Component({
   selector: 'app-menu',
@@ -56,7 +43,7 @@ interface GroupedOptions {
     SelectModule,
     ImageModule,
     RadioButtonModule,
-    TimelineModule, // HTML Timeline အတွက်
+    TimelineModule,
     BadgeModule
   ],
   providers: [MessageService, ConfirmationService, DatePipe],
@@ -84,8 +71,8 @@ export class MenuComponent implements OnInit {
 
   displayDetail: boolean = false;
   selectedItem: any = null;
-  groupedOptions: GroupedOptions[] = [];
-  selectedOptions: { [key: string]: OptionItem } = {};
+  groupedOptions: OptionGroupDto[] = [];
+  selectedOptions: { [key: string]: OptionItemDto } = {};
   totalExtraPrice: number = 0;
 
   categoryModel: CategoryModel[] = [];//category for task bar
@@ -97,6 +84,8 @@ export class MenuComponent implements OnInit {
   allOptionGroupList: any[] = [];
   cartItems: any[] = [];
   orderCount: number = 0;
+  isAvailable: boolean = true;
+  isActive:boolean=true;
 
   currentOrder: any = {
     orderNumber: 'N/A',
@@ -141,24 +130,24 @@ export class MenuComponent implements OnInit {
       if (savedOrderId && Number(data.orderId) === Number(savedOrderId)) {
         this.currentOrder.orderStatus = data.orderStatus;
         localStorage.setItem('lastOrderStatus', data.orderStatus);
-        
+
         console.log("Current Kiosk Order is Ready:", savedOrderId);
         if (data.orderStatus === 'Ready') {
           this.isAnotherOrderWaiting = false;
         }
         this.cdr.detectChanges();
-        return; 
+        return;
       }
 
       if (data.orderStatus === 'Preparing') {
         const currentLocalStatus = localStorage.getItem('lastOrderStatus');
-        
+
         if (!savedOrderId || currentLocalStatus === 'Ready' || currentLocalStatus === 'None') {
-          
+
           if (data.hasOrdersInQueue === true) {
             this.isAnotherOrderWaiting = true;
             this.cdr.detectChanges();
-            return; 
+            return;
           }
 
           this.currentOrder = {
@@ -170,7 +159,7 @@ export class MenuComponent implements OnInit {
           localStorage.setItem('currentKioskOrderNumber', this.currentOrder.orderNumber);
           localStorage.setItem('lastOrderStatus', 'Preparing');
           this.isAnotherOrderWaiting = false;
-          
+
           this.messageService.add({
             key: 'globalMessage',
             severity: 'success',
@@ -224,11 +213,11 @@ export class MenuComponent implements OnInit {
           const rawCategory = Array.isArray(res.data) ? res.data : [];
 
           this.categoryModel = rawCategory
-            .filter((c: any) => c.active === 1 || c.isActive === 'true' || c.isActive === true)
+            //.filter((c: any) => c.active === 1 || c.isActive === 'true' || c.isActive === true)
             .map((item: any) => ({
               categoryId: item.id ?? item.categoryId ?? item.categoryid ?? 0,
               categoryName: item.categoryName ?? null,
-              isActive: true,
+              isActive: item.isActive ?? false,
               categoryImage: item.categoryImage ? this.getImageUrl(item.categoryImage) : null
             }));
           this.getMenuDetailOption();
@@ -301,7 +290,7 @@ export class MenuComponent implements OnInit {
           menuImage: item.menuImage ? this.getImageUrl(item.menuImage) : null,
           description: item.description ?? '',
           price: item.price ?? 0,
-          isAvailable: item.is_available ?? '',
+          isAvailable: item.is_available ?? false,
           categoryId: item.categoryId ?? 0,
           categoryName: item.categoryName ?? ''
         }));
@@ -323,64 +312,72 @@ export class MenuComponent implements OnInit {
   filterMenuByCategory(): void {
     if (this.selectedCategoryId !== null) {
       this.filterMenuItem = this.menuModel.filter(
-        item => item.categoryId === this.selectedCategoryId && item.isAvailable
+        item => item.categoryId === this.selectedCategoryId //&& item.isAvailable
       );
     } else {
-      this.filterMenuItem = this.menuModel.filter(item => item.isAvailable);
+      this.filterMenuItem = this.menuModel;//filter(item => item.isAvailable);
     }
     this.cdr.detectChanges();
   }
 
   openDetail(item: any) {
-  if (!item || !item.menuId) {
-    console.error("Cannot open detail: menuId is missing", item);
-    return;
-  }
-  this.selectedItem = item;
-  this.selectedOptions = {};
-  this.totalExtraPrice = 0;
-  this.quantity = 1;
-  this.groupedOptions = [];
-
-  this.menuService.getMenudetail(item.menuId).subscribe({
-    next: (res) => {
-      if (res.success && res.data) {
-        const linkedGroup = res.data.optionGroups || [];
-        const linkedGroupIds = linkedGroup.map((g: any) => Number(g.groupId || g.id));
-        
-        this.groupedOptions = this.allOptionGroupList
-          .filter(group => group && linkedGroupIds.includes(Number(group.groupId || group.id)))
-          .map(group => ({
-            groupId: group.groupId || group.id,
-            groupName: group.groupName || group.name,
-            // Ensure child items match database column keys (id vs optionItemId)
-            items: (group.items || group.options || group.optionItems || []).map((oi: any) => ({
-              id: oi.id ?? oi.itemId ?? oi.optionItemId,
-              itemName: oi.itemName ?? oi.name,
-              extraPrice: oi.extraPrice ?? 0,
-              optionGroupId: group.groupId || group.id,
-              groupName: group.groupName || group.name
-            }))
-          }));
-
-        // ✔️ Fix: Initialize default selection keys cleanly using Group IDs to avoid string casing issues
-        // this.groupedOptions.forEach(group => {
-        //   if (group.items && group.items.length > 0) {
-        //     this.selectedOptions[group.groupId.toString()] = group.items[0];//groupid
-        //   }
-        // });
-
-        this.calculateTotalPrice();
-        this.displayDetail = true;
-      }
-      this.cdr.detectChanges();
-    },
-    error: (err) => {
-      this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'Failed to load options.' });
-      this.cdr.detectChanges();
+    if (!item || !item.menuId) {
+      console.error("Cannot open detail: menuId is missing", item);
+      return;
     }
-  });
-}
+    this.selectedItem = item;
+    this.selectedOptions = {};
+    this.totalExtraPrice = 0;
+    this.quantity = 1;
+    this.groupedOptions = [];
+
+    this.menuService.getMenudetail(item.menuId).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          const linkedGroup = res.data.optionGroups || [];
+          const linkedGroupIds = linkedGroup.map((g: any) => Number(g.groupId || g.id));
+//groupId,groupName,optionItems
+          this.groupedOptions = this.allOptionGroupList
+            .filter(group => group && linkedGroupIds.includes(Number(group.groupId || group.id)))
+            .map(group => {
+              const matchingApiGroup = linkedGroup.find((g: any) => Number(g.groupId || g.id) === Number(group.groupId || group.id));
+              const apiItems = matchingApiGroup ? (matchingApiGroup.optionItems || matchingApiGroup.items || []) : [];
+              return {
+                groupId: group.groupId || group.id,
+                groupName: group.groupName || group.name,
+                optionItems: (group.items || group.options || group.optionItems || []).map((oi: any) => {
+                  const currentItemId = oi.id ?? oi.itemId ?? oi.optionItemId;
+                  const matchingApiItem = apiItems.find((ai: any) => Number(ai.itemId ?? ai.id) === Number(currentItemId));
+                  return{
+                  id:currentItemId,
+                  itemName: oi.itemName ?? oi.name,
+                  extraPrice: oi.extraPrice ?? 0,
+                  optionGroupId: group.groupId || group.id,
+                  groupName: group.groupName || group.name,
+                  isAvailable: matchingApiItem ? matchingApiItem.isAvailable !== false : true
+                  }
+                })
+              }
+            });
+
+          // ✔️ Fix: Initialize default selection keys cleanly using Group IDs to avoid string casing issues
+          // this.groupedOptions.forEach(group => {
+          //   if (group.items && group.items.length > 0) {
+          //     this.selectedOptions[group.groupId.toString()] = group.items[0];//groupid
+          //   }
+          // });
+
+          this.calculateTotalPrice();
+          this.displayDetail = true;
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'Failed to load options.' });
+        this.cdr.detectChanges();
+      }
+    });
+  }
 
   incrementQuantity() {
     this.quantity++;
@@ -477,47 +474,47 @@ export class MenuComponent implements OnInit {
   }
 
   gotoPayment() {
-  if (!this.customerPhone || this.customerPhone.trim() === '') {
-    this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: 'phone number is required' });
-    return;
+    if (!this.customerPhone || this.customerPhone.trim() === '') {
+      this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: 'phone number is required' });
+      return;
+    }
+
+    const phoneRegex = /^(09|\+959)[0-9]{7,10}$/;
+    if (!phoneRegex.test(this.customerPhone.trim())) {
+      this.messageService.add({
+        key: 'globalMessage',
+        severity: 'error',
+        summary: 'Invalid Phone',
+        detail: 'Please enter a valid Myanmar phone number (e.g., 09xxxxxxxxx)'
+      });
+      return;
+    }
+
+    this.pendingOrderPayload = {
+      phoneNumber: this.customerPhone.trim(),
+      note: '',
+      items: this.cartItems.map(item => {
+        // ✔️ Fix: Map option IDs comprehensively from whatever key format was resolved
+        const optionIds: number[] = Object.keys(item.selectedOptions)
+          .map(key => {
+            const opt = item.selectedOptions[key];
+            return opt ? (opt.id ?? opt.itemId ?? opt.optionItemId) : null;
+          })
+          .filter((id): id is number => id !== null && id !== undefined);
+
+        return {
+          menuId: item.menuId,
+          quantity: item.quantity,
+          optionItemSelectedIds: optionIds // Plural matching backend setup
+        };
+      })
+    };
+
+    this.displayDialogPhone = false;
+    this.displayPaymentDialog = true;
+    this.cdr.detectChanges();
+    console.log('Final Prepared Payload:', this.pendingOrderPayload);
   }
-
-  const phoneRegex = /^(09|\+959)[0-9]{7,10}$/;
-  if (!phoneRegex.test(this.customerPhone.trim())) {
-    this.messageService.add({
-      key: 'globalMessage',
-      severity: 'error',
-      summary: 'Invalid Phone',
-      detail: 'Please enter a valid Myanmar phone number (e.g., 09xxxxxxxxx)'
-    });
-    return;
-  }
-
-  this.pendingOrderPayload = {
-    phoneNumber: this.customerPhone.trim(),
-    note: '',
-    items: this.cartItems.map(item => {
-      // ✔️ Fix: Map option IDs comprehensively from whatever key format was resolved
-      const optionIds: number[] = Object.keys(item.selectedOptions)
-        .map(key => {
-          const opt = item.selectedOptions[key];
-          return opt ? (opt.id ?? opt.itemId ?? opt.optionItemId) : null;
-        })
-        .filter((id): id is number => id !== null && id !== undefined);
-
-      return {
-        menuId: item.menuId,
-        quantity: item.quantity,
-        optionItemSelectedIds: optionIds // Plural matching backend setup
-      };
-    })
-  };
-
-  this.displayDialogPhone = false;
-  this.displayPaymentDialog = true;
-  this.cdr.detectChanges();
-  console.log('Final Prepared Payload:', this.pendingOrderPayload);
-}
 
   orderAndPayment() {
     if (!this.transitionNote || this.transitionNote.trim() === '') {
@@ -544,11 +541,29 @@ export class MenuComponent implements OnInit {
               if (payRes.success && payRes.data) {
                 const serverCalculatedStatus = payRes.data.orderStatus ?? payRes.data.OrderStatus;
                 const hasOtherOrdersInQueue = payRes.data.hasOrdersInQueue; // Backend မှ Flag သစ်
-                
+
                 const savedOrderId = localStorage.getItem('currentKioskOrderId');
                 const lastStatus = localStorage.getItem('lastOrderStatus');
-
-                if (hasOtherOrdersInQueue) {
+                if (!hasOtherOrdersInQueue) {
+                  this.currentOrder = {
+                    orderId: createdOrderid,
+                    orderNumber: createdOrderNumber,
+                    orderStatus: serverCalculatedStatus || 'Preparing'
+                  };
+                  localStorage.setItem('currentKioskOrderId', createdOrderid.toString());
+                  localStorage.setItem('currentKioskOrderNumber', createdOrderNumber);
+                  localStorage.setItem('lastOrderStatus', 'Preparing');
+                  this.isAnotherOrderWaiting = false;
+                }
+                else if (serverCalculatedStatus === 'Preparing' || !savedOrderId || lastStatus === 'None') {
+                  this.currentOrder = {
+                    orderId: createdOrderid,
+                    orderNumber: createdOrderNumber,
+                    orderStatus: serverCalculatedStatus || 'Paid'
+                  };
+                  this.isAnotherOrderWaiting = false;
+                }
+                else if (hasOtherOrdersInQueue) {
                   this.isAnotherOrderWaiting = true;
                   this.messageService.add({
                     key: 'globalMessage',
@@ -556,7 +571,8 @@ export class MenuComponent implements OnInit {
                     summary: 'Queued Success',
                     detail: 'Your order is placed into the queue!'
                   });
-                } 
+                }
+                //savedOrderId && lastStatus !== 'Ready' && lastStatus !== 'None'
                 else if (savedOrderId && lastStatus !== 'Ready' && lastStatus !== 'None') {
                   this.isAnotherOrderWaiting = true;
                   this.messageService.add({
@@ -566,20 +582,34 @@ export class MenuComponent implements OnInit {
                     detail: 'Your order is placed into the queue!'
                   });
                 }
-                else if (serverCalculatedStatus === 'Preparing' || !savedOrderId || lastStatus === 'None') {
-                  this.currentOrder = {
-                    orderId: createdOrderid,
-                    orderNumber: createdOrderNumber,
-                    orderStatus: serverCalculatedStatus || 'Paid'
-                  };
-                  localStorage.setItem('currentKioskOrderId', createdOrderid.toString());
-                  localStorage.setItem('currentKioskOrderNumber', createdOrderNumber);
-                  localStorage.setItem('lastOrderStatus', serverCalculatedStatus);
-                  this.isAnotherOrderWaiting = false;
-                } else {
+                else {
                   this.isAnotherOrderWaiting = true;
                 }
 
+                // else if (serverCalculatedStatus === 'Preparing' || !savedOrderId || lastStatus === 'None') {
+                //   this.currentOrder = {
+                //     orderId: createdOrderid,
+                //     orderNumber: createdOrderNumber,
+                //     orderStatus: serverCalculatedStatus || 'Paid'
+                //   };
+                //   localStorage.setItem('currentKioskOrderId', createdOrderid.toString());
+                //   localStorage.setItem('currentKioskOrderNumber', createdOrderNumber);
+                //   localStorage.setItem('lastOrderStatus', serverCalculatedStatus);
+                //   this.isAnotherOrderWaiting = false;
+                // } else {
+                //   this.isAnotherOrderWaiting = true;
+                // }
+                // else (savedOrderId && lastStatus !== 'Ready' && lastStatus !== 'None') {
+                //   this.isAnotherOrderWaiting = true;
+                //   this.messageService.add({
+                //     key: 'globalMessage',
+                //     severity: 'success',
+                //     summary: 'Queued Success',
+                //     detail: 'Your order is placed into the queue!'
+                //   });
+                // }
+
+                this.cdr.detectChanges();
                 this.clearCart();
                 this.transitionNote = '';
                 this.customerPhone = '';

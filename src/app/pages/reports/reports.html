@@ -118,10 +118,10 @@
                         }
 
                         @else if(col.field === 'createdAt') {
-                        <span class="text-gray-500 font-medium text-[11px]">{{ rowData[col.field] | date: 'yyyy-MMMM-dd' }}</span>
+                        <span class="text-gray-500 font-medium text-[11px]">{{ rowData[col.field] | date: 'yyyy MMMM dd' }}</span>
                         }
                         @else if(col.field === 'updatedAt') {
-                        <span class="text-gray-500 font-medium text-[11px]">{{ rowData[col.field] | date: 'yyyy-MMMM-dd' }}</span>
+                        <span class="text-gray-500 font-medium text-[11px]">{{ rowData[col.field] | date: 'yyyy MMMM dd' }}</span>
                         }
 
                         @else if(col.field === 'note') {

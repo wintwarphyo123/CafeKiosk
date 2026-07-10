@@ -9,6 +9,7 @@ export interface DashboardModel {
 export interface TrendingItemResponseModel{
     menuId:number;
     menuName:string;
+    menuImage:string;
     categoryName:string;
     totalSales:number;
     percentage:number

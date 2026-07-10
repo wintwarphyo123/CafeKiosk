@@ -70,19 +70,7 @@
       }
 
       <div class="flex items-center gap-4 w-full sm:w-auto justify-end">
-        <div class="flex items-center gap-2">
 
-          <button (click)="onNotificationClick()"
-            class="relative w-7 h-7 flex items-center justify-center bg-amber-50 text-amber-800 rounded-md border border-amber-100/70 hover:bg-amber-100 transition-colors">
-            <i class="pi pi-bell text-[10px]"></i>
-            @if (notificationCount > 0) {
-            <span
-              class="absolute -top-1 -right-1 bg-amber-700 text-white font-bold text-[8px] h-3.5 w-3.5 rounded-full flex items-center justify-center scale-90 animate-pulse">
-              {{ notificationCount }}
-            </span>
-            }
-          </button>
-        </div>
 
         <div class="h-4 w-[1px] bg-stone-200 hidden sm:block"></div>
 

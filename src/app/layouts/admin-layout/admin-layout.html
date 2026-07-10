@@ -88,20 +88,7 @@
       class="h-14 bg-white px-6 flex items-center justify-end gap-4 border-b border-stone-200/60 shrink-0 shadow-2xs">
       <div class="flex items-center gap-4">
 
-        <div class="flex items-center gap-2">
-          <button (click)="clearNotifications()"
-            class="relative w-7 h-7 flex items-center justify-center bg-amber-50 text-amber-800 rounded-md border border-amber-100/70 hover:bg-amber-100 transition-colors">
-            <i class="pi pi-bell text-[10px]"></i>
-            @if (notificationCount > 0) {
-            <span
-              class="absolute -top-1 -right-1 bg-amber-700 text-white font-bold text-[8px] h-3.5 w-3.5 rounded-full flex items-center justify-center animate-pulse">
-              {{ notificationCount }}
-            </span>
-            }
-          </button>
-        </div>
-
-        <div class="h-4 w-[1px] bg-stone-200"></div>
+         <div class="h-4 w-[1px] bg-stone-200 hidden sm:block"></div>
 
         <div class="relative">
           <div (click)="toggleProfile()" class="flex items-center gap-2.5 cursor-pointer group select-none">
@@ -214,7 +201,7 @@
             </div>
 
             <div class="mt-1.5 bg-stone-100 p-1.5 rounded border border-stone-200 flex justify-center items-center">
-              <img [src]="imgSrc || 'assets/images/default-avatar.png'"
+              <img [src]="imgSrc || '/thumbnail.jpg'"
                 class="max-h-24 w-24 object-cover rounded-full shadow-xs border-2 border-white"
                 (error)="handleImageError($event)" alt="User Preview Thumbnail" />
             </div>

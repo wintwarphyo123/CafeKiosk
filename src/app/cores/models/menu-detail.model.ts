@@ -1,6 +1,7 @@
 // menu-detail.model.ts
 
 export interface OptionItemDto {
+    isAvailable: boolean|null;
     itemId: number;
     itemName: string;
     extraPrice: number;
@@ -10,7 +11,7 @@ export interface OptionGroupDto {
     groupId: number;
     groupName: string;
     optionItems: OptionItemDto[];
-}
+}//groupId,groupName,optionItems
 
 export interface MenuDetailResponseDto {
     menuId: number;

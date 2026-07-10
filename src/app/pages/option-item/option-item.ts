@@ -46,8 +46,6 @@ export class OptionItem implements OnInit {
   selectedOptionItem: OptionItemModel | null = null;
   dropDownOptions: any[] = [];
   cols!: SortColumn[];
-  filterItemModel:OptionItemModel[]=[];
-    selectedState:string='All';
   
   constructor(
     private optionItemService: OptionItemService,
@@ -122,7 +120,6 @@ export class OptionItem implements OnInit {
         } else {
           this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to load items.' });
         }
-        this.filterItemState(this.selectedState);
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -133,21 +130,6 @@ export class OptionItem implements OnInit {
     });
   }
 
-  changeState(state:string):void{
-    this.selectedState=state;
-    this.filterItemState(state);
-  }
-  filterItemState(state:string){
-    if(state==='Active'){
-      this.filterItemModel= this.optionItemModel.filter(g=>g.status  === true);
-    }
-    else if(state=='InActive'){
-      this.filterItemModel = this.optionItemModel.filter(g=>g.status=== false);
-    }else{
-      this.filterItemModel=[...this.optionItemModel];
-    }
-
-  }
 
   create(): void {
     this.isEdited = false;

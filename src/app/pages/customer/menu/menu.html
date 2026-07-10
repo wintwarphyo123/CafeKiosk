@@ -1,20 +1,25 @@
 <div class="h-screen w-screen bg-[#FDF5ED] flex flex-col font-sans antialiased overflow-hidden">
 
     <!-- HEADER NAVBAR -->
-    <header class="h-16 bg-white border-b border-orange-100/60 flex items-center justify-between px-6 shadow-xs shrink-0 z-30 gap-4">
+    <header
+        class="h-16 bg-white border-b border-orange-100/60 flex items-center justify-between px-6 shadow-xs shrink-0 z-30 gap-4">
         <div class="flex items-center gap-6 flex-1 max-w-xl">
-            <h1 class="text-lg font-black text-orange-600 shrink-0 flex items-center gap-1.5 cursor-pointer" (click)="goToLogin()">
+            <h1 class="text-lg font-black text-orange-600 shrink-0 flex items-center gap-1.5 cursor-pointer"
+                (click)="goToLogin()">
                 <img src="/Rori_Cafe.png" alt="Logo" class="w-10 h-10 object-contain" />
                 <span>Rori'Cafe</span>
             </h1>
 
             <div class="relative w-full">
                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.608 10.608Z" />
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                        stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.608 10.608Z" />
                     </svg>
                 </span>
-                <input type="text" placeholder="Search for coffee, bakery, treats..." [(ngModel)]="searchQuery" (input)="onSearchChange()"
+                <input type="text" placeholder="Search for coffee, bakery, treats..." [(ngModel)]="searchQuery"
+                    (input)="onSearchChange()"
                     class="w-full pl-9 pr-4 py-2 text-xs bg-gray-50 border border-orange-100 rounded-xl focus:outline-none focus:border-orange-400 focus:bg-white transition font-medium text-gray-700 placeholder-gray-400" />
             </div>
         </div>
@@ -23,11 +28,14 @@
             <button (click)="cartVisible = !cartVisible"
                 [ngClass]="cartVisible ? 'bg-orange-100 text-orange-600' : 'text-gray-700 bg-gray-50 hover:bg-orange-50'"
                 class="relative p-2.5 rounded-full transition shadow-xs">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                    stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
                 </svg>
                 @if(cartCount > 0){
-                <span class="absolute -top-0.5 -right-0.5 bg-orange-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-black shadow-xs">
+                <span
+                    class="absolute -top-0.5 -right-0.5 bg-orange-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-black shadow-xs">
                     {{ cartCount }}
                 </span>
                 }
@@ -36,47 +44,68 @@
     </header>
 
     <!-- CATEGORY NAVIGATION BANNER -->
-    <nav class="w-full bg-white border-b border-orange-100/70 px-6 py-3 shadow-xs flex items-center gap-3 overflow-x-auto no-scrollbar shrink-0 z-20">
-    <button (click)="selectCategory(null)"
-        class="flex items-center gap-2 px-4 py-2 rounded-xl transition duration-150 text-xs font-bold whitespace-nowrap shrink-0 shadow-xs border"
-        [ngClass]="selectedCategoryId === null ? 'bg-orange-500 text-white border-transparent shadow-md' : 'bg-white hover:bg-orange-50 text-gray-700 border-orange-100/70'">
-        <span>✨ All Menus</span>
-    </button>
+    <nav
+        class="w-full bg-white border-b border-orange-100/70 px-6 py-3 shadow-xs flex items-center gap-3 overflow-x-auto no-scrollbar shrink-0 z-20">
+        <button (click)="selectCategory(null)"
+            class="flex items-center gap-2 px-4 py-2 rounded-xl transition duration-150 text-xs font-bold whitespace-nowrap shrink-0 shadow-xs border"
+            [ngClass]="selectedCategoryId === null ? 'bg-orange-500 text-white border-transparent shadow-md' : 'bg-white hover:bg-orange-50 text-gray-700 border-orange-100/70'">
+            <span>✨ All Menus</span>
+        </button>
 
-    @for(cat of categoryModel; track cat.categoryId ){
-    <button (click)="selectCategory(cat.categoryId)"
-        class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition duration-150 border whitespace-nowrap shrink-0 shadow-xs"
-        [ngClass]="selectedCategoryId === cat.categoryId ? 'bg-orange-500 text-white border-transparent shadow-md' : 'bg-white hover:bg-orange-50 text-gray-700 border-orange-100/70'">
-        <img [src]="cat.categoryImage" [alt]="cat.categoryName" class="w-5 h-5 object-cover rounded-md shrink-0" />
-        <span class="block shrink-0">{{ cat.categoryName }}</span>
-    </button>
-    }
-</nav>
+        @for(cat of categoryModel; track cat.categoryId ){
+        <button (click)="selectCategory(cat.categoryId)" [disabled]="!cat.isActive"
+            class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition duration-150 border whitespace-nowrap shrink-0 shadow-xs 
+               disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale disabled:bg-gray-100 disabled:border-gray-200"
+            [ngClass]="selectedCategoryId === cat.categoryId ? 'bg-orange-500 text-white border-transparent shadow-md' : 'bg-white hover:bg-orange-50 text-gray-700 border-orange-100/70'">
+
+            <img [src]="cat.categoryImage" [alt]="cat.categoryName" class="w-5 h-5 object-cover rounded-md shrink-0" />
+
+            <span class="block shrink-0">
+                {{ cat.categoryName }}
+                @if(!cat.isActive) {
+                <span class="text-[9px] font-normal text-red-400 block -mt-0.5">(Disabled)</span>
+                }
+            </span>
+        </button>
+        }
+    </nav>
 
     <!-- MAIN BODY GRID CONTAINER (COHESIVE COUPLING FRAME) -->
-    <div class="flex-1 w-full grid grid-cols-1" [ngClass]="cartVisible ? 'lg:grid-cols-[1fr_384px]' : 'grid-cols-1'" class="grid overflow-hidden relative">
+    <div class="flex-1 w-full grid grid-cols-1" [ngClass]="cartVisible ? 'lg:grid-cols-[1fr_384px]' : 'grid-cols-1'"
+        class="grid overflow-hidden relative">
 
         <!-- PRODUCT GRID CANVASES WITH AUTOMATIC RE-BALANCING -->
         <main class="w-full p-6 overflow-y-auto h-full border-r border-orange-100/30">
             <div class="grid grid-cols-1 sm:grid-cols-2 justify-items-center gap-6 max-w-7xl mx-auto"
-                 [ngClass]="cartVisible ? 'md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4' : 'md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'">
-                
+                [ngClass]="cartVisible ? 'md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4' : 'md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'">
+
                 @for(item of filterMenuItem; track item.menuId){
-                <div class="bg-white rounded-2xl border border-orange-100/50 flex flex-col justify-between w-full max-w-xs overflow-hidden group hover:shadow-md hover:border-orange-200 transition-all duration-300 shadow-xs">
+                <div [ngClass]="!item.isAvailable? 'opacity-65 pointer-events-none' : 'group hover:shadow-md hover:border-orange-200'"
+                    class="bg-white rounded-2xl border border-orange-100/50 flex flex-col justify-between w-full max-w-xs overflow-hidden group hover:shadow-md hover:border-orange-200 transition-all duration-300 shadow-xs">
+
                     <div>
-                        <div class="overflow-hidden aspect-[4/3] bg-orange-50/30 cursor-pointer relative flex items-center justify-center border-b border-gray-50" (click)="openDetail(item)">
-                            <img [src]="item.menuImage" [alt]="item.menuName"
-                                (error)="handleImageError($event)"
+                        <div class="overflow-hidden aspect-[4/3] bg-orange-50/30 cursor-pointer relative flex items-center justify-center border-b border-gray-50"
+                            (click)="openDetail(item)">
+                            @if(!item.isAvailable){
+                            <span
+                                class="absolute top-3 right-3 z-30 bg-gray-900/90 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md shadow-sm">
+                                sold out
+                            </span>
+                            }
+                            <img [src]="item.menuImage" [alt]="item.menuName" (error)="handleImageError($event)"
                                 class="w-full h-full object-cover group-hover:scale-105 transition duration-500 ease-out" />
                         </div>
                         <div class="p-4 pb-2">
-                            <h3 class="text-sm font-bold text-gray-800 line-clamp-1 group-hover:text-orange-600 transition-colors">{{ item.menuName }}</h3>
-                            
+                            <h3
+                                class="text-sm font-bold text-gray-800 line-clamp-1 group-hover:text-orange-600 transition-colors">
+                                {{ item.menuName }}</h3>
                         </div>
                     </div>
 
-                    <div class="p-4 pt-2 flex items-center justify-between gap-2 border-t border-gray-50 mt-2 bg-gray-50/30">
-                        <span class="text-sm font-black text-orange-600 tracking-tight">{{ item.price | number:'1.2-2' }} MMK</span>
+                    <div
+                        class="p-4 pt-2 flex items-center justify-between gap-2 border-t border-gray-50 mt-2 bg-gray-50/30">
+                        <span class="text-sm font-black text-orange-600 tracking-tight">{{ item.price | number:'1.2-2'
+                            }} MMK</span>
                         <button (click)="openDetail(item)"
                             class="bg-[#A47551] hover:bg-[#8B5E3C] text-white text-xs px-4 py-2 rounded-xl font-bold transition shadow-xs active:scale-95">
                             Choose
@@ -89,7 +118,8 @@
 
         <!-- CART SIDEBAR CONTAINER -->
         @if(cartVisible){
-        <aside class="fixed inset-y-0 right-0 w-80 sm:w-96 lg:static lg:w-full bg-white border-l border-orange-100 flex flex-col shadow-2xl lg:shadow-none h-full shrink-0 z-40 lg:z-10 animate-slide-in-right">
+        <aside
+            class="fixed inset-y-0 right-0 w-80 sm:w-96 lg:static lg:w-full bg-white border-l border-orange-100 flex flex-col shadow-2xl lg:shadow-none h-full shrink-0 z-40 lg:z-10 animate-slide-in-right">
             <div class="p-4 border-b border-gray-100 flex items-center justify-between bg-orange-50/20">
                 <div class="flex items-center gap-2">
                     <span class="text-sm font-black text-gray-800">My Order</span>
@@ -97,8 +127,10 @@
                         {{ cartItems.length || 0 }}
                     </span>
                 </div>
-                <button (click)="cartVisible = false" class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                <button (click)="cartVisible = false"
+                    class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
+                        stroke="currentColor" class="w-4 h-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
                     </svg>
                 </button>
@@ -110,7 +142,8 @@
                 <div class="h-full flex flex-col items-center justify-center text-center p-6 text-gray-400 my-auto">
                     <span class="text-4xl mb-3">🛒</span>
                     <p class="text-xs font-bold text-gray-700">Your cart is empty</p>
-                    <p class="text-[11px] text-gray-400 mt-1 max-w-[180px] leading-relaxed">Pick some drinks and treats to start your order!</p>
+                    <p class="text-[11px] text-gray-400 mt-1 max-w-[180px] leading-relaxed">Pick some drinks and treats
+                        to start your order!</p>
                 </div>
                 } @else {
                 @for(cartItem of cartItems; track $index; let idx = $index) {
@@ -133,11 +166,14 @@
 
                     <div class="flex items-center justify-between mt-1">
                         <div class="flex items-center bg-gray-50 rounded-xl p-1 border border-gray-200/60">
-                            <button (click)="updateCartQty(idx, -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded-lg text-gray-600 hover:text-gray-900 font-extrabold active:scale-95 shadow-xs border border-gray-100">-</button>
+                            <button (click)="updateCartQty(idx, -1)"
+                                class="w-6 h-6 flex items-center justify-center bg-white rounded-lg text-gray-600 hover:text-gray-900 font-extrabold active:scale-95 shadow-xs border border-gray-100">-</button>
                             <span class="text-xs font-bold text-gray-800 w-7 text-center">{{ cartItem.quantity }}</span>
-                            <button (click)="updateCartQty(idx, 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded-lg text-gray-600 hover:text-gray-900 font-extrabold active:scale-95 shadow-xs border border-gray-100">+</button>
+                            <button (click)="updateCartQty(idx, 1)"
+                                class="w-6 h-6 flex items-center justify-center bg-white rounded-lg text-gray-600 hover:text-gray-900 font-extrabold active:scale-95 shadow-xs border border-gray-100">+</button>
                         </div>
-                        <button (click)="removeCartItem(idx)" class="text-xs text-gray-400 hover:text-rose-500 hover:underline font-semibold transition">Remove</button>
+                        <button (click)="removeCartItem(idx)"
+                            class="text-xs text-gray-400 hover:text-rose-500 hover:underline font-semibold transition">Remove</button>
                     </div>
                 </div>
                 }
@@ -151,9 +187,11 @@
                         <span>Subtotal</span>
                         <span>{{ orderSubtotal | number:'1.2-2' }} MMK</span>
                     </div>
-                    <div class="flex justify-between items-center text-sm font-bold text-gray-800 pt-2 border-t border-dashed border-gray-200">
+                    <div
+                        class="flex justify-between items-center text-sm font-bold text-gray-800 pt-2 border-t border-dashed border-gray-200">
                         <span>Total Price</span>
-                        <span class="text-orange-600 text-base font-black tracking-tight">{{ orderSubtotal | number:'1.2-2' }} MMK</span>
+                        <span class="text-orange-600 text-base font-black tracking-tight">{{ orderSubtotal |
+                            number:'1.2-2' }} MMK</span>
                     </div>
                 </div>
 
@@ -175,7 +213,8 @@
     @if(selectedItem){
     <div class="flex flex-col gap-4 pt-2 max-h-[75vh] overflow-y-auto">
         <div class="w-full flex justify-center">
-            <img [src]="selectedItem.menuImage" class="w-full h-40 object-cover rounded-xl shadow-inner" (error)="handleImageError($event)" />
+            <img [src]="selectedItem.menuImage" class="w-full h-40 object-cover rounded-xl shadow-inner"
+                (error)="handleImageError($event)" />
         </div>
 
         <div>
@@ -190,14 +229,21 @@
             </label>
 
             <div class="flex flex-col gap-2">
-                @if(group.items && group.items.length > 0){
-                @for(option of group.items; track $index){
-                <div class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl text-sm transition hover:bg-gray-100">
+                @if(group.optionItems && group.optionItems.length > 0){
+                @for(option of group.optionItems; track $index){
+                <div [class.opacity-40]="option.isAvailable === false"
+                    [class.pointer-events-none]="option.isAvailable === false"
+                    class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl text-sm transition hover:bg-gray-100">
                     <div class="flex items-center gap-3 cursor-pointer">
                         <p-radioButton [name]="group.groupId.toString()" [value]="option"
+                            [disabled]="option.isAvailable === false"
                             [(ngModel)]="selectedOptions[group.groupId.toString()]" (onClick)="calculateTotalPrice()">
                         </p-radioButton>
-                        <label class="text-gray-700 text-xs font-semibold cursor-pointer">{{ option.itemName }}</label>
+                        <label class="text-gray-700 text-xs font-semibold cursor-pointer">{{ option.itemName }}
+                            @if(option.isAvailable === false) {
+                            <span class="text-[10px] text-red-500 font-bold ml-1">(Out of Stock)</span>
+                            }
+                        </label>
                     </div>
                     @if(option.extraPrice > 0){
                     <span class="text-xs font-bold text-green-600">
@@ -215,7 +261,8 @@
             <div class="flex items-center bg-gray-100 rounded-xl p-1 border border-gray-200">
                 <button (click)="decrementQuantity()"
                     class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-gray-600 hover:bg-gray-50 active:scale-95 transition font-bold shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
+                        stroke="currentColor" class="w-4 h-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
                     </svg>
                 </button>
@@ -224,7 +271,8 @@
 
                 <button (click)="incrementQuantity()"
                     class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-gray-600 hover:bg-gray-50 active:scale-95 transition font-bold shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
+                        stroke="currentColor" class="w-4 h-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                     </svg>
                 </button>
@@ -288,7 +336,8 @@
     [style]="{ width: '90vw', maxWidth: '400px' }" [draggable]="false" [resizable]="false">
     <div class="flex flex-col gap-4 pt-2 text-center">
 
-        <div class="flex flex-col items-center justify-center p-3 bg-gray-50 border border-dashed border-gray-200 rounded-xl">
+        <div
+            class="flex flex-col items-center justify-center p-3 bg-gray-50 border border-dashed border-gray-200 rounded-xl">
             <div class="w-40 h-40 bg-gray-200 flex items-center justify-center rounded-lg mb-2">
                 <span class="text-xs text-gray-500">[ Scan QR Code ]</span>
             </div>
@@ -313,14 +362,14 @@
 </p-dialog>
 
 @if (currentOrder?.orderStatus === 'Paid') {
-    <div class="m-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-center animate-pulse">
-        <p class="text-xs font-semibold text-amber-800">
-            ⚠️ There are orders ahead of you. 
-        </p>
-        <span class="text-[11px] text-amber-600 block mt-0.5">
-            Please wait inside the queue until the current order is done.
-        </span>
-    </div>
+<div class="m-4 p-3 bg-amber-50 border border-amber-200 rounded-lg text-center animate-pulse">
+    <p class="text-xs font-semibold text-amber-800">
+        ⚠️ There are orders ahead of you.
+    </p>
+    <span class="text-[11px] text-amber-600 block mt-0.5">
+        Please wait inside the queue until the current order is done.
+    </span>
+</div>
 }
 
 @if (currentOrder) {
@@ -336,7 +385,8 @@
             <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
         </span>
         } @else {
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"
+            class="w-5 h-5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
         </svg>
         }
@@ -347,11 +397,13 @@
 @if (statusExpanded && currentOrder) {
 <div (click)="statusExpanded = false" class="fixed inset-0 bg-black/40 z-40 transition-opacity duration-300"></div>
 
-<div class="fixed bottom-20 right-6 w-[calc(100vw-3rem)] sm:w-96 bg-white rounded-2xl shadow-2xl z-45 border border-orange-100 flex flex-col overflow-hidden animate-fade-in-up">
+<div
+    class="fixed bottom-20 right-6 w-[calc(100vw-3rem)] sm:w-96 bg-white rounded-2xl shadow-2xl z-45 border border-orange-100 flex flex-col overflow-hidden animate-fade-in-up">
 
     <div class="p-4 border-b border-gray-100 bg-orange-50/40 flex items-center justify-between">
         <div>
-            <span class="text-[10px] text-orange-600 font-bold uppercase tracking-wider block">Live Kitchen Tracking</span>
+            <span class="text-[10px] text-orange-600 font-bold uppercase tracking-wider block">Live Kitchen
+                Tracking</span>
             <h4 class="text-sm font-black text-gray-800 mt-0.5">Order #{{ currentOrder.orderNumber }}</h4>
         </div>
         <span class="bg-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-wide">
@@ -373,7 +425,7 @@
     <div class="p-5 space-y-5 max-h-[60vh] overflow-y-auto bg-white">
         @for (step of statusSteps; track step.status; let i = $index; let isLast = $last) {
         <div class="relative flex gap-4">
-            
+
             @if (!isLast) {
             <div [ngClass]="isStepCompleted(statusSteps[i+1].status) ? 'bg-orange-500' : 'bg-gray-200'"
                 class="absolute left-3.5 top-7 bottom-[-20px] w-0.5 -ml-[1px] z-0 transition-colors duration-300">
@@ -387,28 +439,29 @@
             </div>
 
             <div class="flex flex-col pt-0.5">
-                <span [ngClass]="isStepCompleted(step.status) ? 'text-gray-800 font-black' : 'text-gray-400 font-medium'"
+                <span
+                    [ngClass]="isStepCompleted(step.status) ? 'text-gray-800 font-black' : 'text-gray-400 font-medium'"
                     class="text-xs transition-colors duration-300">
                     {{ step.label }}
                 </span>
                 <small class="text-[10px] text-gray-400">{{ step.status }}</small>
 
                 @if (currentOrder.orderStatus === step.status) {
-                    @if (step.status === 'Paid') {
-                    <span class="text-[10px] text-amber-600 font-bold mt-1 inline-flex items-center gap-1 animate-pulse">
-                        ⏳ In Queue - Waiting for kitchen to start...
-                    </span>
-                    }
-                    @if (step.status === 'Preparing') {
-                    <span class="text-[10px] text-orange-600 font-bold mt-1 inline-flex items-center gap-1 animate-pulse">
-                        👨‍🍳 Kitchen is preparing your order now!
-                    </span>
-                    }
-                    @if (step.status === 'Ready') {
-                    <span class="text-[10px] text-green-600 font-bold mt-1 inline-flex items-center gap-1">
-                        ✅ Done! Please collect your order.
-                    </span>
-                    }
+                @if (step.status === 'Paid') {
+                <span class="text-[10px] text-amber-600 font-bold mt-1 inline-flex items-center gap-1 animate-pulse">
+                    ⏳ In Queue - Waiting for kitchen to start...
+                </span>
+                }
+                @if (step.status === 'Preparing') {
+                <span class="text-[10px] text-orange-600 font-bold mt-1 inline-flex items-center gap-1 animate-pulse">
+                    👨‍🍳 Kitchen is preparing your order now!
+                </span>
+                }
+                @if (step.status === 'Ready') {
+                <span class="text-[10px] text-green-600 font-bold mt-1 inline-flex items-center gap-1">
+                    ✅ Done! Please collect your order.
+                </span>
+                }
                 }
             </div>
         </div>

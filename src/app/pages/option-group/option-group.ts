@@ -46,9 +46,6 @@ export class OptionGroup implements OnInit {
   selectedGroup:OptionGroupModel| null=null;
   cols!:SortColumn[];
 
-  filterGroupModel:OptionGroupModel[]=[];
-  selectedState:string='All';
-
   constructor(
     private optionGroupService:OptionGroupService,
     private messageService:MessageService,
@@ -81,7 +78,6 @@ export class OptionGroup implements OnInit {
         }
         this.isLoading = false;
         console.log(this.optionGroupModel);
-        this.filterGroupState(this.selectedState);
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -90,21 +86,6 @@ export class OptionGroup implements OnInit {
         this.cdr.detectChanges();
       },
     });
-  }
-  changeState(state:string):void{
-    this.selectedState=state;
-    this.filterGroupState(state);
-  }
-  filterGroupState(state:string){
-    if(state==='Active'){
-      this.filterGroupModel= this.optionGroupModel.filter(g=>g.status  === true);
-    }
-    else if(state=='InActive'){
-      this.filterGroupModel = this.optionGroupModel.filter(g=>g.status=== false);
-    }else{
-      this.filterGroupModel=[...this.optionGroupModel];
-    }
-
   }
 
   create():void{

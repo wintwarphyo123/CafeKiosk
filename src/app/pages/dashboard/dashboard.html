@@ -71,8 +71,10 @@
           <div class="flex items-center gap-3">
             <span class="font-bold text-stone-400 w-4">#{{ i + 1 }}</span>
 
-            <div class="w-8 h-8 bg-amber-100 rounded-md flex items-center justify-center text-amber-900 font-bold">
-              ☕
+            <div class="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center overflow-hidden border border-stone-200 shrink-0">
+              <img [src]="item.menuImage"
+                [alt]="item.menuName" class="w-full h-full object-cover"
+                (error)="$any($event.target).src = '/thumbnail.jpg'" />
             </div>
 
             <div>

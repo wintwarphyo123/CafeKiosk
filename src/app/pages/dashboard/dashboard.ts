@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ChartModule } from 'primeng/chart';
@@ -7,6 +7,8 @@ import { DashboardService } from '../../cores/services/dashboard';
 import { DashboardModel, TrendingItemResponseModel } from '../../cores/models/dashboard.model';
 import { TagModule } from "primeng/tag";
 import { SelectModule } from 'primeng/select';
+import { environment } from '../../../environments/environment';
+import { CategoryService } from '../../cores/services/category';
 
 @Component({
   selector: 'app-dashboard',
@@ -23,11 +25,23 @@ import { SelectModule } from 'primeng/select';
   styleUrl: './dashboard.scss'
 })
 export class Dashboard implements OnInit {
+  @ViewChild('image') image!: ElementRef<HTMLInputElement>;
+  @ViewChild('imgV') imgV!: ElementRef<HTMLInputElement>;
+
+
+  imgName: string = '';
+
+  imgBase64String: string = '';
+
+  imgSrc: String = '';
+
+  thumbnailUrl: string = '/thumbnail.jpg';
 
   constructor(
     private dashboardService: DashboardService,
     private messageService: MessageService,
     private cdr: ChangeDetectorRef,
+    private categoryService:CategoryService
   ) { }
   dashboardModel: DashboardModel[] = [];
   trendingItemModel: TrendingItemResponseModel[] = [];
@@ -118,6 +132,7 @@ export class Dashboard implements OnInit {
             menuId: item.menuId ?? 0,
             menuName: item.menuName ?? null,
             categoryName: item.categoryName ?? null,
+            menuImage:item.menuImage  ? this.getImageUrl(item.menuImage) : '',
             totalSales: item.totalSales ?? 0,
             percentage: item.percentage ?? 0.0,
           }));
@@ -130,7 +145,79 @@ export class Dashboard implements OnInit {
         this.cdr.detectChanges();
       }
     })
-    console.log(this.trendingItemModel)
+  }
+   handleImageError(event: any) {
+    event.target.src = '/thumbnail.jpg';
+  }
+
+  private getImageUrl(imagePath: string): string {
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    const base = environment.web_url.replace(/\/$/, '');
+    const path = imagePath.replace(/^\//, '');
+
+    if (path.startsWith('images/')) {
+      return `${base}/${path}`;
+    }
+
+    return `${base}/images/category/${path}`;
+  }
+
+  onUploadImg(): void {
+    this.image.nativeElement.click();
+  }
+
+  onImgChange(event: any): void {
+
+    if (this.image.nativeElement.value == '') {
+      this.imgName = 'None';
+      return;
+    }
+
+    if (this.checkValidExtension(this.image)) {
+
+      const reader = new FileReader();
+
+      this.imgName = this.image.nativeElement.value;
+
+      const file: File = event.target.files[0];
+      if (file) {
+        this.categoryService.convertBase64(file).subscribe((base64) => {
+          this.imgBase64String = base64;
+          //this.categoryForm.controls['categoryImage'].setValue(base64);
+          console.log(this.imgBase64String);
+        })
+
+        /* Show Image */
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+          console.log(reader.result);
+          this.imgSrc = reader.result as string;
+
+          this.cdr.detectChanges();
+        }
+      }
+    }
+  }
+
+  checkValidExtension(sender: ElementRef<HTMLInputElement>): boolean {
+    let validExs: string[] = ['.jpg', '.png', '.jpeg'];
+    let fileExt = sender.nativeElement.value;
+    fileExt = fileExt.substring(sender.nativeElement.value.toString().lastIndexOf('.'));
+    if (validExs.indexOf(fileExt) < 0) {
+      this.messageService.add({
+        key: 'globalMobileMessage',
+        severity: 'warn',
+        summary: 'Warning',
+        detail: "Please choose valid files. [Accepted file: Image]"
+      });
+
+      sender.nativeElement.value = '';
+
+      return false;
+    }
+    else return true;
   }
 
   initChartOptions() {

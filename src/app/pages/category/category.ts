@@ -15,7 +15,6 @@ import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
 import { ImageModule } from "primeng/image";
 import { SelectModule } from 'primeng/select';
-import { isActive } from '@angular/router';
 import { SortColumn } from '../../cores/models/root.model';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 

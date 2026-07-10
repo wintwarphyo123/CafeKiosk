@@ -92,7 +92,7 @@
                         }
 
                         @else if(col.field === 'createdAt' || col.field === 'updatedAt') {
-                        <span class="text-gray-400 font-medium">{{ rowData[col.field] | date: 'yyyy-MM-dd' }}</span>
+                        <span class="text-gray-400 font-medium">{{ rowData[col.field] | date: 'yyyy MMMM dd' }}</span>
                         }
 
                         @else if(col.field === 'note') {

@@ -101,7 +101,11 @@ export const routes: Routes = [
       {
       path: 'menu',
       component: Menu 
-    }
+    },
+    {
+        path: 'menu/detail/:id',
+        component: MenuDetail
+      }
     ]
   },
 

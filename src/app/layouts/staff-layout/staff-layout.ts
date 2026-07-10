@@ -40,7 +40,6 @@ export class StaffLayout implements OnInit {
   userProfile: any = null;
   isProfileOpen: boolean = false;
   searchText: string = '';
-  notificationCount: number = 0;
   private destroy$ = new Subject<void>();
   isloading: boolean = true;
   isMobileMenuOpen: boolean = false;
@@ -101,7 +100,7 @@ export class StaffLayout implements OnInit {
     this.orderNotificationService.notificationCount$
       .pipe(takeUntil(this.destroy$))
       .subscribe(count => {
-        this.notificationCount = count;
+        
         this.cdr.detectChanges();
       });
   }
@@ -220,9 +219,6 @@ export class StaffLayout implements OnInit {
   toggleProfile() {
     this.isProfileOpen = !this.isProfileOpen;
   }
-  clearNotifications() {
-    this.orderNotificationService.clearNotifications();
-  }
 
   onLogout() {
   this.confirmationService.confirm({
@@ -267,13 +263,7 @@ export class StaffLayout implements OnInit {
     });
   }
 
-  onNotificationClick() {
-    this.orderNotificationService.clearNotifications();
-    this.router.navigate(['/staff/kitchen-dashboard'], {
-      queryParams: { status:'paid' },
-      queryParamsHandling: 'merge'
-    });
-  }
+  
   toggleMobileMenu() {
     this.isMobileMenuOpen = !this.isMobileMenuOpen;
   }

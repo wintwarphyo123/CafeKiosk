@@ -324,21 +324,24 @@ export class KitchenDashboard implements OnInit, OnDestroy {
 
   updateStatus(newStatus: string): void {
     if (!this.selectedOrder) return;
-    const activeKitchenQueue = this.orderModel
+    const transitioningStatus = newStatus.toLowerCase();
+    if (transitioningStatus === 'preparing' || transitioningStatus === 'ready'){
+     const activeKitchenQueue = this.orderModel
     .filter(o => ['paid', 'preparing'].includes(o.orderStatus.toLowerCase()))
     .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
     if (activeKitchenQueue.length > 0 && activeKitchenQueue[0].orderId !== this.selectedOrder.orderId) {
-    if (['preparing', 'ready'].includes(newStatus.toLowerCase())) {
+   // if (['preparing', 'ready'].includes(newStatus.toLowerCase())) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Queue Order Enforced',
         detail: `Please finish cooking Order #${activeKitchenQueue[0].orderNumber} first.`
       });
       return;
-    }
+   // }
   }
-
+ 
+    }
     if(newStatus==='Ready' && this.selectedOrder.orderStatus !== 'Preparing'){
       this.messageService.add({
       severity: 'warn',

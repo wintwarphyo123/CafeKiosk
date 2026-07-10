@@ -43,7 +43,6 @@ export class AdminLayout implements OnInit, OnDestroy {
   isProfileOpen: boolean = false;
   isMobileMenuOpen: boolean = false;
   isloading: boolean = true;
-  notificationCount: number = 0;
   openUserDialog: boolean = false;
 
   modelVisible: boolean = false;
@@ -100,7 +99,7 @@ export class AdminLayout implements OnInit, OnDestroy {
     this.orderNotificationService.notificationCount$
       .pipe(takeUntil(this.destroy$))
       .subscribe(count => {
-        this.notificationCount = count;
+       // this.notificationCount = count;
         this.cdr.detectChanges();
       });
   }
@@ -202,10 +201,6 @@ export class AdminLayout implements OnInit, OnDestroy {
   submit() {
     if (this.userForm.valid) {
       console.log('Updated Profile Data Payload:', this.userForm.value);
-
-      // Call your save service here, for example:
-      // this.userService.updateProfile(this.userForm.value).subscribe(res => { ... })
-
       this.modelVisible = false; // close modal on success
     }
   }
@@ -217,10 +212,6 @@ export class AdminLayout implements OnInit, OnDestroy {
 
   toggleProfile() {
     this.isProfileOpen = !this.isProfileOpen;
-  }
-
-  clearNotifications() {
-    this.orderNotificationService.clearNotifications();
   }
 
   onLogout() {

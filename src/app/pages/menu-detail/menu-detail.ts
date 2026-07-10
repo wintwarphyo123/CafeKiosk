@@ -117,9 +117,32 @@ export class MenuDetail implements OnInit {
       return;
     }
     const numericTargetIds = this.selectedGroupIds.map(id => Number(id));
-    this.activePanels = this.allOptionGroupsList.filter(group => 
-      group && numericTargetIds.includes(Number(group.groupId))
-    );
+    // this.activePanels = this.allOptionGroupsList.filter(group => 
+    //   group && numericTargetIds.includes(Number(group.groupId))
+    // );
+    this.activePanels = JSON.parse(JSON.stringify(
+      this.allOptionGroupsList.filter(group => group && numericTargetIds.includes(Number(group.groupId)))
+    ));
+
+    if (this.selectedMenu?.optionGroups) {
+      this.activePanels.forEach(panel => {
+        const matchingApiResponseGroup = this.selectedMenu?.optionGroups?.find(g => Number(g.groupId) === Number(panel.groupId));
+        if (matchingApiResponseGroup && panel.optionItems) {
+          panel.optionItems.forEach(item => {
+            const apiItemMatch = matchingApiResponseGroup.optionItems?.find(oi => Number(oi.itemId) === Number(item.itemId));
+            if (apiItemMatch) {
+              // Ensure backend values map smoothly to frontend model variables
+              item.isAvailable = apiItemMatch.isAvailable !== false;
+            } else {
+              item.isAvailable = true;
+            }
+          });
+        } else if (panel.optionItems) {
+          // If it's a completely new panel just attached by the dropdown selection list, default items to true
+          panel.optionItems.forEach(item => item.isAvailable = true);
+        }
+      });
+    }
   }
 
   removePanel(groupId: number) {
@@ -132,8 +155,17 @@ export class MenuDetail implements OnInit {
       menuId: this.menuId,
       optionGroupIds: this.selectedGroupIds.map(id => Number(id))
     };
-
-    this.menuService.linkOptionGroup(postDto).subscribe({
+    const optionsAvailabilityPayload = this.activePanels.flatMap(panel => 
+      (panel.optionItems || []).map(item => ({
+        optionItemId: item.itemId,
+        isAvailable: item.isAvailable !== false
+      }))
+    );
+    const unifiedSavePayload = {
+      ...postDto,
+      optionsAvailability: optionsAvailabilityPayload
+    };
+    this.menuService.linkOptionGroup(unifiedSavePayload).subscribe({
       next: (res) => {
         if (res.success) {
           this.messageService.add({ key: 'globalMessage', severity: 'success', summary: 'Success', detail: 'Specifications saved successfully!' });
@@ -153,6 +185,10 @@ export class MenuDetail implements OnInit {
   }
 
   goBack() {
-    this.router.navigate(['/admin/menu']);
+    if (this.router.url.includes('/staff')) {
+      this.router.navigate(['/staff/menu']);
+    } else {
+      this.router.navigate(['/admin/menu']);
+    }
   }
 }

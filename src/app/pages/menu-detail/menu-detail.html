@@ -6,31 +6,35 @@
         <span class="font-medium">Loading specifications...</span>
     </div>
 } @else {
-    <div class="w-full max-w-7xl mx-auto p-4 text-[11px] font-sans selection:bg-amber-100">
+    <div class="w-full max-w-7xl mx-auto p-3 sm:p-5 text-[11px] font-sans selection:bg-amber-100">
         
-        <div class="mb-5 flex justify-between items-center border-b border-stone-200 pb-3">
+        <!-- Header Section - Fully Responsive Stack -->
+        <div class="mb-5 flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-stone-200 pb-4 gap-3">
             <div class="flex items-center gap-2">
-                <button (click)="goBack()" class="text-stone-500 hover:text-stone-800 p-1 rounded hover:bg-stone-100 transition-colors">
-                    <i class="pi pi-arrow-left text-sm"></i>
+                <button (click)="goBack()" class="text-stone-500 hover:text-stone-800 p-1.5 rounded hover:bg-stone-100 transition-colors">
+                    <i class="pi pi-arrow-left text-xs"></i>
                 </button>
                 <div>
-                    <h2 class="text-sm font-bold text-stone-800 tracking-wide uppercase">⚙️ Menu Specification Settings</h2>
+                    <h2 class="text-xs sm:text-sm font-bold text-stone-800 tracking-wide uppercase">⚙️ Menu Specification Settings</h2>
                     <p class="text-stone-500 text-[10px]">Configure option groups and choice modifiers for this menu item.</p>
                 </div>
             </div>
-            <div class="flex gap-2">
-                <button (click)="goBack()" class="px-3 py-1.5 rounded text-stone-500 hover:bg-stone-100 font-medium border border-stone-200">Cancel</button>
-                <button (click)="saveMenuOptions()" class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-4 py-1.5 rounded shadow-xs transition-colors">
+            <div class="flex gap-2 w-full sm:w-auto justify-end">
+                <button (click)="goBack()" class="px-3 py-1.5 rounded text-stone-500 hover:bg-stone-100 font-medium border border-stone-200 transition-all text-[11px]">Cancel</button>
+                <button (click)="saveMenuOptions()" class="bg-amber-700 hover:bg-amber-800 text-white font-bold px-4 py-1.5 rounded shadow-sm transition-colors text-[11px]">
                     Save Specifications
                 </button>
             </div>
         </div>
 
+        <!-- Main Column Layout Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
             
+            <!-- Left Side Configuration Forms -->
             <div class="lg:col-span-1 flex flex-col gap-4">
                 
-                <div class="bg-white rounded-lg border border-stone-200 shadow-2xs p-4 flex flex-col gap-3">
+                <!-- Product Summary -->
+                <div class="bg-white rounded-lg border border-stone-200 shadow-xs p-4 flex flex-col gap-3">
                     <h3 class="font-bold text-stone-700 uppercase tracking-wider text-[10px] border-b border-stone-100 pb-1.5">Product Summary</h3>
                     
                     <div class="flex flex-col gap-1.5 mt-1">
@@ -47,11 +51,12 @@
                     </div>
                 </div>
 
-                <div class="bg-white rounded-lg border border-stone-200 shadow-2xs p-4">
+                <!-- Link Options Selector Wrapper -->
+                <div class="bg-white rounded-lg border border-stone-200 shadow-xs p-4">
                     <label class="font-bold text-stone-700 block mb-1.5 uppercase tracking-wider text-[10px]">
                         ➕ Link Option Groups
                     </label>
-                    <p class="text-stone-400 text-[9px] mb-2 leading-tight">Attach preset groups. It will automatically generate active panels on the right.</p>
+                    <p class="text-stone-400 text-[9px] mb-2 leading-tight">Attach preset groups to automatically generate dynamic panels on the right.</p>
                     
                     <p-multiSelect [options]="allOptionGroupsList" 
                                    [(ngModel)]="selectedGroupIds" 
@@ -65,8 +70,9 @@
                 </div>
             </div>
 
+            <!-- Right Side Active Customization Boards -->
             <div class="lg:col-span-2">
-                <div class="bg-white rounded-lg border border-stone-200 shadow-2xs p-4 min-h-[400px]">
+                <div class="bg-white rounded-lg border border-stone-200 shadow-xs p-4 min-h-[400px]">
                     <h3 class="font-bold text-stone-700 uppercase tracking-wider text-[10px] border-b border-stone-200 pb-2 mb-4">
                         🛠️ Configured Specification Panels
                     </h3>
@@ -75,34 +81,63 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             @for (panel of activePanels; track panel.groupId) {
                                 
-                                <div class="bg-white border border-stone-200 hover:border-amber-700/40 rounded-lg p-3 shadow-3xs relative flex flex-col transition-all">
+                                <div class="bg-white border border-stone-200 hover:border-amber-700/30 rounded-lg p-3 shadow-xs relative flex flex-col justify-between transition-all">
                                     
-                                    <div class="flex justify-between items-center mb-2.5 border-b border-stone-100 pb-2">
-                                        <div class="flex items-center gap-1.5">
-                                            <div class="w-1.5 h-1.5 bg-amber-700 rounded-full"></div>
-                                            <span class="font-bold text-stone-800 text-xs">{{ panel.groupName }}</span>
-                                        </div>
-                                        <button (click)="removePanel(panel.groupId)" 
-                                                class="text-stone-400 hover:text-rose-600 p-1 rounded hover:bg-stone-50 transition-colors">
-                                            <i class="pi pi-trash text-[11px]"></i>
-                                        </button>
-                                    </div>
-                                    
-                                    <div class="flex flex-col gap-1.5">
-                                        @for (item of panel.optionItems; track item.itemId) {
-                                            <div class="flex justify-between items-center bg-stone-50/70 p-1.5 px-2.5 rounded border border-stone-100">
-                                                <span class="text-stone-600 font-medium">• {{ item.itemName }}</span>
-                                                <span class="text-stone-500 font-bold bg-white px-1.5 py-0.5 rounded border border-stone-150 text-[10px]">
-                                                    {{ item.extraPrice > 0 ? '+' + (item.extraPrice | number) + ' MMK' : 'Free' }}
-                                                </span>
+                                    <div>
+                                        <!-- Header Block of Individual Groups -->
+                                        <div class="flex justify-between items-center mb-2.5 border-b border-stone-100 pb-2">
+                                            <div class="flex items-center gap-1.5">
+                                                <div class="w-1.5 h-1.5 bg-amber-700 rounded-full"></div>
+                                                <span class="font-bold text-stone-800 text-xs">{{ panel.groupName }}</span>
                                             </div>
-                                        }
+                                            <button (click)="removePanel(panel.groupId)" 
+                                                    class="text-stone-400 hover:text-rose-600 p-1 rounded hover:bg-stone-50 transition-colors">
+                                                <i class="pi pi-trash text-[11px]"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Nested Options Mapping List -->
+                                        <div class="flex flex-col gap-1.5">
+                                            @for (item of panel.optionItems; track item.itemId) {
+                                                <div class="flex justify-between items-center p-2 rounded border transition-all"
+                                                     [ngClass]="item.isAvailable !== false ? 'bg-stone-50/70 border-stone-100' : 'bg-stone-100/40 border-stone-200 opacity-60'">
+                                                    
+                                                    <!-- Option Item Metadata Labels -->
+                                                    <div class="flex flex-col gap-0.5">
+                                                        <span class="font-medium" [ngClass]="item.isAvailable !== false ? 'text-stone-600' : 'text-stone-400 line-through'">
+                                                            • {{ item.itemName }}
+                                                        </span>
+                                                        @if (item.isAvailable === false) {
+                                                            <span class="text-[8px] text-rose-600 font-bold uppercase tracking-wider">Out of Stock</span>
+                                                        }
+                                                    </div>
+
+                                                    <!-- Interactive Modifier Controls & Badges -->
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="text-stone-500 font-bold bg-white px-1.5 py-0.5 rounded border border-stone-150 text-[10px]">
+                                                            {{ item.extraPrice > 0 ? '+' + (item.extraPrice | number) + ' MMK' : 'Free' }}
+                                                        </span>
+                                                        
+                                                        <!-- Clean Native Checkbox/Toggle for Stock Availability Handling -->
+                                                        <label class="relative inline-flex items-center cursor-pointer scale-90">
+                                                            <input type="checkbox" 
+                                                                   [(ngModel)]="item.isAvailable" 
+                                                                   [checked]="item.isAvailable !== false"
+                                                                   class="sr-only peer">
+                                                            <div class="w-7 h-4 bg-stone-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-600"></div>
+                                                        </label>
+                                                    </div>
+
+                                                </div>
+                                            }
+                                        </div>
                                     </div>
 
                                 </div>
                             }
                         </div>
                     } @else {
+                        <!-- Empty Grid Handling State -->
                         <div class="flex flex-col items-center justify-center py-24 border border-dashed border-stone-200 rounded-lg text-stone-400">
                             <i class="pi pi-clone text-2xl mb-2 opacity-50 text-amber-700"></i>
                             <span class="font-bold text-stone-700 text-xs mb-0.5">No Linked Panels Found</span>

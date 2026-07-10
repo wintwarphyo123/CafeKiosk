@@ -17,7 +17,7 @@ import { MenuService } from '../../cores/services/menu';
 import { environment } from '../../../environments/environment';
 
 import { SortColumn } from '../../cores/models/root.model';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AllCategoryForDropDown } from '../../cores/models/menu-detail.model';
 
 @Component({
@@ -66,7 +66,8 @@ export class Menu implements OnInit {
     private messageService: MessageService,
     private cdr: ChangeDetectorRef,
     private confirmationService: ConfirmationService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) { }
 
   private formBuilder = inject(FormBuilder);
@@ -377,8 +378,8 @@ export class Menu implements OnInit {
   }
 
   viewDetail(rowData: any) {
-    this.router.navigate(['/admin/menu/detail', rowData.menuId]);
-  }
+    this.router.navigate(['detail', rowData.menuId], { relativeTo: this.route });
+  }//change
 
   toggleMenuAvailability(item: any) {
     this.isLoading = true;

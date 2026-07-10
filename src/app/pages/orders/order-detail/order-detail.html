@@ -18,7 +18,7 @@
         <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
           <span>Order #{{ selectedOrder.orderNumber || selectedOrder.orderId }}</span>
         </h2>
-        <p class="text-sm text-gray-500 mt-1">Placed on {{ selectedOrder.createdAt | date:'medium' }}</p>
+        <p class="text-sm text-gray-500 mt-1">Placed on {{ selectedOrder.createdAt | date:'MMM d, yyyy, h:mm:ss a':'+06' }}</p>
       </div>
 
       <div class="flex items-center gap-2">
@@ -58,8 +58,7 @@
               </div>
               }
             </div>
-            <span class="font-mono text-gray-700 font-semibold">{{ (item.priceAtOrder * item.quantity) | currency
-              }}</span>
+            <span class="font-mono text-gray-700 font-semibold">{{(item.priceAtOrder * item.quantity)}} MMK</span>
           </div>
         </div>
         }
@@ -93,7 +92,7 @@
 
         <div class="text-right">
           <span class="text-xs uppercase tracking-wider font-bold opacity-70 block">Processed At</span>
-          <span class="text-sm font-mono font-bold">{{ selectedOrder.createdAt | date:'mediumTime' }}</span>
+          <span class="text-sm font-mono font-bold">{{ selectedOrder.updatedAt| date:'MMM d, yyyy, h:mm:ss a':'+06' }}</span>
         </div>
 
       </div>
