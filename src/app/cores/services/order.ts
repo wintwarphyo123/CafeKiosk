@@ -45,6 +45,9 @@ export class OrderService {
     const url = `${environment.apiUrl}/api/order/filter?startDate=${startDate}&endDate=${endDate}`;
     return this.http.get<RootModel>(url);
   }
+  getOrderStatusTimeline(orderId:number):Observable<RootModel>{
+    return this.http.get<RootModel>(`${environment.apiUrl}/api/Order/order-status/${orderId}`);
+  }
 
   exportToExcel(
     startDate: string | null | undefined,
@@ -69,5 +72,7 @@ export class OrderService {
       responseType: 'blob' 
     });
   }
+
+  
 
 }

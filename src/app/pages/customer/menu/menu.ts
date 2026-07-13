@@ -66,7 +66,7 @@ export class MenuComponent implements OnInit {
   transitionNote: string = '';
   quantity: number = 1;
   pendingOrderPayload: any = null;
-  isAnotherOrderWaiting: boolean = true;
+  isAnotherOrderWaiting: boolean = false;
   searchQuery: string = '';
 
   displayDetail: boolean = false;
@@ -85,7 +85,7 @@ export class MenuComponent implements OnInit {
   cartItems: any[] = [];
   orderCount: number = 0;
   isAvailable: boolean = true;
-  isActive:boolean=true;
+  isActive: boolean = true;
 
   currentOrder: any = {
     orderNumber: 'N/A',
@@ -115,77 +115,94 @@ export class MenuComponent implements OnInit {
 
     const savedOrderId = localStorage.getItem('currentKioskOrderId');
     if (savedOrderId) {
-      this.currentOrder = {
-        orderId: Number(savedOrderId),
-        orderNumber: localStorage.getItem('currentKioskOrderNumber') || 'N/A',
-        orderStatus: localStorage.getItem('lastOrderStatus') || 'Paid'
-      };
+      this.orderService.getOrderStatusTimeline(Number(savedOrderId)).subscribe({
+        next: (orderData: any) => {
+          const actualData = orderData?.data ?? orderData;
+          const status = actualData?.orderStatus ?? actualData?.OrderStatus ?? actualData?.status;
+          if (!actualData || status === 'Cancelled') {
+            localStorage.removeItem('currentKioskOrderId');
+            localStorage.removeItem('currentKioskOrderNumber');
+            localStorage.removeItem('lastOrderStatus');
+            this.currentOrder = { orderNumber: 'N/A', orderStatus: 'None' };
+            this.statusExpanded = false;
+          } else {
+            this.currentOrder = {
+              orderId: Number(savedOrderId),
+              orderNumber: localStorage.getItem('currentKioskOrderNumber') || 'N/A',
+              orderStatus: status
+            };
+            this.statusExpanded = true;
+            this.isAnotherOrderWaiting = (status === 'Paid');
+          }
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.warn("Order not found or expired from previous day, clearing storage.");
+          localStorage.removeItem('currentKioskOrderId');
+          localStorage.removeItem('currentKioskOrderNumber');
+          localStorage.removeItem('lastOrderStatus');
+          this.currentOrder = { orderNumber: 'N/A', orderStatus: 'None' };
+          this.statusExpanded = false;
+          this.isAnotherOrderWaiting = false;
+          this.cdr.detectChanges();
+        }
+      });
     }
   }
 
   listenToOrderUpdates(): void {
     this.notificationService.listenForOrderReady((data: any) => {
-      const savedOrderId = localStorage.getItem('currentKioskOrderId');
+      console.log("SignalR Status Live Update Caught:", data);
+      const incomingOrderId = data.orderId ?? data.OrderId ?? data.id;
+      const incomingOrderStatus = data.orderStatus ?? data.OrderStatus ?? data.order_status;
+      const incomingOrderNumber = data.orderNumber ?? data.OrderNumber ?? data.orderNo ?? ('ORD-' + incomingOrderId);
 
-      if (savedOrderId && Number(data.orderId) === Number(savedOrderId)) {
-        this.currentOrder.orderStatus = data.orderStatus;
-        localStorage.setItem('lastOrderStatus', data.orderStatus);
-
-        console.log("Current Kiosk Order is Ready:", savedOrderId);
-        if (data.orderStatus === 'Ready') {
-          this.isAnotherOrderWaiting = false;
-        }
+      // 🌟 [စည်းကမ်းချက် ၁] - မီးဖိုချောင်မှ ၎င်းအော်ဒါပြီးစီးကြောင်း Ready နှိပ်လိုက်လျှင်
+      if (incomingOrderStatus === 'Ready') {
+        this.currentOrder = {
+          orderId: incomingOrderId,
+          orderNumber: incomingOrderNumber,
+          orderStatus: 'Ready'
+        };
+        localStorage.setItem('lastOrderStatus', 'Ready');
+        this.isAnotherOrderWaiting = false;
         this.cdr.detectChanges();
+
+        // ၅ စက္ကန့်ပြည့်လျှင် Timeline Drawer အား သန့်ရှင်းစွာ ပိတ်ချပြီး Reset ချမည်
+        setTimeout(() => {
+          this.currentOrder = { orderNumber: 'N/A', orderStatus: 'None' };
+          this.statusExpanded = false;
+          this.cdr.detectChanges();
+        }, 5000);
         return;
       }
 
-      if (data.orderStatus === 'Preparing') {
-        const currentLocalStatus = localStorage.getItem('lastOrderStatus');
+      // 🌟 [စည်းကမ်းချက် ၂] - အော်ဒါသည် 'Preparing' အဆင့်သို့ ရောက်ရှိလာမှသာ Timeline ပေါ်တွင် နေရာအစားထိုးပြသမည်
+      if (incomingOrderStatus === 'Preparing') {
+        this.isAnotherOrderWaiting = data.hasOrdersInQueue === true;
 
-        if (!savedOrderId || currentLocalStatus === 'Ready' || currentLocalStatus === 'None') {
-
-          if (data.hasOrdersInQueue === true) {
-            this.isAnotherOrderWaiting = true;
-            this.cdr.detectChanges();
-            return;
-          }
-
-          this.currentOrder = {
-            orderId: data.orderId,
-            orderNumber: data.orderNumber || ('ORD-' + data.orderId),
-            orderStatus: 'Preparing'
-          };
-          localStorage.setItem('currentKioskOrderId', data.orderId.toString());
-          localStorage.setItem('currentKioskOrderNumber', this.currentOrder.orderNumber);
-          localStorage.setItem('lastOrderStatus', 'Preparing');
-          this.isAnotherOrderWaiting = false;
-
-          this.messageService.add({
-            key: 'globalMessage',
-            severity: 'success',
-            summary: 'Queue Switched',
-            detail: `Displaying active Kitchen Order #${this.currentOrder.orderNumber}`,
-            life: 4000
-          });
-          this.cdr.detectChanges();
-        }
+        this.currentOrder = {
+          orderId: incomingOrderId,
+          orderNumber: incomingOrderNumber,
+          orderStatus: incomingOrderStatus
+        };
+        
+        localStorage.setItem('currentKioskOrderId', incomingOrderId.toString());
+        localStorage.setItem('currentKioskOrderNumber', incomingOrderNumber);
+        localStorage.setItem('lastOrderStatus', incomingOrderStatus);
+        
+        this.statusExpanded = true;
+        this.cdr.detectChanges();
       }
     });
 
     this.notificationService.listenForNewOrder((data: any) => {
-      const savedOrderId = localStorage.getItem('currentKioskOrderId');
-      if (savedOrderId && Number(data.orderId) !== Number(savedOrderId)) {
-        if (this.currentOrder.orderStatus === 'Preparing' || this.currentOrder.orderStatus === 'Paid') {
-          this.isAnotherOrderWaiting = true;
-          this.messageService.add({
-            key: 'globalMessage',
-            severity: 'info',
-            summary: 'Queue Alert',
-            detail: 'A new order has been queued! Please wait until the active order is finished.',
-            life: 6000
-          });
-          this.cdr.detectChanges();
-        }
+      console.log("New Order Enters Database Queue:", data);
+      const currentTimelineStatus = this.currentOrder?.orderStatus ?? this.currentOrder?.OrderStatus ?? 'None';
+
+      if (currentTimelineStatus === 'Preparing') {
+        this.isAnotherOrderWaiting = true;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -336,7 +353,7 @@ export class MenuComponent implements OnInit {
         if (res.success && res.data) {
           const linkedGroup = res.data.optionGroups || [];
           const linkedGroupIds = linkedGroup.map((g: any) => Number(g.groupId || g.id));
-//groupId,groupName,optionItems
+          //groupId,groupName,optionItems
           this.groupedOptions = this.allOptionGroupList
             .filter(group => group && linkedGroupIds.includes(Number(group.groupId || group.id)))
             .map(group => {
@@ -348,13 +365,13 @@ export class MenuComponent implements OnInit {
                 optionItems: (group.items || group.options || group.optionItems || []).map((oi: any) => {
                   const currentItemId = oi.id ?? oi.itemId ?? oi.optionItemId;
                   const matchingApiItem = apiItems.find((ai: any) => Number(ai.itemId ?? ai.id) === Number(currentItemId));
-                  return{
-                  id:currentItemId,
-                  itemName: oi.itemName ?? oi.name,
-                  extraPrice: oi.extraPrice ?? 0,
-                  optionGroupId: group.groupId || group.id,
-                  groupName: group.groupName || group.name,
-                  isAvailable: matchingApiItem ? matchingApiItem.isAvailable !== false : true
+                  return {
+                    id: currentItemId,
+                    itemName: oi.itemName ?? oi.name,
+                    extraPrice: oi.extraPrice ?? 0,
+                    optionGroupId: group.groupId || group.id,
+                    groupName: group.groupName || group.name,
+                    isAvailable: matchingApiItem ? matchingApiItem.isAvailable !== false : true
                   }
                 })
               }
@@ -466,6 +483,8 @@ export class MenuComponent implements OnInit {
     this.calculateCartTotalPrice();
   }
 
+  
+
   openPhoneDialog(): void {
     if (this.cartItems.length === 0) {
       return;
@@ -539,86 +558,44 @@ export class MenuComponent implements OnInit {
             next: (payRes) => {
               this.isloading = false;
               if (payRes.success && payRes.data) {
-                const serverCalculatedStatus = payRes.data.orderStatus ?? payRes.data.OrderStatus;
-                const hasOtherOrdersInQueue = payRes.data.hasOrdersInQueue; // Backend မှ Flag သစ်
+                const targetOrder = payRes.data.order;
+                const serverCalculatedStatus = targetOrder.orderStatus ?? targetOrder.OrderStatus ?? 'Paid';
+                const hasOtherOrdersInQueue = payRes.data.hasOrdersInQueue;
 
-                const savedOrderId = localStorage.getItem('currentKioskOrderId');
-                const lastStatus = localStorage.getItem('lastOrderStatus');
-                if (!hasOtherOrdersInQueue) {
+                localStorage.setItem('currentKioskOrderId', createdOrderid.toString());
+                localStorage.setItem('currentKioskOrderNumber', createdOrderNumber);
+                localStorage.setItem('lastOrderStatus', serverCalculatedStatus);
+
+                // 🌟 [Single Kiosk Logic အမှန်ဆုံးပုံစံ] - အကယ်၍ ရှေ့တွင် လူများချက်ပြုတ်နေဆဲဖြစ်ပါက 
+                // Kiosk Timeline တွင် လက်ရှိချက်နေဆဲအော်ဒါကို ဆက်ပြထားပြီး ၎င်းအော်ဒါအသစ်အား Queue Warning သာပြပေးထားမည်
+                if (hasOtherOrdersInQueue || (this.currentOrder && this.currentOrder.orderStatus === 'Preparing')) {
+                  this.isAnotherOrderWaiting = true;
+                } else {
                   this.currentOrder = {
                     orderId: createdOrderid,
                     orderNumber: createdOrderNumber,
-                    orderStatus: serverCalculatedStatus || 'Preparing'
-                  };
-                  localStorage.setItem('currentKioskOrderId', createdOrderid.toString());
-                  localStorage.setItem('currentKioskOrderNumber', createdOrderNumber);
-                  localStorage.setItem('lastOrderStatus', 'Preparing');
-                  this.isAnotherOrderWaiting = false;
-                }
-                else if (serverCalculatedStatus === 'Preparing' || !savedOrderId || lastStatus === 'None') {
-                  this.currentOrder = {
-                    orderId: createdOrderid,
-                    orderNumber: createdOrderNumber,
-                    orderStatus: serverCalculatedStatus || 'Paid'
+                    orderStatus: serverCalculatedStatus
                   };
                   this.isAnotherOrderWaiting = false;
-                }
-                else if (hasOtherOrdersInQueue) {
-                  this.isAnotherOrderWaiting = true;
-                  this.messageService.add({
-                    key: 'globalMessage',
-                    severity: 'info',
-                    summary: 'Queued Success',
-                    detail: 'Your order is placed into the queue!'
-                  });
-                }
-                //savedOrderId && lastStatus !== 'Ready' && lastStatus !== 'None'
-                else if (savedOrderId && lastStatus !== 'Ready' && lastStatus !== 'None') {
-                  this.isAnotherOrderWaiting = true;
-                  this.messageService.add({
-                    key: 'globalMessage',
-                    severity: 'success',
-                    summary: 'Queued Success',
-                    detail: 'Your order is placed into the queue!'
-                  });
-                }
-                else {
-                  this.isAnotherOrderWaiting = true;
+                  this.statusExpanded = true; 
                 }
 
-                // else if (serverCalculatedStatus === 'Preparing' || !savedOrderId || lastStatus === 'None') {
-                //   this.currentOrder = {
-                //     orderId: createdOrderid,
-                //     orderNumber: createdOrderNumber,
-                //     orderStatus: serverCalculatedStatus || 'Paid'
-                //   };
-                //   localStorage.setItem('currentKioskOrderId', createdOrderid.toString());
-                //   localStorage.setItem('currentKioskOrderNumber', createdOrderNumber);
-                //   localStorage.setItem('lastOrderStatus', serverCalculatedStatus);
-                //   this.isAnotherOrderWaiting = false;
-                // } else {
-                //   this.isAnotherOrderWaiting = true;
-                // }
-                // else (savedOrderId && lastStatus !== 'Ready' && lastStatus !== 'None') {
-                //   this.isAnotherOrderWaiting = true;
-                //   this.messageService.add({
-                //     key: 'globalMessage',
-                //     severity: 'success',
-                //     summary: 'Queued Success',
-                //     detail: 'Your order is placed into the queue!'
-                //   });
-                // }
-
-                this.cdr.detectChanges();
                 this.clearCart();
                 this.transitionNote = '';
                 this.customerPhone = '';
                 this.displayPaymentDialog = false;
-                this.statusExpanded = true;
+
+                this.messageService.add({
+                  key: 'globalMessage',
+                  severity: 'success',
+                  summary: 'Order Placed',
+                  detail: `Order #${createdOrderNumber} successfully processed.`,
+                  life: 4000
+                });
+                this.cdr.detectChanges();
               } else {
                 this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: payRes.message || 'order fail' });
               }
-              this.cdr.detectChanges();
             },
             error: (err) => {
               this.isloading = false;

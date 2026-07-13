@@ -31,7 +31,6 @@ import { OrderService } from '../../../cores/services/order';
     InputTextModule,
     DialogModule,
     ImageModule,
-    CurrencyPipe,
     TagModule,
     DatePipe,
     NgClass,
