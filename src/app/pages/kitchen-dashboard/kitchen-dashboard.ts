@@ -116,74 +116,17 @@ export class KitchenDashboard implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
   }
-  // private listenForRefreshSignals(): void {
-  //   this.orderNotificationService.orderRefresh$
-  //     .pipe(takeUntil(this.destroy$))
-  //     .subscribe(() => {
-  //       this.orderService.get('Paid').pipe(takeUntil(this.destroy$)).subscribe(res => {
-  //         if (res.success && Array.isArray(res.data) && res.data.length > 0) {
-            
-  //           const latestPaid = res.data.reduce((latest: any, current: any) => {
-  //             return new Date(current.createdAt).getTime() > new Date(latest.createdAt).getTime() ? current : latest;
-  //           });
-
-  //           this.latestIncomingOrderId = latestPaid.orderId;
-  //           this.cdr.detectChanges();
-
-  //           setTimeout(() => {
-  //             this.latestIncomingOrderId = null;
-  //             this.cdr.detectChanges();
-  //           }, 8000);
-  //         }
-  //       });
-  //     });
-  // }
+  
   private listenForRefreshSignals(): void {
   this.orderNotificationService.orderRefresh$
     .pipe(takeUntil(this.destroy$))
     .subscribe(() => {
       this.loadData();
-      // 1. Re-run complete load cycle to grab the new data array structure
-      // this.orderService.get(this.selectedStatus).pipe(takeUntil(this.destroy$)).subscribe(res => {
-      //   if (res.success && Array.isArray(res.data)) {
-          
-      //     // Map incoming objects uniformly
-      //     this.orderModel = res.data.map((item: any) => ({
-      //       orderId: item.orderId ?? 0,
-      //       orderNumber: item.orderNumber ?? '',
-      //       totalAmount: item.totalAmount ?? 0,
-      //       orderStatus: item.orderStatus ?? 'Pending',
-      //       phoneNumber: item.phoneNumber ?? '',
-      //       note: item.note ?? '',
-      //       createdAt: item.createdAt ?? new Date(),
-      //       updatedAt: item.updatedAt ?? new Date(),
-      //       orderItems: item.orderItems ?? []
-      //     }));
-
-      //     // 2. Notify the search pipeline to run filter matching over the new dataset
-      //     this.ordersLoaded$.next(this.orderModel);
-
-      //     // 3. Keep your gorgeous 'Just Arrived' visual animation working
-      //     if (this.orderModel.length > 0) {
-      //       const latestPaid = this.orderModel.reduce((latest: any, current: any) => {
-      //         return new Date(current.createdAt).getTime() > new Date(latest.createdAt).getTime() ? current : latest;
-      //       });
-      //       this.latestIncomingOrderId = latestPaid.orderId;
-      //     }
-
-      //     this.cdr.detectChanges();
-
-      //     setTimeout(() => {
-      //       this.latestIncomingOrderId = null;
-      //       this.cdr.detectChanges();
-      //     }, 8000);
-      //   }
-      // });
     });
     this.orderNotificationService.listenForOrderReady((data:any)=>{
       console.log("Kitchen Dashboard received Real-time Refresh Trigger:", data);
       this.loadData();
-    })
+    });
 }
 
   isLatestIncoming(orderId: number): boolean {
@@ -263,8 +206,7 @@ export class KitchenDashboard implements OnInit, OnDestroy {
     // }
     if (cleanKey) {
       this.filteredOrders = currentOrders.filter(order =>
-        order.orderNumber.toLowerCase().includes(cleanKey) ||
-        (order.phoneNumber && order.phoneNumber.includes(cleanKey))
+        order.orderNumber.toLowerCase().includes(cleanKey) 
       );
     }
     else {

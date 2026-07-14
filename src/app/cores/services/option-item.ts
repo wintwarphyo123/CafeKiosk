@@ -22,11 +22,14 @@ export class OptionItemService {
   update(id:number,model:OptionItemModel):Observable<RootModel>{
     return this.http.put<RootModel>(`${environment.apiUrl}/api/optionItem/${id}`,model)
   }
+  getDeletedData():Observable<RootModel>{
+    return this.http.get<RootModel>(`${environment.apiUrl}/api/optionItem/deleted`);
+  }
+  restoreData(id:number):Observable<RootModel>{
+    return this.http.put<RootModel>(`${environment.apiUrl}/api/optionItem/${id}/restore`,{})
+  }
 
   delete(id:number):Observable<RootModel>{
     return this.http.delete<RootModel>(`${environment.apiUrl}/api/optionItem/${id}`,{})
-  }
-  changeStatus(id:number):Observable<RootModel>{
-    return this.http.put<RootModel>(`${environment.apiUrl}/api/optionItem/${id}/update-status`,{})
   }
 }

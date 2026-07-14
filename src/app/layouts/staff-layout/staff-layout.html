@@ -85,7 +85,7 @@
             </div>
             <div
               class="w-8 h-8 rounded-full bg-amber-50 border border-amber-200/60 flex items-center justify-center text-sm shadow-2xs overflow-hidden">
-              @if(userProfile.profileImage){
+              @if(userProfile?.profileImage){
               <img [src]="getImageUrl(userProfile.profileImage)" (error)="handleImageError($event)" alt="Profile Photo"
                 class="w-full h-full object-cover" />
               }@else {
@@ -184,7 +184,7 @@
             </div>
 
             <div class="mt-1.5 bg-stone-100 p-1.5 rounded border border-stone-200 flex justify-center items-center">
-              <img [src]="imgSrc || 'assets/images/default-avatar.png'"
+              <img [src]="imgSrc || '/thumbnail.jpg'"
                 class="max-h-24 w-24 object-cover rounded-full shadow-xs border-2 border-white"
                 (error)="handleImageError($event)" alt="User Preview Thumbnail" />
             </div>

@@ -19,6 +19,7 @@ import { environment } from '../../../environments/environment';
 import { SortColumn } from '../../cores/models/root.model';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AllCategoryForDropDown } from '../../cores/models/menu-detail.model';
+import { OrderNotificationService } from '../../cores/services/order-notification-service';
 
 @Component({
   selector: 'app-menu',
@@ -58,8 +59,9 @@ export class Menu implements OnInit {
   isEdited: boolean = false;
   allCategories: any[] = [];
   cols!: SortColumn[];
-  filteredMenu:MenuModel[]=[];
-  selectedState:string='All';
+  filteredMenu: MenuModel[] = [];
+  selectedState: string = 'All';
+  
 
   constructor(
     private menuService: MenuService,
@@ -67,7 +69,8 @@ export class Menu implements OnInit {
     private cdr: ChangeDetectorRef,
     private confirmationService: ConfirmationService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    
   ) { }
 
   private formBuilder = inject(FormBuilder);
@@ -78,7 +81,7 @@ export class Menu implements OnInit {
     description: [''],
     price: [0],
     isAvailable: [true],
-    categoryId: [null], 
+    categoryId: [null],
     categoryName: ['']
   })
 
@@ -89,11 +92,13 @@ export class Menu implements OnInit {
       { field: 'categoryName', header: 'Category Name' }
     ]
     const savedRole = localStorage.getItem('userRole') || '';
-    this.userRole = savedRole.toUpperCase(); 
+    this.userRole = savedRole.toUpperCase();
     this.categoryData();
+    this.loadData();
+    
   }
 
-  categoryData(){
+  categoryData() {
     this.isLoading = true;
     this.menuService.getAllCategories().subscribe({
       next: (res) => {
@@ -103,21 +108,21 @@ export class Menu implements OnInit {
           this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to load categories.' });
           return;
         }
-        
+
         const rawCategory = Array.isArray(res.data) ? res.data : [];
-        
+
         this.allCategories = rawCategory.map((item: any) => ({
           id: item.categoriesId ?? item.id ?? item.CategoriesId ?? 0,
           name: item.categoriesName ?? item.name ?? item.CategoriesName ?? ''
         }));
 
         this.cdr.detectChanges();
-       
+
         this.loadData();
       },
       error: (err) => {
         this.isLoading = false;
-        this.loadData(); 
+        this.loadData();
         this.cdr.detectChanges();
       }
     });
@@ -154,19 +159,86 @@ export class Menu implements OnInit {
     })
   }
 
-  changeState(state:string):void{
-    this.selectedState=state;
+  changeState(state: string): void {
+    this.selectedState = state;
     this.filterMenuState(state);
   }
-  filterMenuState(state:string):void{
-    if(state==='Available'){
-      this.filteredMenu= this.menuModel.filter(menu => menu.isAvailable === true);
-    }else if(state==='Out_Of_Stock'){
-      this.filteredMenu= this.menuModel.filter(menu => menu.isAvailable === false);
-    }else{
-      this.filteredMenu=[...this.menuModel];
+  filterMenuState(state: string): void {
+    if (state === 'Available') {
+      this.filteredMenu = this.menuModel.filter(menu => menu.isAvailable === true);
+    } else if (state === 'Out_Of_Stock') {
+      this.filteredMenu = this.menuModel.filter(menu => menu.isAvailable === false);
+    } else if (state === 'Deleted') {
+      this.menuService.getDeletedData().subscribe({
+        next: (res) => {
+          this.isLoading = false;
+          if (res.success) {
+            const rawData = Array.isArray(res.data) ? res.data : [];
+            this.filteredMenu = rawData.map((item) => ({
+              menuId: item.Id ?? item.menuId ?? item.id ?? 0,
+              menuName: item.menuName ?? '',
+              menuImage: item.menuImage ? this.getImageUrl(item.menuImage) : null,
+              description: item.description ?? '',
+              price: item.price ?? 0,
+              isAvailable: item.isAvailable ?? item.is_available ?? true,
+              categoryId: item.categoryId ?? 0,
+              categoryName: item.categoryName ?? ''
+            }));
+          }
+          this.cdr.detectChanges();
+        }
+      })
+    }
+    else {
+      this.filteredMenu = [...this.menuModel];
     }
   }
+
+  restoreItem(menu:MenuModel) {
+     
+      this.confirmationService.confirm({
+        message: 'Are you sure want to restore?',
+        header: 'Confirmation',
+        icon: 'pi pi-exclamation-triangle',
+        accept: () => {
+          this.menuService.restoreData(menu.menuId).subscribe({
+            next: (res) => {
+              this.modalVisible = false;
+              if (res.success) {
+                this.loadData();
+                this.messageService.add({
+                  key: 'globalMessage',
+                  severity: 'success',
+                  summary: 'success',
+                  detail: 'Menu restore successfully'
+                });
+                this.filterMenuState('Deleted');
+              } else {
+                this.messageService.add({
+                  key: 'globalMessage',
+                  severity: 'warn',
+                  summary: 'warning',
+                  detail: 'Menu restore fail'
+                });
+                this.cdr.detectChanges();
+              }
+            },
+            error: (err) => {
+              
+              this.modalVisible = false;
+              this.loadData();
+              this.messageService.add({
+                key: 'globalMessage',
+                severity: 'error',
+                summary: 'Error',
+                detail: 'Menu restore failed, name is already exist!!'
+              });
+              this.cdr.detectChanges();
+            }
+          });
+        }
+      })
+    }
   handleImageError(event: any) {
     event.target.src = this.thumbnailUrl;
   }
@@ -243,7 +315,7 @@ export class Menu implements OnInit {
   submit() {
     const formValue = this.menuForm.getRawValue();
     let menuData: any;
-    
+
     if (this.isEdited) {
       const currentMenuId = this.selectedMenu?.menuId ?? 0;
       menuData = {
@@ -336,7 +408,7 @@ export class Menu implements OnInit {
     this.modalVisible = true;
     this.isEdited = true;
     this.selectedMenu = menu;
-    
+
     // FIX: Match exact keys assigned on your FormGroup properties!
     this.menuForm.patchValue({
       id: menu.menuId ?? 0,

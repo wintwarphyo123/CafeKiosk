@@ -22,11 +22,15 @@ export class OptionGroupService {
   update(id:number,model:OptionGroupModel):Observable<RootModel>{
     return this.http.put<RootModel>(`${environment.apiUrl}/api/optionGroup/${id}`,model)
   }
+  getDeletedData():Observable<RootModel>{
+    return this.http.get<RootModel>(`${environment.apiUrl}/api/optionGroup/deleted`);
+  }
+  restoreData(id:number):Observable<RootModel>{
+    return this.http.put<RootModel>(`${environment.apiUrl}/api/optionGroup/${id}/restore`,{})
+  }
 
   delete(id:number):Observable<RootModel>{
     return this.http.delete<RootModel>(`${environment.apiUrl}/api/optionGroup/${id}`,{})
   }
-  changeStatus(id:number):Observable<RootModel>{
-    return this.http.put<RootModel>(`${environment.apiUrl}/api/optionGroup/${id}/update-status`,{})
-  }
+  
 }

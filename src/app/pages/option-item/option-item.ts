@@ -46,7 +46,8 @@ export class OptionItem implements OnInit {
   selectedOptionItem: OptionItemModel | null = null;
   dropDownOptions: any[] = [];
   cols!: SortColumn[];
-  
+  selectedState:string='Active';
+  filterItemModel:OptionItemModel[]=[];
   constructor(
     private optionItemService: OptionItemService,
     private optionGroupService: OptionGroupService,
@@ -120,6 +121,7 @@ export class OptionItem implements OnInit {
         } else {
           this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to load items.' });
         }
+        this.filterItemState(this.selectedState);
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -129,7 +131,74 @@ export class OptionItem implements OnInit {
       }
     });
   }
-
+  changeState(state: string): void {
+        this.selectedState = state;
+        this.filterItemState(state);
+      }
+filterItemState(state: string) {
+        if (state === 'Active') {
+          this.filterItemModel = this.optionItemModel.filter(item => item.status === true);
+        }
+        else if (state === 'Deleted') {
+          this.optionItemService.getDeletedData().subscribe({
+            next: (res) => {
+              this.isLoading = false;
+              if (res.success) {
+                this.filterItemModel=res.data;
+              }
+              this.cdr.detectChanges();
+            }
+          })
+        }
+        else {
+          this.filterItemModel = [...this.optionItemModel];
+        }
+      }
+      restoreItem(item:OptionItemModel) {
+       
+        this.confirmationService.confirm({
+          message: 'Are you sure want to restore?',
+          header: 'Confirmation',
+          icon: 'pi pi-exclamation-triangle',
+          accept: () => {
+            this.optionItemService.restoreData(item.id).subscribe({
+              next: (res) => {
+                this.modelVisible = false;
+                if (res.success) {
+                  this.loadData();
+                  this.messageService.add({
+                    key: 'globalMessage',
+                    severity: 'success',
+                    summary: 'success',
+                    detail: 'option group restore successfully'
+                  });
+                  this.filterItemState('Deleted');
+                } else {
+                  this.messageService.add({
+                    key: 'globalMessage',
+                    severity: 'warn',
+                    summary: 'warning',
+                    detail: 'option group restore fail'
+                  });
+                  this.cdr.detectChanges();
+                }
+              },
+              error: (err) => {
+                
+                this.modelVisible = false;
+                this.loadData();
+                this.messageService.add({
+                  key: 'globalMessage',
+                  severity: 'error',
+                  summary: 'Error',
+                  detail: 'Option Group restore failed, name is already exist!!'
+                });
+                this.cdr.detectChanges();
+              }
+            });
+          }
+        })
+      }
 
   create(): void {
     this.isEdited = false;
@@ -265,32 +334,4 @@ export class OptionItem implements OnInit {
       }
     });
   }
-  changeStatus(optionItem:OptionItemModel): void {
-       this.isLoading=true;
-        this.optionItemService.changeStatus(optionItem.id).subscribe({
-          next: (res) => {
-            this.isLoading=false;
-            if (res.success) {
-              optionItem.status=!optionItem.status;
-              this.messageService.add({
-                key: 'globalMessage',
-                severity: 'success',
-                summary: 'success',
-                detail: 'option group status updated successfully'
-              });
-            } else {
-              this.messageService.add({ key:'globalMessage',severity: 'error', summary: 'Error', detail: res.message });
-            }
-          },
-          error: (err) => {
-            this.isLoading=false;
-            this.messageService.add({
-              key: 'globalMessage',
-              severity: 'warn',
-              summary: 'Warning',
-              detail: 'option group status update failed'
-            });
-          }
-        }); 
-      }
 }

@@ -3,7 +3,6 @@ export interface OrderModel {
     orderNumber: string;
     totalAmount: number;
     orderStatus: string;
-    phoneNumber: string | null;
     note: string | null;
     createdAt: string;
     updatedAt:string;

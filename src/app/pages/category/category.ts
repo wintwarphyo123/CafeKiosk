@@ -17,6 +17,7 @@ import { ImageModule } from "primeng/image";
 import { SelectModule } from 'primeng/select';
 import { SortColumn } from '../../cores/models/root.model';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { OrderNotificationService } from '../../cores/services/order-notification-service';
 
 @Component({
   selector: 'app-category',
@@ -60,15 +61,17 @@ export class Category implements OnInit {
   isLoading: boolean = false;
   isEdit: boolean = false;
   errorMessage = signal<any[]>([]);
-  cols!:SortColumn[];
-  filterCategoryModel:CategoryModel[]=[];
-  selectedState:string='All';
+  cols!: SortColumn[];
+  filterCategoryModel: CategoryModel[] = [];
+  selectedState: string = 'All';
+  kioskCategory:any[]=[];
   constructor(
-   
+
     private categoryService: CategoryService,
     private messageService: MessageService,
     private cdr: ChangeDetectorRef,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private signalRService: OrderNotificationService,
   ) { }
 
   private formBuilder = inject(FormBuilder)
@@ -77,14 +80,24 @@ export class Category implements OnInit {
     categoryName: [''],
     isActive: [true],
     categoryImage: ['']
-    
+
   })
 
   ngOnInit(): void {
-    this.cols=[
-      {field:'categoryName',header:'category Name'}
+    this.cols = [
+      { field: 'categoryName', header: 'category Name' }
     ]
     this.loadData();
+    this.signalRService.listenForCategoryUpdate((data) => {
+    console.log("Live Category status received: ", data);
+    
+    const targetCategory = this.kioskCategory.find(m => m.id === data.categoryId);
+    if (targetCategory) {
+      targetCategory.isActive = data.isActive;
+      this.cdr.detectChanges(); 
+    }
+  });
+    
   }
 
   loadData(): void {
@@ -93,7 +106,7 @@ export class Category implements OnInit {
       next: (res) => {
         this.isLoading = false;
         if (!res.success) {
-          this.messageService.add({key:'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to load users.' });
+          this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to load users.' });
           return;
         }
         const rawCategory = Array.isArray(res.data) ? res.data : [];
@@ -101,7 +114,7 @@ export class Category implements OnInit {
         this.categoryModel = rawCategory.map((item) => ({
           categoryId: item.id ?? item.categoryId ?? item.categoryid ?? 0,
           categoryName: item.categoryName ?? null,
-          isActive: item.active===1 || item.isActive === 'true' || item.isActive===true,
+          isActive: item.active === 1 || item.isActive === 'true' || item.isActive === true,
           categoryImage: item.categoryImage ? this.getImageUrl(item.categoryImage) : null,
         }));
         this.filterCategoryState(this.selectedState);
@@ -116,272 +129,330 @@ export class Category implements OnInit {
       }
     });
   }
-  changeState(state:string):void{
-    this.selectedState=state;
+  changeState(state: string): void {
+    this.selectedState = state;
     this.filterCategoryState(state);
   }
-  filterCategoryState(state:string){
-    if(state==='Active'){
-      this.filterCategoryModel= this.categoryModel.filter(cat =>cat.isActive  === true);
+  filterCategoryState(state: string) {
+    if (state === 'Available') {
+      this.filterCategoryModel = this.categoryModel.filter(cat => cat.isActive === true);
     }
-    else if(state=='InActive'){
-      this.filterCategoryModel = this.categoryModel.filter(cat =>cat.isActive === false);
-    }else{
-      this.filterCategoryModel=[...this.categoryModel];
+    else if (state == 'Out_Of_Stock') {
+      this.filterCategoryModel = this.categoryModel.filter(cat => cat.isActive === false);
     }
-
-  }
-
-  handleImageError(event: any) {
-    event.target.src = '/thumbnail.jpg';
-  }
-
-  private getImageUrl(imagePath: string): string {
-    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-      return imagePath;
-    }
-    const base = environment.web_url.replace(/\/$/, '');
-    const path = imagePath.replace(/^\//, '');
-
-    if (path.startsWith('images/')) {
-      return `${base}/${path}`;
-    }
-
-    return `${base}/images/category/${path}`;
-  }
-
-  onUploadImg(): void {
-    this.image.nativeElement.click();
-  }
-
-  onImgChange(event: any): void {
-
-    if (this.image.nativeElement.value == '') {
-      this.imgName = 'None';
-      return;
-    }
-
-    if (this.checkValidExtension(this.image)) {
-
-      const reader = new FileReader();
-
-      this.imgName = this.image.nativeElement.value;
-
-      const file: File = event.target.files[0];
-      if (file) {
-        this.categoryService.convertBase64(file).subscribe((base64) => {
-          this.imgBase64String = base64;
-          this.categoryForm.controls['categoryImage'].setValue(base64);
-          console.log(this.imgBase64String);
-        })
-
-        /* Show Image */
-        reader.readAsDataURL(file);
-        reader.onload = () => {
-          console.log(reader.result);
-          this.imgSrc = reader.result as string;
-
+    else if (state === 'Deleted') {
+      this.categoryService.getDeletedData().subscribe({
+        next: (res) => {
+          this.isLoading = false;
+          if (res.success) {
+            const rawData = Array.isArray(res.data) ? res.data : [];
+            this.filterCategoryModel = rawData.map((item) => ({
+              categoryId: item.id ?? item.categoryId ?? item.categoryid ?? 0,
+              categoryName: item.categoryName ?? null,
+              isActive: item.active === 1 || item.isActive === 'true' || item.isActive === true,
+              categoryImage: item.categoryImage ? this.getImageUrl(item.categoryImage) : null,
+            }));
+          }
           this.cdr.detectChanges();
         }
-      }
-    }
-  }
-
-  checkValidExtension(sender: ElementRef<HTMLInputElement>): boolean {
-    let validExs: string[] = ['.jpg', '.png', '.jpeg'];
-    let fileExt = sender.nativeElement.value;
-    fileExt = fileExt.substring(sender.nativeElement.value.toString().lastIndexOf('.'));
-    if (validExs.indexOf(fileExt) < 0) {
-      this.messageService.add({
-        key: 'globalMobileMessage',
-        severity: 'warn',
-        summary: 'Warning',
-        detail: "Please choose valid files. [Accepted file: Image]"
-      });
-
-      sender.nativeElement.value = '';
-
-      return false;
-    }
-    else return true;
-  }
-
-
-  create(): void {
-    this.categoryForm.reset();
-    this.resetImageFields();
-    this.modalVisible = true;
-    this.isEdit = false;
-  }
-
-  update(category: CategoryModel) {
-    this.isEdit = true;
-    this.selectedCategory = category;
-    this.categoryForm.reset();
-    this.categoryForm.patchValue({
-      categoryId: category.categoryId ?? 0,
-      categoryName: category.categoryName ?? '',
-      categoryImage: category.categoryImage ?? '',
-      isActive: category.isActive ?? ''
-    });
-    if (category.categoryImage) {
-      this.imgSrc = category.categoryImage; 
-      
-      this.imgName = category.categoryImage.substring(category.categoryImage.lastIndexOf('/') + 1);
-    } else {
-      this.imgSrc = '';
-      this.imgName = '';
-    }
-
-    console.log(this.categoryForm);
-    this.modalVisible = true;
-  }
-  
-
-  submit() {
-
-    const formValue = this.categoryForm.getRawValue();
-    let categoryData: any;
-    if (!this.isEdit) {
-      categoryData = {
-        categoryId: 0,
-        categoryName: formValue.categoryName,
-        categoryImage: formValue.categoryImage
-      }
-      this.categoryService.create(categoryData).subscribe({
-        next: (res) => {
-          if (res.success) {
-            this.modalVisible = false;
-            this.resetImageFields();
-            this.loadData();
-            this.messageService.add({
-              key: 'globalMessage',
-              severity: 'success',
-              summary: 'success',
-              detail: 'Category Create Successfully'
-            });
-          } else {
-            this.messageService.add({key:'globalMessage', severity: 'error', summary: 'Error', detail: res.message });
-          }
-          this.cdr.detectChanges();
-        },
-        error: (err) => {
-          this.modalVisible = false;
-          this.loadData();
-          this.messageService.add({
-            key: 'globalMessage',
-            severity: 'warn',
-            summary: 'Warning',
-            detail: 'Category Create Fail'
-          });
-        },
-        complete: () => { },
-      });
-    }
-    else {
-      categoryData = {
-        categoryId: this.selectedCategory?.categoryId,
-        categoryName: formValue.categoryName,
-        categoryImage: formValue.categoryImage
-      }
-      this.categoryService.update(categoryData.categoryId, categoryData).subscribe({
-        next: (res) => {
-          if (res.success) {
-            this.modalVisible = false;
-            this.loadData();
-            this.resetImageFields();
-            this.loadData();
-            this.messageService.add({
-              key: 'globalMessage',
-              severity: 'success',
-              summary: 'success',
-              detail: 'Category Update Successfully'
-            });
-          } else {
-            this.messageService.add({ key:'globalMessage',severity: 'error', summary: 'Error', detail: res.message });
-          }
-        },
-        error: (err) => {
-          this.modalVisible = false;
-          this.loadData();
-          this.messageService.add({
-            key: 'globalMessage',
-            severity: 'warn',
-            summary: 'Warning',
-            detail: 'Category Update Failed'
-          });
-        },
-        complete: () => { },
       })
     }
+    else {
+      this.filterCategoryModel = [...this.categoryModel];
+    }
   }
-
-  delete(category: CategoryModel): void {
-    this.selectedCategory = category;
+  restoreItem(category: CategoryModel) {
+   
     this.confirmationService.confirm({
-      message: 'Are you sure want to delete?',
+      message: 'Are you sure want to restore?',
       header: 'Confirmation',
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
-        this.categoryService.delete(category.categoryId).subscribe({
+        this.categoryService.restoreData(category.categoryId).subscribe({
           next: (res) => {
             this.modalVisible = false;
-            this.messageService.add({
-              key: 'globalMessage',
-              severity: 'success',
-              summary: 'success',
-              detail: 'Category delete Successfully'
-            });
+            if (res.success) {
+              this.loadData();
+              this.messageService.add({
+                key: 'globalMessage',
+                severity: 'success',
+                summary: 'success',
+                detail: 'Category restore successfully'
+              });
+              this.filterCategoryState('Deleted');
+            } else {
+              this.messageService.add({
+                key: 'globalMessage',
+                severity: 'warn',
+                summary: 'warning',
+                detail: 'Category restore fail'
+              });
+              this.cdr.detectChanges();
+            }
           },
           error: (err) => {
+            
             this.modalVisible = false;
+            this.loadData();
+            this.messageService.add({
+              key: 'globalMessage',
+              severity: 'error',
+              summary: 'Error',
+              detail: 'Category restore failed, name is already exist!!'
+            });
+            this.cdr.detectChanges();
+          }
+        });
+      }
+    })
+  }
+  handleImageError(event: any) {
+        event.target.src = '/thumbnail.jpg';
+      }
+
+  private getImageUrl(imagePath: string): string {
+        if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+          return imagePath;
+        }
+        const base = environment.web_url.replace(/\/$/, '');
+        const path = imagePath.replace(/^\//, '');
+
+        if (path.startsWith('images/')) {
+          return `${base}/${path}`;
+        }
+
+        return `${base}/images/category/${path}`;
+      }
+
+  onUploadImg(): void {
+        this.image.nativeElement.click();
+      }
+
+  onImgChange(event: any): void {
+
+        if (this.image.nativeElement.value == '') {
+          this.imgName = 'None';
+          return;
+        }
+
+        if (this.checkValidExtension(this.image)) {
+
+          const reader = new FileReader();
+
+          this.imgName = this.image.nativeElement.value;
+
+          const file: File = event.target.files[0];
+          if (file) {
+            this.categoryService.convertBase64(file).subscribe((base64) => {
+              this.imgBase64String = base64;
+              this.categoryForm.controls['categoryImage'].setValue(base64);
+              console.log(this.imgBase64String);
+            })
+
+            /* Show Image */
+            reader.readAsDataURL(file);
+            reader.onload = () => {
+              console.log(reader.result);
+              this.imgSrc = reader.result as string;
+
+              this.cdr.detectChanges();
+            }
+          }
+        }
+      }
+
+  checkValidExtension(sender: ElementRef<HTMLInputElement>): boolean {
+        let validExs: string[] = ['.jpg', '.png', '.jpeg'];
+        let fileExt = sender.nativeElement.value;
+        fileExt = fileExt.substring(sender.nativeElement.value.toString().lastIndexOf('.'));
+        if (validExs.indexOf(fileExt) < 0) {
+          this.messageService.add({
+            key: 'globalMobileMessage',
+            severity: 'warn',
+            summary: 'Warning',
+            detail: "Please choose valid files. [Accepted file: Image]"
+          });
+
+          sender.nativeElement.value = '';
+
+          return false;
+        }
+        else return true;
+      }
+
+
+  create(): void {
+        this.categoryForm.reset();
+        this.resetImageFields();
+        this.modalVisible = true;
+        this.isEdit = false;
+      }
+
+  update(category: CategoryModel) {
+        this.isEdit = true;
+        this.selectedCategory = category;
+        this.categoryForm.reset();
+        this.categoryForm.patchValue({
+          categoryId: category.categoryId ?? 0,
+          categoryName: category.categoryName ?? '',
+          categoryImage: category.categoryImage ?? '',
+          isActive: category.isActive ?? ''
+        });
+        if (category.categoryImage) {
+          this.imgSrc = category.categoryImage;
+
+          this.imgName = category.categoryImage.substring(category.categoryImage.lastIndexOf('/') + 1);
+        } else {
+          this.imgSrc = '';
+          this.imgName = '';
+        }
+        console.log(this.categoryForm);
+        this.modalVisible = true;
+      }
+  submit() {
+        const formValue = this.categoryForm.getRawValue();
+        let categoryData: any;
+        if (!this.isEdit) {
+          categoryData = {
+            categoryId: 0,
+            categoryName: formValue.categoryName,
+            categoryImage: formValue.categoryImage
+          }
+          this.categoryService.create(categoryData).subscribe({
+            next: (res) => {
+              if (res.success) {
+                this.modalVisible = false;
+                this.resetImageFields();
+                this.loadData();
+                this.messageService.add({
+                  key: 'globalMessage',
+                  severity: 'success',
+                  summary: 'success',
+                  detail: 'Category Create Successfully'
+                });
+              } else {
+                this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message });
+              }
+              this.cdr.detectChanges();
+            },
+            error: (err) => {
+              this.modalVisible = false;
+              this.loadData();
+              this.messageService.add({
+                key: 'globalMessage',
+                severity: 'warn',
+                summary: 'Warning',
+                detail: 'Category Create Fail'
+              });
+            },
+            complete: () => { },
+          });
+        }
+        else {
+          categoryData = {
+            categoryId: this.selectedCategory?.categoryId,
+            categoryName: formValue.categoryName,
+            categoryImage: formValue.categoryImage
+          }
+          this.categoryService.update(categoryData.categoryId, categoryData).subscribe({
+            next: (res) => {
+              if (res.success) {
+                this.modalVisible = false;
+                this.loadData();
+                this.resetImageFields();
+                this.loadData();
+                this.messageService.add({
+                  key: 'globalMessage',
+                  severity: 'success',
+                  summary: 'success',
+                  detail: 'Category Update Successfully'
+                });
+              } else {
+                this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message });
+              }
+            },
+            error: (err) => {
+              this.modalVisible = false;
+              this.loadData();
+              this.messageService.add({
+                key: 'globalMessage',
+                severity: 'warn',
+                summary: 'Warning',
+                detail: 'Category Update Failed'
+              });
+            },
+            complete: () => { },
+          })
+        }
+      }
+
+  delete(category: CategoryModel): void {
+        this.selectedCategory = category;
+        this.confirmationService.confirm({
+          message: 'Are you sure want to delete?',
+          header: 'Confirmation',
+          icon: 'pi pi-exclamation-triangle',
+          accept: () => {
+            this.categoryService.delete(category.categoryId).subscribe({
+              next: (res) => {
+                this.modalVisible = false;
+                this.loadData();
+                this.messageService.add({
+                  key: 'globalMessage',
+                  severity: 'success',
+                  summary: 'success',
+                  detail: 'Category delete Successfully'
+                });
+              },
+              error: (err) => {
+                this.modalVisible = false;
+                this.messageService.add({
+                  key: 'globalMessage',
+                  severity: 'warn',
+                  summary: 'Warning',
+                  detail: 'Category delete Failed'
+                });
+              }
+            });
+          }
+        });
+      }
+
+  changeStatus(category: CategoryModel): void {
+        this.isLoading = true;
+        this.categoryService.changeStatus(category.categoryId).subscribe({
+          next: (res) => {
+            this.isLoading = false;
+            if (res.success) {
+              category.isActive = !category.isActive;
+              this.messageService.add({
+                key: 'globalMessage',
+                severity: 'success',
+                summary: 'success',
+                detail: 'Category status updated successfully'
+              });
+            } else {
+              this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message });
+            }
+          },
+          error: (err) => {
+            this.isLoading = false;
             this.messageService.add({
               key: 'globalMessage',
               severity: 'warn',
               summary: 'Warning',
-              detail: 'Category delete Failed'
+              detail: 'Category status update failed'
             });
           }
         });
       }
-    });
-  }
-
-  changeStatus(category: CategoryModel): void {
-   this.isLoading=true;
-    this.categoryService.changeStatus(category.categoryId).subscribe({
-      next: (res) => {
-        this.isLoading=false;
-        if (res.success) {
-          category.isActive = !category.isActive;
-          this.messageService.add({
-            key: 'globalMessage',
-            severity: 'success',
-            summary: 'success',
-            detail: 'Category status updated successfully'
-          });
-        } else {
-          this.messageService.add({ key:'globalMessage',severity: 'error', summary: 'Error', detail: res.message });
-        }
-      },
-      error: (err) => {
-        this.isLoading=false;
-        this.messageService.add({
-          key: 'globalMessage',
-          severity: 'warn',
-          summary: 'Warning',
-          detail: 'Category status update failed'
-        });
-      }
-    }); 
-  }
 
   resetImageFields() {
-    this.imgBase64String = '';
-    this.imgSrc = '';
-    this.imgName = '';
-    if (this.image && this.image.nativeElement) {
-      this.image.nativeElement.value = '';
+        this.imgBase64String = '';
+        this.imgSrc = '';
+        this.imgName = '';
+        if (this.image && this.image.nativeElement) {
+          this.image.nativeElement.value = '';
+        }
+      }
     }
-  }
-}

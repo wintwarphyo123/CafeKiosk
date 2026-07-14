@@ -80,7 +80,6 @@ export class OrderDetail implements OnInit {
             createdAt: Item.createdAt ?? new Date(), 
             updatedAt:Item.updatedAt ?? new Date(),
             orderStatus: Item.orderStatus ?? 'Pending',
-            phoneNumber:Item.phoneNumber ?? '',
             note: Item.note ?? '',
             totalAmount: Item.totalAmount ?? 0,
             orderItems: Item.orderItems ?? [] 

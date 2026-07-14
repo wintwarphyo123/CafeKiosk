@@ -16,6 +16,10 @@ export class MenuService {
     return this.http.get<RootModel>(url);
   }
 
+  getMenu():Observable<RootModel>{
+    return this.http.get<RootModel>(`${environment.apiUrl}/api/menu/Kiosk-menus`);
+  }
+
   create(model:MenuModel):Observable<RootModel>{
      return this.http.post<RootModel>(`${environment.apiUrl}/api/menu`,model);
   }
@@ -44,9 +48,17 @@ export class MenuService {
     return this.http.post<RootModel>(`${environment.apiUrl}/api/menu/link-option-group`,dto)
   }
 
+  getDeletedData():Observable<RootModel>{
+    return this.http.get<RootModel>(`${environment.apiUrl}/api/menu/deleted`);
+  }
+  restoreData(id:number):Observable<RootModel>{
+    return this.http.put<RootModel>(`${environment.apiUrl}/api/menu/${id}/restore`,{})
+  }
+
   changeStatus(menuId:number):Observable<RootModel>{
     return this.http.put<RootModel>(`${environment.apiUrl}/api/menu/${menuId}/available`,{})
   }
+
   convertBase64(file: File): Observable<string> {
     const result = new ReplaySubject<string>(1);
     const reader = new FileReader();

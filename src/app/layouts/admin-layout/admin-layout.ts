@@ -96,12 +96,12 @@ export class AdminLayout implements OnInit, OnDestroy {
     });
 
     // Subscribe to real-time notification count stream
-    this.orderNotificationService.notificationCount$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(count => {
-       // this.notificationCount = count;
-        this.cdr.detectChanges();
-      });
+    // this.orderNotificationService.notificationCount$
+    //   .pipe(takeUntil(this.destroy$))
+    //   .subscribe(count => {
+    //    // this.notificationCount = count;
+    //     this.cdr.detectChanges();
+    //   });
   }
   handleImageError(event: any) {
     event.target.src = '/thumbnail.jpg';

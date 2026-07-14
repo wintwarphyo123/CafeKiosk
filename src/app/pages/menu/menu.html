@@ -43,6 +43,12 @@
                             (click)="changeState('Out_Of_Stock')">
                             Out Of Stock
                         </button>
+                        <button type="button"
+                            class="px-3.5 h-full text-xs font-semibold rounded-md transition-all duration-200"
+                            [class]="selectedState === 'Deleted' ? 'bg-rose-600 text-white shadow-xs' : 'text-stone-500 hover:text-rose-600'"
+                            (click)="changeState('Deleted')">
+                            Deleted Menus
+                        </button>
                     </div>
                     @if(userRole === 'ADMIN') {
                     <div class="w-full sm:w-auto sm:ml-auto">
@@ -74,11 +80,16 @@
                         </div>
                     </th>
                     }
+                    @if(selectedState!=='Deleted'){
                     <th class="w-32 text-center py-2 px-3">Available</th>
                     <th class="w-32 text-center py-2 px-3">View Details</th>
+                    @if(userRole=='ADMIN'){
                     <th class="w-32 text-center py-2 px-3">Actions</th>
-
-
+                    }
+                    }
+                    @else{
+                    <th class="w-32 text-center py-2 px-3">Restore</th>
+                    }
 
                 </tr>
             </ng-template>
@@ -106,6 +117,7 @@
                     </td>
                     }
 
+                    @if(selectedState!=='Deleted'){
                     <td class="w-32 text-center py-1.5 px-3">
                         <div class="flex items-center justify-center">
                             <button (click)="toggleMenuAvailability(rowData)" pTooltip="Change Status"
@@ -128,7 +140,7 @@
                             </button>
                         </div>
                     </td>
-
+                    @if(userRole==='ADMIN'){
                     <td class="w-24 text-center py-1.5 px-3">
                         <div class="flex gap-1 justify-center items-center">
                             <button (click)="update(rowData)"
@@ -143,6 +155,17 @@
                             </button>
                         </div>
                     </td>
+                    }
+                    }
+                    @else {
+                    <td>
+                        <button (click)="restoreItem(rowData)"
+                            class="text-stone-500 hover:text-green-600 p-1 rounded hover:bg-stone-100 transition-colors"
+                            pTooltip="Restore & Recover" tooltipPosition="top">
+                            <i class="pi pi-refresh text-[11px]"></i>
+                        </button>
+                    </td>
+                    }
 
 
                 </tr>

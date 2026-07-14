@@ -39,10 +39,11 @@
         <div>
           <h3 class="font-bold text-slate-700 text-base">#{{ order.orderNumber }}</h3>
           @if (isLatestIncoming(order.orderId)) {
-          <span class="bg-emerald-500 text-white text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider animate-pulse">
+          <span
+            class="bg-emerald-500 text-white text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider animate-pulse">
             Just Arrived
           </span>
-        }
+          }
           <p class="text-xs text-slate-400 font-mono">{{ order.createdAt | date:'mediumTime' }}</p>
         </div>
         <p-tag [severity]="getPaymentSeverity(order.orderStatus)" [value]="order.orderStatus"></p-tag>
@@ -90,7 +91,7 @@
       <div>
         <p class="text-xs text-slate-400 font-mono">Reference Registry ID: {{ selectedOrder.orderId }}</p>
         <p class="text-sm text-slate-600 mt-0.5">Placed on: <span class="font-semibold">{{ selectedOrder.createdAt |
-            date:'medium' }}</span></p>
+            date:'MMM d, yyyy, h:mm:ss a':'+0630' }}</span></p>
       </div>
       <p-tag [severity]="getPaymentSeverity(selectedOrder.orderStatus)" [value]="selectedOrder.orderStatus"></p-tag>
     </div>

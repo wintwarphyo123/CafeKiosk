@@ -24,6 +24,7 @@ import { Router } from '@angular/router';
 import { OrderNotificationService } from '../../../cores/services/order-notification-service';
 import { BadgeModule } from 'primeng/badge';
 import { OptionGroupDto, OptionItemDto } from '../../../cores/models/menu-detail.model';
+import { MenuModel } from '../../../cores/models/menu.model';
 
 @Component({
   selector: 'app-menu',
@@ -55,14 +56,13 @@ export class MenuComponent implements OnInit {
   cartVisible: boolean = false;
   orderSubtotal: number = 1;
   thumbnailUrl: string = '/thumbnail.jpg';
+  readonly Object = Object;
 
   sidebarVisible: boolean = false;
   cartCount: number = 0;
   isloading: boolean = false;
-  displayDialogPhone: boolean = false;
   displayPaymentDialog: boolean = false;
   statusExpanded: boolean = false;
-  customerPhone: string = '';
   transitionNote: string = '';
   quantity: number = 1;
   pendingOrderPayload: any = null;
@@ -79,14 +79,15 @@ export class MenuComponent implements OnInit {
   orderModel: OrderRequest[] = [];
   confirmPayment: ConfirmPaymentRequest[] = [];
   selectedCategoryId: number | null = null;
-  menuModel: any[] = [];
+  menuModel: MenuModel[] = [];
   filterMenuItem: any[] = [];
   allOptionGroupList: any[] = [];
   cartItems: any[] = [];
   orderCount: number = 0;
   isAvailable: boolean = true;
   isActive: boolean = true;
-
+  displayVoucherDialog: boolean = false;
+  activeTimeoutId: any = null;
   currentOrder: any = {
     orderNumber: 'N/A',
     orderStatus: 'None'
@@ -111,9 +112,10 @@ export class MenuComponent implements OnInit {
 
   ngOnInit() {
     this.loadCategory();
+    this.loadMenu();
     this.listenToOrderUpdates();
 
-    const savedOrderId = localStorage.getItem('currentKioskOrderId');
+     const savedOrderId = localStorage.getItem('currentKioskOrderId');
     if (savedOrderId) {
       this.orderService.getOrderStatusTimeline(Number(savedOrderId)).subscribe({
         next: (orderData: any) => {
@@ -131,7 +133,7 @@ export class MenuComponent implements OnInit {
               orderNumber: localStorage.getItem('currentKioskOrderNumber') || 'N/A',
               orderStatus: status
             };
-            this.statusExpanded = true;
+             this.statusExpanded = true;
             this.isAnotherOrderWaiting = (status === 'Paid');
           }
           this.cdr.detectChanges();
@@ -148,6 +150,44 @@ export class MenuComponent implements OnInit {
         }
       });
     }
+
+    this.notificationService.listenForMenuUpdate((data) => {
+      console.log("Live menu status received: ", data);
+      const targetMenu = this.menuModel.find(m => m.menuId === data.menuId);
+
+      if (targetMenu) {
+        targetMenu.isAvailable = data.isAvailable;
+        this.menuModel = [...this.menuModel]
+        this.cdr.detectChanges();
+      }
+    });
+
+    this.notificationService.listenForCategoryUpdate((data) => {
+      console.log("Live category status received: ", data);
+      const isCategoryActive = data.IsActive !== undefined ? data.IsActive : data.isActive;
+      const targetCategoryId = data.CategoryId !== undefined ? data.CategoryId : data.categoryId;
+      if (this.categoryModel && this.categoryModel.length > 0) {
+        const targetCategory = this.categoryModel.find(c => c.categoryId === targetCategoryId);
+        if (targetCategory) {
+          targetCategory.isActive = isCategoryActive;
+
+          this.categoryModel = [...this.categoryModel];
+        }
+      }
+      if (isCategoryActive === true) {
+        this.loadMenu();
+      } else {
+        if (this.menuModel && this.menuModel.length > 0) {
+          this.menuModel.forEach(menu => {
+            if (menu.categoryId === targetCategoryId) {
+              menu.isAvailable = false;
+            }
+          })
+        }
+      }
+      this.menuModel = [...this.menuModel];
+      this.cdr.detectChanges();
+    });
   }
 
   listenToOrderUpdates(): void {
@@ -156,8 +196,7 @@ export class MenuComponent implements OnInit {
       const incomingOrderId = data.orderId ?? data.OrderId ?? data.id;
       const incomingOrderStatus = data.orderStatus ?? data.OrderStatus ?? data.order_status;
       const incomingOrderNumber = data.orderNumber ?? data.OrderNumber ?? data.orderNo ?? ('ORD-' + incomingOrderId);
-
-      // 🌟 [စည်းကမ်းချက် ၁] - မီးဖိုချောင်မှ ၎င်းအော်ဒါပြီးစီးကြောင်း Ready နှိပ်လိုက်လျှင်
+      const savedOrderId = localStorage.getItem('currentKioskOrderId');
       if (incomingOrderStatus === 'Ready') {
         this.currentOrder = {
           orderId: incomingOrderId,
@@ -167,18 +206,29 @@ export class MenuComponent implements OnInit {
         localStorage.setItem('lastOrderStatus', 'Ready');
         this.isAnotherOrderWaiting = false;
         this.cdr.detectChanges();
+        if (this.activeTimeoutId) {
+          clearTimeout(this.activeTimeoutId);
+        }
 
-        // ၅ စက္ကန့်ပြည့်လျှင် Timeline Drawer အား သန့်ရှင်းစွာ ပိတ်ချပြီး Reset ချမည်
-        setTimeout(() => {
-          this.currentOrder = { orderNumber: 'N/A', orderStatus: 'None' };
-          this.statusExpanded = false;
-          this.cdr.detectChanges();
+        this.activeTimeoutId=setTimeout(() => {
+          const currentSavedId = localStorage.getItem('currentKioskOrderId');
+          if (currentSavedId && Number(incomingOrderId) === Number(currentSavedId)) {
+            localStorage.removeItem('currentKioskOrderId');
+            localStorage.removeItem('currentKioskOrderNumber');
+            localStorage.removeItem('lastOrderStatus');
+            this.currentOrder = { orderNumber: 'N/A', orderStatus: 'None' };
+            this.statusExpanded = false;
+            this.cdr.detectChanges();
+          }
         }, 5000);
         return;
       }
 
-      // 🌟 [စည်းကမ်းချက် ၂] - အော်ဒါသည် 'Preparing' အဆင့်သို့ ရောက်ရှိလာမှသာ Timeline ပေါ်တွင် နေရာအစားထိုးပြသမည်
       if (incomingOrderStatus === 'Preparing') {
+        if (savedOrderId && Number(incomingOrderId) !== Number(savedOrderId)) {
+          console.log("အခြားသူ၏ အော်ဒါ Preparing ဖြစ်သဖြင့် လက်ရှိ Kiosk Timeline ကို မပြောင်းလဲဘဲ ကျော်သွားပါမည်။");
+          return;
+        }
         this.isAnotherOrderWaiting = data.hasOrdersInQueue === true;
 
         this.currentOrder = {
@@ -291,7 +341,7 @@ export class MenuComponent implements OnInit {
 
   loadMenu(): void {
     this.isloading = true;
-    this.menuService.get().subscribe({
+    this.menuService.getMenu().subscribe({
       next: (res) => {
         this.isloading = false;
         console.log('API Response:', res);
@@ -376,13 +426,6 @@ export class MenuComponent implements OnInit {
                 })
               }
             });
-
-          // ✔️ Fix: Initialize default selection keys cleanly using Group IDs to avoid string casing issues
-          // this.groupedOptions.forEach(group => {
-          //   if (group.items && group.items.length > 0) {
-          //     this.selectedOptions[group.groupId.toString()] = group.items[0];//groupid
-          //   }
-          // });
 
           this.calculateTotalPrice();
           this.displayDetail = true;
@@ -483,37 +526,29 @@ export class MenuComponent implements OnInit {
     this.calculateCartTotalPrice();
   }
 
-  
-
-  openPhoneDialog(): void {
-    if (this.cartItems.length === 0) {
-      return;
-    }
-    this.displayDialogPhone = true;
-  }
-
-  gotoPayment() {
-    if (!this.customerPhone || this.customerPhone.trim() === '') {
-      this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: 'phone number is required' });
-      return;
-    }
-
-    const phoneRegex = /^(09|\+959)[0-9]{7,10}$/;
-    if (!phoneRegex.test(this.customerPhone.trim())) {
-      this.messageService.add({
-        key: 'globalMessage',
-        severity: 'error',
-        summary: 'Invalid Phone',
-        detail: 'Please enter a valid Myanmar phone number (e.g., 09xxxxxxxxx)'
-      });
-      return;
-    }
-
+  openVoucherDialog(): void {
+    if (this.cartItems.length === 0) return;
     this.pendingOrderPayload = {
-      phoneNumber: this.customerPhone.trim(),
       note: '',
       items: this.cartItems.map(item => {
-        // ✔️ Fix: Map option IDs comprehensively from whatever key format was resolved
+        const optionIds: number[] = Object.keys(item.selectedOptions)
+          .map(key => {
+            const opt = item.selectedOptions[key];
+            return opt ? (opt.id ?? opt.itemId ?? opt.optionItemId) : null;
+          })
+          .filter((id): id is number => id !== null && id !== undefined);
+
+        return { menuId: item.menuId, quantity: item.quantity, optionItemSelectedIds: optionIds };
+      })
+    };
+    this.displayVoucherDialog = true;
+    this.cdr.detectChanges();
+  }
+  gotoPayment() {
+    this.pendingOrderPayload = {
+      note: '',
+      items: this.cartItems.map(item => {
+
         const optionIds: number[] = Object.keys(item.selectedOptions)
           .map(key => {
             const opt = item.selectedOptions[key];
@@ -524,12 +559,11 @@ export class MenuComponent implements OnInit {
         return {
           menuId: item.menuId,
           quantity: item.quantity,
-          optionItemSelectedIds: optionIds // Plural matching backend setup
+          optionItemSelectedIds: optionIds
         };
       })
     };
-
-    this.displayDialogPhone = false;
+    this.displayVoucherDialog = false;
     this.displayPaymentDialog = true;
     this.cdr.detectChanges();
     console.log('Final Prepared Payload:', this.pendingOrderPayload);
@@ -582,7 +616,6 @@ export class MenuComponent implements OnInit {
 
                 this.clearCart();
                 this.transitionNote = '';
-                this.customerPhone = '';
                 this.displayPaymentDialog = false;
 
                 this.messageService.add({
@@ -627,7 +660,7 @@ export class MenuComponent implements OnInit {
 
     if (keyword) {
       this.filterMenuItem = baseItems.filter(item =>
-        item.menuName.toLowerCase().includes(keyword) ||
+        item.menuName?.toLowerCase().includes(keyword) ||
         (item.description && item.description.toLowerCase().includes(keyword))
       );
     } else {

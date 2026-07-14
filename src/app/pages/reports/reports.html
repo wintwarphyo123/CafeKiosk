@@ -6,7 +6,7 @@
 
         <p-table #dt2 [value]="filteredOrders" [columns]="cols" [paginator]="true" [rows]="10"
             [rowsPerPageOptions]="[10, 20, 50]" styleClass="p-datatable-sm custom-table" [loading]="isLoading"
-            [globalFilterFields]="['orderNumber', 'totalAmount', 'phoneNumber', 'note','createdAt','updatedAt']"
+            [globalFilterFields]="['orderNumber', 'totalAmount', 'note','createdAt','updatedAt']"
             responsiveLayout="stack" breakpoint="960px" selectionMode="single" dataKey="orderId">
 
             <ng-template pTemplate="caption">
@@ -111,10 +111,6 @@
                         @else if(col.field === 'totalAmount') {
                         <span class="font-extrabold text-gray-900">{{ rowData[col.field] |
                             currency:'MMK':'symbol':'1.0-0' }}</span>
-                        }
-
-                        @else if(col.field === 'phoneNumber') {
-                        <span class="font-medium tracking-wide text-gray-600">{{ rowData[col.field] || '-' }}</span>
                         }
 
                         @else if(col.field === 'createdAt') {

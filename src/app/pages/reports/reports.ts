@@ -71,7 +71,6 @@ export class Reports {
     orderNumber: [''],
     totalAmount: [''],
     orderStatus: [''],
-    phoneNumber: [''],
     note: [''],
     createdAt: [new Date().toISOString().slice(0, 10)]
   });
@@ -91,7 +90,6 @@ export class Reports {
     this.cols = [//orderNumber,totalAmount,phoneNumber,note,createdAt,updatedAt
       { field: 'orderNumber', header: 'Order Number' },
       { field: 'totalAmount', header: 'Total Amount' },
-      { field: 'phoneNumber', header: 'Phone Number' },
       { field: 'note', header: 'Transaction Note' },
       { field: 'createdAt', header: 'Ordered Date' },
       { field: 'updatedAt', header: 'Updated Date' },
@@ -144,7 +142,6 @@ export class Reports {
             orderNumber: item.orderNumber ?? '',
             totalAmount: item.totalAmount ?? '',
             orderStatus: item.orderStatus ?? '',
-            phoneNumber: item.phoneNumber ?? '',
             note: item.note ?? '',
             createdAt: formattedDate ?? '',
             updatedAt:updatedDate ?? '',
@@ -305,7 +302,6 @@ export class Reports {
             orderNumber: item.orderNumber ?? '',
             totalAmount: item.totalAmount ?? '',
             orderStatus: item.orderStatus ?? '',
-            phoneNumber: item.phoneNumber ?? '',
             note: item.note ?? '',
             createdAt: formattedDate ?? '',
             updatedAt:formattedDate ?? ''

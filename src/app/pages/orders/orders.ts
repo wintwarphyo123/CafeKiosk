@@ -61,7 +61,6 @@ export class Orders implements OnInit, OnDestroy {
     orderNumber: [''],
     totalAmount: [''],
     orderStatus: [''],
-    phoneNumber: [''],
     note: [''],
     createdAt: [new Date().toISOString().slice(0, 10)],
     updatedAt:[new Date().toISOString().slice(0, 10)]
@@ -81,7 +80,6 @@ export class Orders implements OnInit, OnDestroy {
     this.cols = [
       { field: 'orderNumber', header: 'Order Number' },
       { field: 'totalAmount', header: 'Total Amount' },
-      { field: 'phoneNumber', header: 'Phone Number' },
       { field: 'note', header: 'Transaction Note' },
       { field: 'createdAt', header: 'Ordered Date' },
       { field: 'updatedAt', header: 'Updated Date' },
@@ -120,19 +118,12 @@ export class Orders implements OnInit, OnDestroy {
           return;
         }
         const rawItems = Array.isArray(res.data) ? res.data : [];
-        //  this.orderModel = rawItem.map((item) => {
-        //   const rawDate = item.createdAt || null;
-        //   const formattedDate = rawDate
-        //     ? this.datePipe.transform(rawDate, 'yyyy MMMM dd')
-        //     : '';
-           
           this.orderModel = rawItems.map((item) =>({
             ...item,
           orderId: item.orderId ?? 0,
           orderNumber: item.orderNumber ?? '',
           totalAmount: item.totalAmount ?? 0,
           orderStatus: item.orderStatus ?? '',
-          phoneNumber: item.phoneNumber ?? '',
           note: item.note ?? '',
           createdAt: item.createdAt ?? '',
           updatedAt:item.updatedAt?? ''

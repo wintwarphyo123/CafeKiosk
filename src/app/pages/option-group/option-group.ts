@@ -45,6 +45,8 @@ export class OptionGroup implements OnInit {
   isEdited:boolean=false;
   selectedGroup:OptionGroupModel| null=null;
   cols!:SortColumn[];
+  filterGroupModel: OptionGroupModel[] = [];
+  selectedState: string = 'Active';
 
   constructor(
     private optionGroupService:OptionGroupService,
@@ -78,6 +80,7 @@ export class OptionGroup implements OnInit {
         }
         this.isLoading = false;
         console.log(this.optionGroupModel);
+        this.filterGroupState(this.selectedState);
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -87,6 +90,75 @@ export class OptionGroup implements OnInit {
       },
     });
   }
+
+  changeState(state: string): void {
+      this.selectedState = state;
+      this.filterGroupState(state);
+    }
+    filterGroupState(state: string) {
+      if (state === 'Active') {
+        this.filterGroupModel = this.optionGroupModel.filter(group => group.status === true);
+      }
+      else if (state === 'Deleted') {
+        this.optionGroupService.getDeletedData().subscribe({
+          next: (res) => {
+            this.isLoading = false;
+            if (res.success) {
+              this.filterGroupModel=res.data;
+            }
+            this.cdr.detectChanges();
+          }
+        })
+      }
+      else {
+        this.filterGroupModel = [...this.optionGroupModel];
+      }
+    }
+    restoreItem(group:OptionGroupModel) {
+     
+      this.confirmationService.confirm({
+        message: 'Are you sure want to restore?',
+        header: 'Confirmation',
+        icon: 'pi pi-exclamation-triangle',
+        accept: () => {
+          this.optionGroupService.restoreData(group.id).subscribe({
+            next: (res) => {
+              this.modelVisible = false;
+              if (res.success) {
+                this.loadData();
+                this.messageService.add({
+                  key: 'globalMessage',
+                  severity: 'success',
+                  summary: 'success',
+                  detail: 'option group restore successfully'
+                });
+                this.filterGroupState('Deleted');
+              } else {
+                this.messageService.add({
+                  key: 'globalMessage',
+                  severity: 'warn',
+                  summary: 'warning',
+                  detail: 'option group restore fail'
+                });
+                this.cdr.detectChanges();
+              }
+            },
+            error: (err) => {
+              
+              this.modelVisible = false;
+              this.loadData();
+              this.messageService.add({
+                key: 'globalMessage',
+                severity: 'error',
+                summary: 'Error',
+                detail: 'Option Group restore failed, name is already exist!!'
+              });
+              this.cdr.detectChanges();
+            }
+          });
+        }
+      })
+    }
 
   create():void{
     this.optionGroupForm.reset();
@@ -201,34 +273,5 @@ export class OptionGroup implements OnInit {
       }
     });
   }
-
-  changeStatus(optionGroup:OptionGroupModel): void {
-     this.isLoading=true;
-      this.optionGroupService.changeStatus(optionGroup.id).subscribe({
-        next: (res) => {
-          this.isLoading=false;
-          if (res.success) {
-            optionGroup.status=!optionGroup.status;
-            this.messageService.add({
-              key: 'globalMessage',
-              severity: 'success',
-              summary: 'success',
-              detail: 'option group status updated successfully'
-            });
-          } else {
-            this.messageService.add({ key:'globalMessage',severity: 'error', summary: 'Error', detail: res.message });
-          }
-        },
-        error: (err) => {
-          this.isLoading=false;
-          this.messageService.add({
-            key: 'globalMessage',
-            severity: 'warn',
-            summary: 'Warning',
-            detail: 'option group status update failed'
-          });
-        }
-      }); 
-    }
 
 }

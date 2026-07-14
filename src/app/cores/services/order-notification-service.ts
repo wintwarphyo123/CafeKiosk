@@ -7,13 +7,19 @@ import { BehaviorSubject, Observable, Subject } from 'rxjs';
 })
 export class OrderNotificationService {
 
-  private hubConnection!: signalR.HubConnection;
+  public hubConnection!: signalR.HubConnection;
 
   private countSubject = new BehaviorSubject<number>(0);
   notificationCount$ = this.countSubject.asObservable();
 
   private orderRefreshSource = new Subject<void>();
   orderRefresh$ = this.orderRefreshSource.asObservable();
+
+  private categoryUpdateSource = new Subject<any>();
+  categoryUpdate$ = this.categoryUpdateSource.asObservable();
+
+  private menuUpdateSource = new Subject<any>();
+  menuUpdate$ = this.menuUpdateSource.asObservable();
 
   constructor() {
     this.hubConnection = new signalR.HubConnectionBuilder()
@@ -33,6 +39,14 @@ export class OrderNotificationService {
       this.countSubject.next(this.countSubject.value + 1);
       this.orderRefreshSource.next();
     });
+    this.hubConnection.on('ReceiveCategoryUpdate', (categoryData: any) => {
+      this.categoryUpdateSource.next(categoryData);
+    });
+  
+    this.hubConnection.on('ReceiveMenuUpdate', (menuData: any) => {
+      this.menuUpdateSource.next(menuData);
+    });
+  
   }
 
   clearNotifications(): void {
@@ -45,6 +59,18 @@ export class OrderNotificationService {
     });
   } listenForNewOrder(callback: (data: any) => void): void {
     this.hubConnection.on('newOrderCreated', (data) => {
+      callback(data);
+    });
+  }
+
+  listenForCategoryUpdate(callback: (data: any) => void): void {
+    this.hubConnection.on('ReceiveCategoryUpdate', (data) => {
+      callback(data);
+    });
+  }
+
+  listenForMenuUpdate(callback: (data: any) => void): void {
+    this.hubConnection.on('ReceiveMenuUpdate', (data) => {
       callback(data);
     });
   }

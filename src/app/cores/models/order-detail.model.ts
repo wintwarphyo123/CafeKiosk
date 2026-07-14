@@ -19,7 +19,6 @@ export interface OrderResponseDto{
     orderNumber:string;
     totalAmount:number;
     orderStatus:string;
-    phoneNumber:string;
     note:string;
     createdAt:string;
     updatedAt:string;
