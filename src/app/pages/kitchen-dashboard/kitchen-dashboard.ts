@@ -1,4 +1,4 @@
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { CurrencyPipe, DatePipe, NgClass } from '@angular/common';
 import { ChangeDetectorRef, Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -38,6 +38,7 @@ import { OrderNotificationService } from '../../cores/services/order-notificatio
     SelectModule,
     ImageModule,
     TagModule,
+    NgClass,
     DatePipe
   ],
   providers: [MessageService, ConfirmationService, DatePipe],
@@ -272,30 +273,31 @@ export class KitchenDashboard implements OnInit, OnDestroy {
   updateStatus(newStatus: string): void {
     if (!this.selectedOrder) return;
     const transitioningStatus = newStatus.toLowerCase();
-    if (transitioningStatus === 'preparing' || transitioningStatus === 'ready'){
-     const activeKitchenQueue = this.orderModel
-    .filter(o => ['paid', 'preparing'].includes(o.orderStatus.toLowerCase()))
-    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
-    if (activeKitchenQueue.length > 0 && activeKitchenQueue[0].orderId !== this.selectedOrder.orderId) {
-   // if (['preparing', 'ready'].includes(newStatus.toLowerCase())) {
+    // ── FIFO Queue Enforcement ─────────────────────────────────────────
+    if (transitioningStatus === 'preparing') {
+      // Check if any order is already being prepared (only one at a time allowed)
+      const alreadyPreparing = this.orderModel.find(
+        o => o.orderStatus.toLowerCase() === 'preparing' && o.orderId !== this.selectedOrder!.orderId
+      );
+      if (alreadyPreparing) {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Queue Order Enforced',
+          detail: `Please finish cooking Order #${alreadyPreparing.orderNumber} first (FIFO).`
+        });
+        return;
+      }
+    }
+
+    // ── Ready requires Preparing state ──────────────────────────────────
+    if (newStatus === 'Ready' && this.selectedOrder.orderStatus !== 'Preparing') {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Queue Order Enforced',
-        detail: `Please finish cooking Order #${activeKitchenQueue[0].orderNumber} first.`
+        summary: 'Action Blocked',
+        detail: 'This order must be in "Preparing" status before it can be marked as Ready.'
       });
       return;
-   // }
-  }
- 
-    }
-    if(newStatus==='Ready' && this.selectedOrder.orderStatus !== 'Preparing'){
-      this.messageService.add({
-      severity: 'warn',
-      summary: 'Action Blocked',
-      detail: 'This order must be in "Preparing" status before it can be marked as Ready.'
-    });
-    return;
     }
 
     this.isUpdatingStatus = true;

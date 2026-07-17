@@ -12,7 +12,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
     provideHttpClient(
-      withInterceptors([authInterceptor]) // ဤနေရာတွင် Interceptor ကို ထည့်ပေးပါ
+      withInterceptors([authInterceptor])
     ),
     providePrimeNG({
             theme: {

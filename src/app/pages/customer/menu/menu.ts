@@ -99,6 +99,10 @@ export class MenuComponent implements OnInit {
     { status: 'Ready', label: 'ready', icon: 'pi pi-check-circle', color: '#4caf50', stepIndex: 3 }
   ];
 
+  paymentStage: 'SELECT' | 'CARD' | 'EPAY' | 'LOADING' = 'SELECT';
+  selectedPaymentMethod: 'CARD' | 'EPAY' | null = null;
+  cardNumber: string = '';
+
 
   constructor(
     private categoryService: CategoryService,
@@ -115,25 +119,27 @@ export class MenuComponent implements OnInit {
     this.loadMenu();
     this.listenToOrderUpdates();
 
-     const savedOrderId = localStorage.getItem('currentKioskOrderId');
+    const savedOrderId = localStorage.getItem('currentKioskOrderId');
     if (savedOrderId) {
       this.orderService.getOrderStatusTimeline(Number(savedOrderId)).subscribe({
         next: (orderData: any) => {
           const actualData = orderData?.data ?? orderData;
           const status = actualData?.orderStatus ?? actualData?.OrderStatus ?? actualData?.status;
-          if (!actualData || status === 'Cancelled') {
-            localStorage.removeItem('currentKioskOrderId');
-            localStorage.removeItem('currentKioskOrderNumber');
-            localStorage.removeItem('lastOrderStatus');
-            this.currentOrder = { orderNumber: 'N/A', orderStatus: 'None' };
-            this.statusExpanded = false;
+          if (!actualData || status === 'Ready') {
+            this.clearKioskStorage();
           } else {
             this.currentOrder = {
               orderId: Number(savedOrderId),
               orderNumber: localStorage.getItem('currentKioskOrderNumber') || 'N/A',
               orderStatus: status
             };
-             this.statusExpanded = true;
+            if (status === 'Preparing') {
+              this.statusExpanded = true;
+            }
+            else {
+              this.statusExpanded = false;
+
+            }
             this.isAnotherOrderWaiting = (status === 'Paid');
           }
           this.cdr.detectChanges();
@@ -188,6 +194,16 @@ export class MenuComponent implements OnInit {
       this.menuModel = [...this.menuModel];
       this.cdr.detectChanges();
     });
+
+  }
+  clearKioskStorage() {
+    localStorage.removeItem('currentKioskOrderId');
+    localStorage.removeItem('currentKioskOrderNumber');
+    localStorage.removeItem('lastOrderStatus');
+    this.currentOrder = { orderNumber: 'N/A', orderStatus: 'None' };
+    this.statusExpanded = false;
+    this.isAnotherOrderWaiting = false;
+    this.cdr.detectChanges();
   }
 
   listenToOrderUpdates(): void {
@@ -197,60 +213,64 @@ export class MenuComponent implements OnInit {
       const incomingOrderStatus = data.orderStatus ?? data.OrderStatus ?? data.order_status;
       const incomingOrderNumber = data.orderNumber ?? data.OrderNumber ?? data.orderNo ?? ('ORD-' + incomingOrderId);
       const savedOrderId = localStorage.getItem('currentKioskOrderId');
-      if (incomingOrderStatus === 'Ready') {
-        this.currentOrder = {
-          orderId: incomingOrderId,
-          orderNumber: incomingOrderNumber,
-          orderStatus: 'Ready'
-        };
-        localStorage.setItem('lastOrderStatus', 'Ready');
-        this.isAnotherOrderWaiting = false;
-        this.cdr.detectChanges();
-        if (this.activeTimeoutId) {
-          clearTimeout(this.activeTimeoutId);
-        }
 
-        this.activeTimeoutId=setTimeout(() => {
-          const currentSavedId = localStorage.getItem('currentKioskOrderId');
-          if (currentSavedId && Number(incomingOrderId) === Number(currentSavedId)) {
-            localStorage.removeItem('currentKioskOrderId');
-            localStorage.removeItem('currentKioskOrderNumber');
-            localStorage.removeItem('lastOrderStatus');
-            this.currentOrder = { orderNumber: 'N/A', orderStatus: 'None' };
-            this.statusExpanded = false;
-            this.cdr.detectChanges();
+      // ── READY ───────────────────────────────────────────────────────────────
+      // Only react to Ready if this kiosk is tracking that specific order
+      if (incomingOrderStatus === 'Ready') {
+        if (savedOrderId && Number(incomingOrderId) === Number(savedOrderId)) {
+          this.currentOrder = {
+            orderId: incomingOrderId,
+            orderNumber: incomingOrderNumber,
+            orderStatus: 'Ready'
+          };
+          localStorage.setItem('lastOrderStatus', 'Ready');
+          this.isAnotherOrderWaiting = false;
+          this.statusExpanded = true;   // Keep timeline visible so customer sees "collect"
+          this.cdr.detectChanges();
+
+          if (this.activeTimeoutId) {
+            clearTimeout(this.activeTimeoutId);
           }
-        }, 5000);
+
+          // After 3 minutes: clear the timeline so the kiosk is ready for a new customer
+          this.activeTimeoutId = setTimeout(() => {
+            const stillSaved = localStorage.getItem('currentKioskOrderId');
+            if (stillSaved && Number(incomingOrderId) === Number(stillSaved)) {
+              this.clearKioskStorage();
+            }
+          }, 180000); // 3 minutes
+        }
         return;
       }
 
+      // ── PREPARING ───────────────────────────────────────────────────────────
+      // Only update this kiosk's timeline if the Preparing order IS our tracked order.
       if (incomingOrderStatus === 'Preparing') {
-        if (savedOrderId && Number(incomingOrderId) !== Number(savedOrderId)) {
-          console.log("အခြားသူ၏ အော်ဒါ Preparing ဖြစ်သဖြင့် လက်ရှိ Kiosk Timeline ကို မပြောင်းလဲဘဲ ကျော်သွားပါမည်။");
+        if (!savedOrderId || Number(incomingOrderId) !== Number(savedOrderId)) {
+          // This Preparing event belongs to a different order — ignore for this kiosk
+          console.log('Preparing event ignored — not our order. Ours:', savedOrderId, 'Event:', incomingOrderId);
           return;
         }
+
         this.isAnotherOrderWaiting = data.hasOrdersInQueue === true;
 
         this.currentOrder = {
           orderId: incomingOrderId,
           orderNumber: incomingOrderNumber,
-          orderStatus: incomingOrderStatus
+          orderStatus: 'Preparing'
         };
-        
-        localStorage.setItem('currentKioskOrderId', incomingOrderId.toString());
-        localStorage.setItem('currentKioskOrderNumber', incomingOrderNumber);
-        localStorage.setItem('lastOrderStatus', incomingOrderStatus);
-        
+
+        localStorage.setItem('lastOrderStatus', 'Preparing');
         this.statusExpanded = true;
         this.cdr.detectChanges();
       }
     });
 
-    this.notificationService.listenForNewOrder((data: any) => {
-      console.log("New Order Enters Database Queue:", data);
-      const currentTimelineStatus = this.currentOrder?.orderStatus ?? this.currentOrder?.OrderStatus ?? 'None';
+    this.notificationService.listenForQueueStatus((data: any) => {
+      console.log("Queue Update Received:", data);
+      const currentTimelineStatus = this.currentOrder?.orderStatus ?? 'None';
 
-      if (currentTimelineStatus === 'Preparing') {
+      if (currentTimelineStatus === 'Preparing' && data.hasOrdersInQueue === true) {
         this.isAnotherOrderWaiting = true;
         this.cdr.detectChanges();
       }
@@ -353,7 +373,6 @@ export class MenuComponent implements OnInit {
         this.menuModel = rawMenu.map((item) => ({
           menuId: item.Id ?? item.menuId ?? item.id ?? 0,
           menuName: item.menuName ?? '',
-          //item.categorye ? this.getImageUrl(item.categoryImage) : null,
           menuImage: item.menuImage ? this.getImageUrl(item.menuImage) : null,
           description: item.description ?? '',
           price: item.price ?? 0,
@@ -568,86 +587,103 @@ export class MenuComponent implements OnInit {
     this.cdr.detectChanges();
     console.log('Final Prepared Payload:', this.pendingOrderPayload);
   }
+  handlePaymentSelection(method: 'CARD' | 'EPAY') {
+    this.selectedPaymentMethod = method;
+    this.paymentStage = method;
+  }
 
   orderAndPayment() {
-    if (!this.transitionNote || this.transitionNote.trim() === '') {
-      this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: 'Need TransitionId' });
+    if (!this.selectedPaymentMethod) {
+      this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: 'Please select a payment method.' });
       return;
     }
-
+    if (this.selectedPaymentMethod === 'CARD' && (!this.cardNumber || this.cardNumber.trim().length < 16)) {
+      this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: 'Please enter a valid 16-digit card number.' });
+      return;
+    }
+    this.paymentStage = 'LOADING';
     this.isloading = true;
     this.cdr.detectChanges();
-    this.orderService.create(this.pendingOrderPayload).subscribe({
-      next: (res) => {
-        if (res.success && res.data) {
-          const createdOrderid = res.data.orderId ?? res.data.OrderId ?? res.data.id;
-          const createdOrderNumber = res.data.orderNumber ?? res.data.OrderNumber;
+    
+    setTimeout(() => {
+      this.orderService.create(this.pendingOrderPayload).subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            const createdOrderid = res.data.orderId ?? res.data.OrderId ?? res.data.id;
+            const createdOrderNumber = res.data.orderNumber ?? res.data.OrderNumber;
 
-          const paymentPayload: ConfirmPaymentRequest = {
-            orderId: createdOrderid,
-            transitionId: this.transitionNote.trim(),
-          };
+            const paymentNote = this.selectedPaymentMethod === 'CARD'
+              ? `Paid via Card (Ends: ${this.cardNumber.substring(this.cardNumber.length - 4)})`
+              : 'Paid via E-Wallet Scan';
+            const paymentPayload: ConfirmPaymentRequest = {
+              orderId: createdOrderid,
+              transitionId: paymentNote,
+            }
 
-          this.orderService.confirmPayment(paymentPayload).subscribe({
-            next: (payRes) => {
-              this.isloading = false;
-              if (payRes.success && payRes.data) {
-                const targetOrder = payRes.data.order;
-                const serverCalculatedStatus = targetOrder.orderStatus ?? targetOrder.OrderStatus ?? 'Paid';
-                const hasOtherOrdersInQueue = payRes.data.hasOrdersInQueue;
+            this.orderService.confirmPayment(paymentPayload).subscribe({
+              next: (payRes) => {
+                this.isloading = false;
+                if (payRes.success && payRes.data) {
+                  const targetOrder = payRes.data.order;
+                  const serverCalculatedStatus = targetOrder.orderStatus ?? targetOrder.OrderStatus ?? 'Paid';
+                  const hasOtherOrdersInQueue = payRes.data.hasOrdersInQueue;
 
-                localStorage.setItem('currentKioskOrderId', createdOrderid.toString());
-                localStorage.setItem('currentKioskOrderNumber', createdOrderNumber);
-                localStorage.setItem('lastOrderStatus', serverCalculatedStatus);
+                  // Always save this order so this kiosk tracks it
+                  localStorage.setItem('currentKioskOrderId', createdOrderid.toString());
+                  localStorage.setItem('currentKioskOrderNumber', createdOrderNumber);
+                  localStorage.setItem('lastOrderStatus', serverCalculatedStatus);
 
-                // 🌟 [Single Kiosk Logic အမှန်ဆုံးပုံစံ] - အကယ်၍ ရှေ့တွင် လူများချက်ပြုတ်နေဆဲဖြစ်ပါက 
-                // Kiosk Timeline တွင် လက်ရှိချက်နေဆဲအော်ဒါကို ဆက်ပြထားပြီး ၎င်းအော်ဒါအသစ်အား Queue Warning သာပြပေးထားမည်
-                if (hasOtherOrdersInQueue || (this.currentOrder && this.currentOrder.orderStatus === 'Preparing')) {
-                  this.isAnotherOrderWaiting = true;
-                } else {
+                  // Always show customer their order in the timeline, even if queued
                   this.currentOrder = {
                     orderId: createdOrderid,
                     orderNumber: createdOrderNumber,
-                    orderStatus: serverCalculatedStatus
+                    orderStatus: serverCalculatedStatus  // Will be 'Paid' when in queue
                   };
-                  this.isAnotherOrderWaiting = false;
-                  this.statusExpanded = true; 
+
+                  // If other orders are being prepared, show queue warning
+                  this.isAnotherOrderWaiting = hasOtherOrdersInQueue === true;
+
+                  // Auto-open timeline so customer immediately sees their order number & status
+                  this.statusExpanded = true;
+
+                  this.clearCart();
+                  this.displayPaymentDialog = false;
+                  this.paymentStage = 'SELECT';
+                  this.selectedPaymentMethod = null;
+                  this.cardNumber = '';
+
+                  this.messageService.add({
+                    key: 'globalMessage',
+                    severity: 'success',
+                    summary: 'Order Placed',
+                    detail: `Order #${createdOrderNumber} successfully processed.`,
+                    life: 4000
+                  });
+                  this.cdr.detectChanges();
+                } else {
+                  this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: payRes.message || 'order fail' });
                 }
-
-                this.clearCart();
-                this.transitionNote = '';
-                this.displayPaymentDialog = false;
-
-                this.messageService.add({
-                  key: 'globalMessage',
-                  severity: 'success',
-                  summary: 'Order Placed',
-                  detail: `Order #${createdOrderNumber} successfully processed.`,
-                  life: 4000
-                });
+              },
+              error: (err) => {
+                this.isloading = false;
+                this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'order fail' });
                 this.cdr.detectChanges();
-              } else {
-                this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: payRes.message || 'order fail' });
               }
-            },
-            error: (err) => {
-              this.isloading = false;
-              this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'order fail' });
-              this.cdr.detectChanges();
-            }
-          });
-        } else {
+            });
+          } else {
+            this.isloading = false;
+            this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Order creation failed' });
+            this.cdr.detectChanges();
+          }
+        },
+        error: (err) => {
           this.isloading = false;
-          this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Order creation failed' });
+          this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'order fail' });
           this.cdr.detectChanges();
         }
-      },
-      error: (err) => {
-        this.isloading = false;
-        this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'order fail' });
-        this.cdr.detectChanges();
-      }
+      });
     });
+
   }
 
   onSearchChange() {

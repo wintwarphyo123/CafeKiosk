@@ -366,43 +366,96 @@
         </div>
     </div>
 </p-dialog>
-<!-- PAYMENT STATUS DIALOG -->
-<p-dialog [(visible)]="displayPaymentDialog" [modal]="true" header="payment"
-    [style]="{ width: '90vw', maxWidth: '400px' }" [draggable]="false" [resizable]="false">
-    <div class="flex flex-col gap-4 pt-2 text-center">
 
-        <div
-            class="flex flex-col items-center justify-center p-3 bg-gray-50 border border-dashed border-gray-200 rounded-xl">
-            <div class="w-40 h-40 bg-gray-200 flex items-center justify-center rounded-lg mb-2">
-                <span class="text-xs text-gray-500">[ Scan QR Code ]</span>
-            </div>
-            <p class="text-[11px] text-gray-500 font-bold">payment</p>
-        </div>
+<p-dialog [(visible)]="displayPaymentDialog" 
+          [modal]="true" 
+          [closable]="paymentStage !== 'LOADING'" 
+          [style]="{width: '460px'}" 
+          header="Checkout Payment"
+          styleClass="luxury-payment-dialog">
+  
+  <div class="bg-[#1c1917] text-[#f5f5f4] p-2 rounded-2xl font-sans">
+    
+    <!-- 💳 1️⃣ STAGE: SELECT METHOD -->
+    @if (paymentStage === 'SELECT') {
+      <p class="text-xs text-[#a8a29e] mb-4 uppercase tracking-widest font-black">Choose your preferred payment</p>
+      <div class="grid grid-cols-2 gap-4">
+        <!-- Card Option Button -->
+        <button (click)="handlePaymentSelection('CARD')" class="border-2 border-[#44403c] hover:border-[#d97706] rounded-2xl p-6 flex flex-col items-center justify-center gap-3 bg-[#292524] transition-all duration-200 group active:scale-95">
+          <i class="pi pi-credit-card text-3xl text-[#a8a29e] group-hover:text-[#d97706] transition-colors"></i>
+          <span class="font-bold text-sm tracking-wide">Credit / Debit</span>
+        </button>
+        <!-- E-Pay Option Button -->
+        <button (click)="handlePaymentSelection('EPAY')" class="border-2 border-[#44403c] hover:border-[#d97706] rounded-2xl p-6 flex flex-col items-center justify-center gap-3 bg-[#292524] transition-all duration-200 group active:scale-95">
+          <i class="pi pi-mobile text-3xl text-[#a8a29e] group-hover:text-[#d97706] transition-colors"></i>
+          <span class="font-bold text-sm tracking-wide">E-Wallet Scan</span>
+        </button>
+      </div>
+    }
 
-        <div class="flex flex-col gap-1.5 text-left">
-            <label class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Transaction ID</label>
-            <input type="text" placeholder="transition Note" [(ngModel)]="transitionNote"
-                class="w-full px-4 py-3 text-sm bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:bg-white transition font-mono tracking-wider" />
+    <!-- 💳 2️⃣ STAGE: CARD NUMBER INPUT -->
+    @if (paymentStage === 'CARD') {
+      <div class="flex flex-col gap-4">
+        <h3 class="text-base font-bold text-[#fafaf9] tracking-wide">Card Information</h3>
+        <div class="flex flex-col gap-2">
+          <label class="text-[10px] text-[#a8a29e] uppercase font-black tracking-widest">Card Number</label>
+          <input type="text" 
+                 [(ngModel)]="cardNumber" 
+                 placeholder="•••• •••• •••• ••••" 
+                 maxlength="16" 
+                 class="bg-[#292524] border border-[#44403c] text-white p-3 rounded-xl focus:outline-none focus:border-[#d97706] font-mono tracking-widest text-lg text-center w-full shadow-inner" />
         </div>
+        <div class="flex gap-2 mt-2">
+          <button (click)="paymentStage = 'SELECT'; selectedPaymentMethod = null;" class="flex-1 bg-transparent border border-[#44403c] text-[#a8a29e] py-3 rounded-xl font-bold text-sm transition-all hover:bg-[#292524]">Back</button>
+          <button (click)="orderAndPayment()" class="flex-1 bg-[#d97706] text-white py-3 rounded-xl font-bold text-sm hover:bg-[#b45309] transition-all shadow-md">Pay Securely</button>
+        </div>
+      </div>
+    }
 
-        <div class="flex items-center gap-3 mt-2">
-            <button (click)="displayPaymentDialog = false; displayVoucherDialog=true"
-                class="flex-1 bg-gray-100 py-3 rounded-xl font-bold text-xs">Back</button>
-            <button (click)="orderAndPayment()" [disabled]="isloading || !transitionNote"
-                class="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-200 text-white py-3 rounded-xl font-bold text-xs shadow-sm">
-                @if(isloading) { <span>wait .....</span> } @else { <span>Confirm & Order</span> }
-            </button>
+    @if (paymentStage === 'EPAY') {
+      <div class="flex flex-col items-center text-center gap-4">
+        <h3 class="text-base font-bold text-[#fafaf9] tracking-wide">Scan to Pay</h3>
+        <p class="text-xs text-[#a8a29e] px-4">Scan using KPay, WavePay, AYA Pay or CB Pay...</p>
+        
+        <!-- Luxury QR Frame Container -->
+        <div class="w-44 h-44 bg-white p-2 rounded-2xl shadow-2xl flex items-center justify-center border-4 border-[#d97706]/20">
+          <img src="/QR_scan.jpg" alt="Payment QR" class="w-full h-full object-contain" />
         </div>
-    </div>
+        
+        <div class="flex gap-2 w-full mt-2">
+          <button (click)="paymentStage = 'SELECT'; selectedPaymentMethod = null;" class="flex-1 bg-transparent border border-[#44403c] text-[#a8a29e] py-3 rounded-xl font-bold text-sm transition-all hover:bg-[#292524]">Cancel</button>
+          <button (click)="orderAndPayment()" class="flex-1 bg-[#d97706] text-white py-3 rounded-xl font-bold text-sm hover:bg-[#b45309] transition-all shadow-md">I Have Paid</button>
+        </div>
+      </div>
+    }
+
+    <!-- 💳 4️⃣ STAGE: FAKE LOADING EFFECT -->
+    @if (paymentStage === 'LOADING') {
+      <div class="flex flex-col items-center justify-center py-12 gap-4">
+        <i class="pi pi-spin pi-spinner text-4xl text-[#d97706]"></i>
+        <div class="text-center animate-pulse">
+          <h4 class="text-base font-bold text-[#fafaf9] tracking-wide">Verifying Secure Payment</h4>
+          <p class="text-[11px] text-[#78716c] mt-1 tracking-normal">Communicating with banking servers. Please hold...</p>
+        </div>
+      </div>
+    }
+
+  </div>
 </p-dialog>
 
-<div class="fixed bottom-6 right-6 z-50">
+<!-- 📡 Floating Action Button (FAB) - Order Tracking -->
+<div class="fixed bottom-6 right-6 z-50 group">
+    <!-- Tooltip -->
+    <div class="absolute bottom-full right-0 mb-2 px-3 py-1.5 bg-gray-900 text-white text-[11px] font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl">
+        Track Order Status
+        <div class="absolute top-full right-4 border-4 border-transparent border-t-gray-900"></div>
+    </div>
     <button (click)="statusExpanded = !statusExpanded"
         [ngClass]="statusExpanded ? 'bg-gray-800 rotate-90' : 'bg-orange-600 hover:bg-orange-700 active:scale-95 animate-bounce'"
-        class="w-12 h-12 rounded-full text-white flex items-center justify-center shadow-2xl transition-all duration-300 focus:outline-none relative">
+        class="w-14 h-14 rounded-full text-white flex items-center justify-center shadow-2xl transition-all duration-300 focus:outline-none relative">
 
         @if (!statusExpanded) {
-        <i class="pi pi-receipt text-lg"></i>
+        <i class="pi pi-receipt text-xl"></i>
         <!-- အော်ဒါရှိပြီး မပြီးသေးပါက စိမ်းရောင်အချက်ပြမီးလေး လင်းနေမည် -->
         @if (currentOrder && currentOrder.orderStatus !== 'None' && currentOrder.orderStatus !== 'Ready') {
         <span class="absolute -top-1 -right-1 flex h-3 w-3">
@@ -424,25 +477,25 @@
 <div (click)="statusExpanded = false" class="fixed inset-0 bg-black/40 z-40 transition-opacity duration-300"></div>
 
 <div
-    class="fixed bottom-20 right-6 w-[calc(100vw-3rem)] sm:w-96 bg-white rounded-2xl shadow-2xl z-45 border border-orange-100 flex flex-col overflow-hidden animate-fade-in-up">
+    class="fixed bottom-20 right-6 w-[calc(100vw-3rem)] sm:w-96 bg-white rounded-2xl shadow-2xl z-45 border border-orange-200/50 flex flex-col overflow-hidden animate-fade-in-up">
 
     <!-- ခြေရာခံစရာ အော်ဒါအစစ်အမှန် ရှိနေသည့် ကဏ္ဍ -->
     @if (currentOrder && currentOrder.orderStatus !== 'None') {
-    <div class="p-4 border-b border-gray-100 bg-orange-50/40 flex items-center justify-between">
+    <div class="p-4 border-b border-orange-100 bg-gradient-to-r from-orange-50 to-amber-50 flex items-center justify-between">
         <div>
-            <span class="text-[10px] text-orange-600 font-bold uppercase tracking-wider block">Live Kitchen
-                Tracking</span>
-            <h4 class="text-sm font-black text-gray-800 mt-0.5">Order #{{ currentOrder.orderNumber }}</h4>
+            <span class="text-[10px] text-orange-600 font-bold uppercase tracking-wider block">Live Kitchen Tracking</span>
+            <h4 class="text-base font-black text-gray-800 mt-0.5">Order #{{ currentOrder.orderNumber }}</h4>
         </div>
-        <span class="bg-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-wide">
+        <span class="bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-wide shadow-sm">
             {{ currentOrder.orderStatus }}
         </span>
     </div>
 
     <!-- မိမိအော်ဒါသည် Paid ဖြစ်ပြီး မီးဖိုချောင်က မကိုင်ရသေးပါက ပြသမည့် Queue Box -->
     @if (currentOrder.orderStatus === 'Paid') {
-    <div class="mx-4 mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-center animate-pulse">
-        <p class="text-xs font-semibold text-amber-800">
+    <div class="mx-4 mt-3 p-4 bg-amber-50 border-2 border-amber-200 rounded-xl text-center animate-pulse">
+        <p class="text-xs font-semibold text-amber-800 flex items-center justify-center gap-1">
+            <i class="pi pi-clock text-amber-500"></i>
             ⚠️ There are orders ahead of you.
         </p>
         <span class="text-[11px] text-amber-600 block mt-0.5">
@@ -453,8 +506,9 @@
 
     <!-- မိမိအော်ဒါအား ချက်ပြုတ်နေစဉ် နောက်ထပ် Queue ရှိနေပါက ပြသမည့် Box -->
     @if (isAnotherOrderWaiting && currentOrder.orderStatus !== 'Paid') {
-    <div class="mx-4 mt-3 p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-center animate-pulse">
+    <div class="mx-4 mt-3 p-4 bg-amber-50 border-2 border-amber-200 rounded-xl text-center animate-pulse">
         <p class="text-[11px] font-bold text-amber-800 flex items-center justify-center gap-1">
+            <i class="pi pi-clock text-amber-500"></i>
             ⚠️ Next Order is Waiting in Queue
         </p>
         <span class="text-[10px] text-amber-600 block mt-0.5 font-medium">
@@ -470,37 +524,37 @@
 
             @if (!isLast) {
             <div [ngClass]="isStepCompleted(statusSteps[i+1].status) ? 'bg-orange-500' : 'bg-gray-200'"
-                class="absolute left-3.5 top-7 bottom-[-20px] w-0.5 -ml-[1px] z-0 transition-colors duration-300">
+                class="absolute left-4 top-9 bottom-[-20px] w-0.5 -ml-[1px] z-0 transition-all duration-700">
             </div>
             }
 
             <div [style.backgroundColor]="isStepCompleted(step.status) ? step.color : '#F3F4F6'"
-                [ngClass]="isStepCompleted(step.status) ? 'text-white scale-105 shadow ring-4 ring-orange-50' : 'text-gray-400'"
-                class="w-7 h-7 rounded-full flex items-center justify-center shrink-0 z-10 transition-all duration-300">
-                <i [class]="step.icon" class="text-[10px]"></i>
+                [ngClass]="isStepCompleted(step.status) ? 'text-white scale-105 shadow-md ring-4 ring-orange-50' : 'text-gray-400'"
+                class="w-9 h-9 rounded-full flex items-center justify-center shrink-0 z-10 transition-all duration-300">
+                <i [class]="step.icon" class="text-xs"></i>
             </div>
 
-            <div class="flex flex-col pt-0.5">
+            <div class="flex flex-col pt-1">
                 <span
                     [ngClass]="isStepCompleted(step.status) ? 'text-gray-800 font-black' : 'text-gray-400 font-medium'"
-                    class="text-xs transition-colors duration-300">
+                    class="text-sm transition-colors duration-300">
                     {{ step.label }}
                 </span>
                 <small class="text-[10px] text-gray-400">{{ step.status }}</small>
 
                 @if (currentOrder.orderStatus === step.status) {
                 @if (step.status === 'Paid') {
-                <span class="text-[10px] text-amber-600 font-bold mt-1 inline-flex items-center gap-1 animate-pulse">
+                <span class="inline-flex items-center gap-1 bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full text-[11px] font-bold animate-pulse mt-1">
                     ⏳ In Queue - Waiting for kitchen to start...
                 </span>
                 }
                 @if (step.status === 'Preparing') {
-                <span class="text-[10px] text-orange-600 font-bold mt-1 inline-flex items-center gap-1 animate-pulse">
+                <span class="inline-flex items-center gap-1 bg-orange-100 text-orange-800 px-2.5 py-1 rounded-full text-[11px] font-bold animate-pulse mt-1">
                     👨‍🍳 Kitchen is preparing your order now!
                 </span>
                 }
                 @if (step.status === 'Ready') {
-                <span class="text-[10px] text-green-600 font-bold mt-1 inline-flex items-center gap-1">
+                <span class="inline-flex items-center gap-1 bg-green-100 text-green-800 px-2.5 py-1 rounded-full text-[11px] font-bold mt-1">
                     ✅ Done! Please collect your order.
                 </span>
                 }
@@ -519,8 +573,12 @@
     </div>
     }
 
-    <div class="p-3 bg-gray-50 border-t border-gray-100 text-center text-[10px] font-medium text-gray-400">
-        Will update in real-time. Thank you! 🙏
+    <!-- Footer Bar -->
+    <div class="p-3 bg-gradient-to-r from-orange-50 to-amber-50 border-t border-orange-100 text-center">
+        <p class="text-[10px] font-bold text-orange-400 flex items-center justify-center gap-1">
+            ☕ Powered by SmartCafe
+        </p>
+        <p class="text-[9px] text-gray-400 mt-0.5">Will update in real-time. Thank you! 🙏</p>
     </div>
 </div>
 }

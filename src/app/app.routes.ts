@@ -14,6 +14,7 @@ import { Orders } from './pages/orders/orders';
 import { OrderDetail } from './pages/orders/order-detail/order-detail';
 import { KitchenDashboard } from './pages/kitchen-dashboard/kitchen-dashboard';
 import { Reports } from './pages/reports/reports';
+import { OrderPickupDashboard } from './pages/order-pickup-dashboard/order-pickup-dashboard';
 
 export const routes: Routes = [
   // Default Application Entry Point
@@ -29,6 +30,10 @@ export const routes: Routes = [
   {
     path: 'login',
     component: Login
+  },
+  {
+    path:'order_pickup_dashboard',
+    component:OrderPickupDashboard
   },
 
   // Admin Management Console Layout

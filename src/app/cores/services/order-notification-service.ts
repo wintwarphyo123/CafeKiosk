@@ -62,6 +62,11 @@ export class OrderNotificationService {
       callback(data);
     });
   }
+  listenForQueueStatus(callback: (data: any) => void): void {
+    this.hubConnection.on('orderQueueStatusChanged', (data) => {
+      callback(data);
+    });
+}
 
   listenForCategoryUpdate(callback: (data: any) => void): void {
     this.hubConnection.on('ReceiveCategoryUpdate', (data) => {

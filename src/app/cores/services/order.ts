@@ -49,6 +49,10 @@ export class OrderService {
     return this.http.get<RootModel>(`${environment.apiUrl}/api/Order/order-status/${orderId}`);
   }
 
+  getActiveOrders():Observable<RootModel>{
+    return this.http.get<RootModel>(`${environment.apiUrl}/api/order/activeOrders`);
+  }
+
   exportToExcel(
     startDate: string | null | undefined,
     endDate: string | null | undefined,
