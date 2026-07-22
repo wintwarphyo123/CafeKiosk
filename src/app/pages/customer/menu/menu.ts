@@ -304,7 +304,7 @@ export class MenuComponent implements OnInit {
             .map((item: any) => ({
               categoryId: item.id ?? item.categoryId ?? item.categoryid ?? 0,
               categoryName: item.categoryName ?? null,
-              isActive: item.isActive ?? false,
+              isActive: item.isActive ?? item.is_active ?? item.Is_active ?? true,
               categoryImage: item.categoryImage ? this.getImageUrl(item.categoryImage) : null
             }));
           this.getMenuDetailOption();
@@ -376,7 +376,7 @@ export class MenuComponent implements OnInit {
           menuImage: item.menuImage ? this.getImageUrl(item.menuImage) : null,
           description: item.description ?? '',
           price: item.price ?? 0,
-          isAvailable: item.is_available ?? false,
+          isAvailable: item.isAvailable ?? item.is_available ?? item.Is_available ?? false,
           categoryId: item.categoryId ?? 0,
           categoryName: item.categoryName ?? ''
         }));

@@ -15,13 +15,18 @@ import { OrderDetail } from './pages/orders/order-detail/order-detail';
 import { KitchenDashboard } from './pages/kitchen-dashboard/kitchen-dashboard';
 import { Reports } from './pages/reports/reports';
 import { OrderPickupDashboard } from './pages/order-pickup-dashboard/order-pickup-dashboard';
+import { Welcome } from './pages/customer/welcome/welcome';
 
 export const routes: Routes = [
   // Default Application Entry Point
   {
     path: '',
-    redirectTo: 'customer_menu',
+    redirectTo: 'welcome',
     pathMatch: 'full'
+  },
+  {
+    path:'welcome',
+    component:Welcome
   },
   {
     path: 'customer_menu',
@@ -117,6 +122,6 @@ export const routes: Routes = [
  
   {
     path: '**',
-    redirectTo: 'customer_menu' 
+    redirectTo: 'welcome' 
   }
 ];
