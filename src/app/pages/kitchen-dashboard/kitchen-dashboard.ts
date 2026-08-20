@@ -18,8 +18,8 @@ import { TagModule } from 'primeng/tag';
 import { OrderResponseDto } from '../../cores/models/order-detail.model';
 import { SortColumn } from '../../cores/models/root.model';
 import { OrderService } from '../../cores/services/order';
-import { Observable, Subject, combineLatest } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Observable, Subject, combineLatest, forkJoin, of } from 'rxjs';
+import { takeUntil, switchMap, map, catchError } from 'rxjs/operators';
 import { OrderNotificationService } from '../../cores/services/order-notification-service';
 
 @Component({
@@ -136,9 +136,12 @@ export class KitchenDashboard implements OnInit, OnDestroy {
 
   loadData(): void {
     this.isLoading = true;
-    this.orderService.get(this.selectedStatus).pipe(takeUntil(this.destroy$)).subscribe({
-      next: (res) => {
-        this.isLoading = false;
+    // Pass empty string when 'All' is selected so the API returns all active orders
+    const statusParam = this.selectedStatus === 'All' ? '' : this.selectedStatus;
+
+    this.orderService.get(statusParam).pipe(
+      takeUntil(this.destroy$),
+      switchMap((res) => {
         if (!res.success) {
           this.messageService.add({
             key: 'globalMessage',
@@ -146,22 +149,56 @@ export class KitchenDashboard implements OnInit, OnDestroy {
             summary: 'Error',
             detail: 'Failed to sync orders trace.'
           });
-          return;
+          return of([]);
         }
 
-        const rawItem = Array.isArray(res.data) ? res.data : [];
-        this.orderModel = rawItem.map((item) => ({
-          orderId: item.orderId ?? 0,
-          orderNumber: item.orderNumber ?? '',
-          totalAmount: item.totalAmount ?? 0,
-          orderStatus: item.orderStatus ?? 'Pending',
-          phoneNumber: item.phoneNumber ?? '',
-          note: item.note ?? '',
-          createdAt: item.createdAt ?? new Date(),
-          updatedAt:item.updatedAt ?? new Date(),
-          orderItems: item.orderItems ?? []
-        }));
+        const rawItems = Array.isArray(res.data) ? res.data : [];
+        if (rawItems.length === 0) return of([]);
 
+        // Fetch full detail (with orderItems) for each order in parallel
+        const detailRequests$ = rawItems.map((item: any) =>
+          this.orderService.viewDetail(item.orderId).pipe(
+            map((detailRes) => {
+              const d = (detailRes.success && detailRes.data) ? detailRes.data : item;
+              return {
+                orderId: d.orderId ?? item.orderId ?? 0,
+                orderNumber: d.orderNumber ?? item.orderNumber ?? '',
+                totalAmount: d.totalAmount ?? item.totalAmount ?? 0,
+                orderStatus: d.orderStatus ?? item.orderStatus ?? 'Pending',
+                phoneNumber: d.phoneNumber ?? item.phoneNumber ?? '',
+                note: d.note ?? item.note ?? '',
+                createdAt: d.createdAt ?? item.createdAt ?? new Date(),
+                updatedAt: d.updatedAt ?? item.updatedAt ?? new Date(),
+                orderItems: Array.isArray(d.orderItems) ? d.orderItems.map((sub: any) => ({
+                  orderItemId: sub.orderItemId ?? 0,
+                  menuId: sub.menuId ?? 0,
+                  menuName: sub.menuName ?? sub.itemName ?? '',
+                  quantity: sub.quantity ?? 1,
+                  priceAtOrder: sub.priceAtOrder ?? sub.price ?? 0,
+                  selectedOptions: sub.selectedOptions ?? []
+                })) : []
+              } as OrderResponseDto;
+            }),
+            catchError(() => of({
+              orderId: item.orderId ?? 0,
+              orderNumber: item.orderNumber ?? '',
+              totalAmount: item.totalAmount ?? 0,
+              orderStatus: item.orderStatus ?? 'Pending',
+              phoneNumber: item.phoneNumber ?? '',
+              note: item.note ?? '',
+              createdAt: item.createdAt ?? new Date(),
+              updatedAt: item.updatedAt ?? new Date(),
+              orderItems: []
+            } as OrderResponseDto))
+          )
+        );
+
+        return forkJoin(detailRequests$);
+      })
+    ).subscribe({
+      next: (orders) => {
+        this.isLoading = false;
+        this.orderModel = orders as OrderResponseDto[];
         this.ordersLoaded$.next(this.orderModel);
         this.cdr.detectChanges();
       },
@@ -199,74 +236,31 @@ export class KitchenDashboard implements OnInit, OnDestroy {
     }
 
     let result = currentOrders;
-    if (statusKey !== 'All') {
+    if (statusKey && statusKey !== 'All') {
       result = result.filter(o => o.orderStatus.toLowerCase() === statusKey.toLowerCase());
     }
-    // if (statusKey && statusKey !== 'All') {
-    //   result = result.filter(o => o.orderStatus.toLowerCase() === statusKey.toLowerCase());
-    // }
     if (cleanKey) {
-      this.filteredOrders = currentOrders.filter(order =>
-        order.orderNumber.toLowerCase().includes(cleanKey) 
+      this.filteredOrders = result.filter(order =>
+        order.orderNumber.toLowerCase().includes(cleanKey)
       );
-    }
-    else {
-
+    } else {
       this.filteredOrders = [...result];
     }
-    //this.filteredOrders = result;
     this.cdr.detectChanges();
   }
 
   viewDetail(order: OrderResponseDto): void {
-    this.isLoading = true;
-    this.orderService.viewDetail(order.orderId).pipe(takeUntil(this.destroy$)).subscribe({
-      next: (res) => {
-        this.isLoading = false;
-        if (res.success && res.data) {
-
-          this.selectedOrder = {
-            ...res.data,
-           orderItems: (res.data.orderItems ?? []).map((subItem: any) => ({
-              orderItemId: subItem.orderItemId,
-              quantity: subItem.quantity,
-              menuName: subItem.menuName ?? subItem.itemName ?? '',
-              priceAtOrder: subItem.priceAtOrder ?? subItem.price ?? 0,
-              selectedOptions: subItem.selectedOptions ?? [] 
-            }))
-          };
-          console.log('Selected Order Details:', this.selectedOrder);
-          this.sidebarVisible = true;
-
-          this.orderForm.patchValue({
-            orderId: res.data.orderId,
-            orderNumber: res.data.orderNumber,
-            totalAmount: res.data.totalAmount,
-            orderStatus: res.data.orderStatus,
-            phoneNumber: res.data.phoneNumber,
-            note: res.data.note,
-            createdAt: res.data.createdAt
-          });
-        } else {
-          this.messageService.add({
-            key: 'globalMessage',
-            severity: 'error',
-            summary: 'Details Error',
-            detail: 'Could not fetch order specifics.'
-          });
-        }
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        this.isLoading = false;
-        this.messageService.add({
-          key: 'globalMessage',
-          severity: 'error',
-          summary: 'Server Error',
-          detail: 'Could not communicate order sub-parameters.'
-        });
-        this.cdr.detectChanges();
-      }
+    // Data is already fully loaded via forkJoin in loadData() — open dialog instantly
+    this.selectedOrder = order;
+    this.sidebarVisible = true;
+    this.orderForm.patchValue({
+      orderId: order.orderId,
+      orderNumber: order.orderNumber,
+      totalAmount: order.totalAmount,
+      orderStatus: order.orderStatus,
+     // phoneNumber: order.p ?? '',
+      note: order.note,
+      createdAt: order.createdAt
     });
   }
 

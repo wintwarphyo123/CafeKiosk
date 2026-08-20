@@ -32,5 +32,10 @@ export class OptionGroupService {
   delete(id:number):Observable<RootModel>{
     return this.http.delete<RootModel>(`${environment.apiUrl}/api/optionGroup/${id}`,{})
   }
+  importExcel(file:File):Observable<RootModel>{
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    return this.http.post<RootModel>(`${environment.apiUrl}/api/optionGroup/import-optionGroups`,formData);
+  }
   
 }

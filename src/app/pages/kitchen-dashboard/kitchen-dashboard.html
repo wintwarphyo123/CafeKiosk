@@ -68,19 +68,16 @@
 
     <!-- Order Card -->
     <div
-      class="bg-white rounded-2xl flex flex-col justify-between p-5 hover:shadow-md transition-all duration-200"
+      class="bg-white rounded-2xl flex flex-col justify-between p-5 hover:shadow-md transition-all duration-200 min-h-[220px]"
       [ngClass]="{
         'border-l-4 border-blue-400 shadow-blue-50 shadow-md': order.orderStatus === 'Paid',
         'border-l-4 border-amber-500 shadow-amber-100 shadow-lg ring-1 ring-amber-200': order.orderStatus === 'Preparing',
         'border-l-4 border-emerald-500 shadow-emerald-50 shadow-md': order.orderStatus === 'Ready',
         'border border-slate-100 shadow-sm': order.orderStatus !== 'Paid' && order.orderStatus !== 'Preparing' && order.orderStatus !== 'Ready'
-      }"
-      [class.border-emerald-500]="isLatestIncoming(order.orderId)"
-      [class.ring-4]="isLatestIncoming(order.orderId)"
-      [class.ring-emerald-100]="isLatestIncoming(order.orderId)"
-      [class.shadow-lg]="isLatestIncoming(order.orderId)">
+      }">
 
-      <div class="flex justify-between items-start mb-4">
+      <!-- Top Header -->
+      <div class="flex justify-between items-start mb-2">
         <div>
           <h3 class="font-black text-[#1A110B] text-base">#{{ order.orderNumber }}</h3>
           @if (isLatestIncoming(order.orderId)) {
@@ -97,35 +94,42 @@
         <p-tag [severity]="getPaymentSeverity(order.orderStatus)" [value]="order.orderStatus"></p-tag>
       </div>
 
-      <div class="space-y-2 flex-grow border-t border-b border-stone-100 py-3 my-2">
-        @for (item of order.orderItems.slice(0, 3); track item.orderItemId) {
-        <div class="flex justify-between text-sm text-stone-600">
-          <span>{{ item.quantity }}x {{ item.menuName }}</span>
-          <span class="font-mono text-stone-400">{{ item.priceAtOrder }} MMK</span>
-        </div>
-        }
-        @if (order.orderItems.length > 3) {
-        <p class="text-xs font-semibold text-indigo-500">+{{ order.orderItems.length - 3 }} more items</p>
+      <!-- Item Checklist Preview -->
+      <div class="space-y-1.5 border-t border-b border-stone-100 py-3 my-2" style="min-height:64px">
+        @if (order.orderItems && order.orderItems.length > 0) {
+          @for (item of order.orderItems.slice(0, 3); track item.orderItemId) {
+          <div class="flex justify-between text-xs text-stone-600">
+            <span class="font-bold">{{ item.quantity }}x {{ item.menuName }}</span>
+            <span class="font-mono text-stone-400">{{ item.priceAtOrder }} MMK</span>
+          </div>
+          }
+          @if (order.orderItems.length > 3) {
+          <p class="text-[11px] font-bold text-amber-600 mt-1">+{{ order.orderItems.length - 3 }} more items</p>
+          }
+        } @else {
+          <p class="text-xs text-stone-400 italic">No items attached</p>
         }
       </div>
 
-      <div class="flex justify-between items-center pt-3 gap-3">
-        <div>
+      <!-- Footer Action Bar -->
+      <div class="flex justify-between items-center pt-2 gap-3">
+        <div class="shrink-0">
           <span class="text-[10px] text-stone-400 block uppercase font-bold tracking-wider">Total</span>
-          <span class="text-lg font-black text-[#1A110B] font-mono">{{ order.totalAmount }} MMK</span>
+          <span class="text-base font-black text-[#1A110B] font-mono">{{ order.totalAmount }} MMK</span>
         </div>
 
-        <!-- Status-based See Details button -->
+        <!-- Action Button -->
         <button
-          class="flex-1 rounded-xl py-2 px-4 font-bold text-sm transition-all duration-200 text-white"
-          [ngClass]="{
-            'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700': order.orderStatus === 'Paid',
-            'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700': order.orderStatus === 'Preparing',
-            'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700': order.orderStatus === 'Ready',
-            'bg-gradient-to-r from-stone-600 to-stone-700 hover:from-stone-700 hover:to-stone-800': order.orderStatus !== 'Paid' && order.orderStatus !== 'Preparing' && order.orderStatus !== 'Ready'
-          }"
+          type="button"
+          class="flex-1 rounded-xl py-2.5 px-3 font-bold text-xs text-white cursor-pointer flex items-center justify-center gap-1.5"
+          [style.background]="
+            order.orderStatus === 'Paid'      ? 'linear-gradient(to right,#3b82f6,#2563eb)' :
+            order.orderStatus === 'Preparing' ? 'linear-gradient(to right,#f59e0b,#d97706)' :
+            order.orderStatus === 'Ready'     ? 'linear-gradient(to right,#10b981,#0d9488)' :
+                                                'linear-gradient(to right,#57534e,#44403c)'"
           (click)="viewDetail(order)">
-          <i class="pi pi-eye text-xs mr-1.5"></i> See Details
+          <i class="pi pi-eye text-xs"></i>
+          <span>See Details</span>
         </button>
       </div>
 
@@ -143,92 +147,94 @@
 </div>
 
 <!-- Order Detail Dialog -->
+<!-- Order Detail Dialog -->
 <p-dialog [(visible)]="sidebarVisible" [modal]="true"
   [header]="selectedOrder ? 'Order Details — #' + selectedOrder.orderNumber : 'Order Details'"
-  [breakpoints]="{ '960px': '75vw', '640px': '90vw' }" [style]="{ width: '50vw' }" [draggable]="false"
+  [breakpoints]="{ '960px': '70vw', '640px': '95vw' }" [style]="{ width: '38vw' }" [draggable]="false"
   [resizable]="false" styleClass="rounded-xl overflow-hidden shadow-2xl">
 
   @if (selectedOrder) {
-  <div class="flex flex-col space-y-5 p-2">
+  <div class="flex flex-col h-[75vh] max-h-[650px] p-1">
 
-    <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-3">
-      <div>
-        <p class="text-xs text-slate-400 font-mono">Reference Registry ID: {{ selectedOrder.orderId }}</p>
-        <p class="text-sm text-slate-600 mt-0.5">Placed on: <span class="font-semibold">{{ selectedOrder.createdAt |
-            date:'MMM d, yyyy, h:mm:ss a':'+0630' }}</span></p>
+    <!-- Top Metadata & Preparation Bar (Slimmed Down) -->
+    <div class="shrink-0 space-y-2 mb-3">
+      <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-2">
+        <div>
+          <p class="text-[10px] text-slate-400 font-mono">Reference Registry ID: {{ selectedOrder.orderId }}</p>
+          <p class="text-xs text-slate-600">Placed on: <span class="font-semibold">{{ selectedOrder.createdAt |
+              date:'MMM d, yyyy, h:mm:ss a':'+0630' }}</span></p>
+        </div>
+        <p-tag [severity]="getPaymentSeverity(selectedOrder.orderStatus)" [value]="selectedOrder.orderStatus"></p-tag>
       </div>
-      <p-tag [severity]="getPaymentSeverity(selectedOrder.orderStatus)" [value]="selectedOrder.orderStatus"></p-tag>
-    </div>
 
-    <div class="bg-slate-50 border border-slate-200/60 rounded-xl p-4">
-      <span class="text-xs uppercase font-bold tracking-wider text-slate-400 block mb-2">Advance Preparation
-        Lifecycle</span>
-      <div class="flex flex-wrap gap-2">
-        @for (status of statusOptions; track status) {
-        <button pButton [label]="status"
-          [disabled]="isUpdatingStatus || (selectedOrder.orderStatus === 'Pending' && status !== 'Paid' && status !== 'Cancelled' && status !== 'Pending')"
-          [class]="selectedOrder.orderStatus === status ? 'p-button-sm font-semibold' : 'p-button-sm p-button-outlined p-button-secondary'"
-          (click)="updateStatus(status)">
-        </button>
-        }
-      </div>
-    </div>
-
-
-    <div
-      class="divide-y divide-slate-100 border border-slate-100 rounded-xl px-4 bg-white shadow-sm max-h-60 overflow-y-auto">
-      <div class="py-3">
-        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Kitchen Item Checklist</h4>
-
-        <div class="divide-y divide-slate-100">
-          @for (item of selectedOrder.orderItems; track item.orderItemId) {
-          <div class="py-3.5 flex justify-between items-start">
-            <div>
-              <div class="flex items-center gap-2">
-                <span class="font-bold text-slate-800 text-base">{{ item.quantity }}x</span>
-                <span class="font-semibold text-slate-700 text-base">{{ item.menuName }}</span>
-              </div>
-
-              @if (item.selectedOptions && item.selectedOptions.length > 0) {
-              <div class="mt-1.5 flex flex-wrap gap-1.5 pl-1">
-                @for (opt of item.selectedOptions; track opt.optionItemName) {
-                <span
-                  class="bg-blue-50 border border-blue-100 text-[11px] text-blue-700 font-medium px-2 py-0.5 rounded-md shadow-2xs">
-                  {{ opt.optionGroupName }}: <strong class="text-blue-900 font-semibold">{{ opt.optionItemName
-                    }}</strong>
-                </span>
-                }
-              </div>
-              }
-            </div>
-
-            <span class="font-mono font-bold text-slate-600 text-sm mt-0.5">
-              {{ (item.priceAtOrder * item.quantity)}} MMK
-            </span>
-          </div>
-          } @empty {
-          <div class="text-center py-6 text-sm text-slate-400 italic">
-            No items found inside this order payload.
-          </div>
+      <div class="bg-slate-50 border border-slate-200/60 rounded-lg p-2.5">
+        <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-1">Advance Preparation Lifecycle</span>
+        <div class="flex flex-wrap gap-1">
+          @for (status of statusOptions; track status) {
+          <button pButton [label]="status"
+            [disabled]="isUpdatingStatus || (selectedOrder.orderStatus === 'Pending' && status !== 'Paid' && status !== 'Cancelled' && status !== 'Pending')"
+            [class]="selectedOrder.orderStatus === status ? 'p-button-xs text-xs font-semibold py-1 px-2.5' : 'p-button-xs text-xs p-button-outlined p-button-secondary py-1 px-2.5'"
+            (click)="updateStatus(status)">
+          </button>
           }
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="border-t border-slate-100 pt-3">
-    <div
-      class="flex justify-between items-center text-slate-700 mb-3 bg-emerald-50/40 border border-emerald-100/70 p-3 rounded-xl">
-      <span class="text-sm font-medium text-emerald-800">Aggregate Total Value</span>
-      <span class="font-mono text-xl font-black text-emerald-700">{{ selectedOrder.totalAmount}} MMK</span>
+    <!-- Kitchen Item Checklist (Main Focus area: Grows to fill remaining height) -->
+    <div class="flex-1 min-h-0 border border-slate-100 rounded-xl px-4 bg-white shadow-xs overflow-y-auto">
+      <div class="sticky top-0 bg-white py-2.5 z-10 border-b border-slate-100 flex items-center justify-between">
+        <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Kitchen Item Checklist</h4>
+        <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold">
+          {{ selectedOrder.orderItems?.length || 0 }} Items
+        </span>
+      </div>
+
+      <div class="divide-y divide-slate-100">
+        @for (item of selectedOrder.orderItems; track item.orderItemId) {
+        <div class="py-3 flex justify-between items-start">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-black text-amber-600 text-sm">{{ item.quantity }}x</span>
+              <span class="font-bold text-slate-800 text-sm">{{ item.menuName }}</span>
+            </div>
+
+            @if (item.selectedOptions && item.selectedOptions.length > 0) {
+            <div class="mt-1 flex flex-wrap gap-1 pl-1">
+              @for (opt of item.selectedOptions; track opt.optionItemName) {
+              <span class="bg-blue-50 border border-blue-100 text-[10px] text-blue-700 font-medium px-2 py-0.5 rounded-md">
+                {{ opt.optionGroupName }}: <strong class="text-blue-900 font-semibold">{{ opt.optionItemName }}</strong>
+              </span>
+              }
+            </div>
+            }
+          </div>
+
+          <span class="font-mono font-bold text-slate-600 text-xs mt-0.5 shrink-0">
+            {{ (item.priceAtOrder * item.quantity)}} MMK
+          </span>
+        </div>
+        } @empty {
+        <div class="text-center py-10 text-sm text-slate-400 italic">
+          No items found inside this order payload.
+        </div>
+        }
+      </div>
     </div>
 
-    <div class="text-xs text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-200">
-      <span class="font-bold block text-slate-400 uppercase tracking-wide mb-0.5">Staff Transaction Remarks</span>
-      {{ selectedOrder.note || 'No custom notes provided for this transaction sequence.' }}
+    <!-- Bottom Footer (Compact Layout) -->
+    <div class="shrink-0 border-t border-slate-100 pt-2.5 mt-2 space-y-2">
+      <div class="flex justify-between items-center text-slate-700 bg-emerald-50/50 border border-emerald-100/70 px-3 py-2 rounded-lg">
+        <span class="text-xs font-semibold text-emerald-800">Aggregate Total Value</span>
+        <span class="font-mono text-base font-black text-emerald-700">{{ selectedOrder.totalAmount }} MMK</span>
+      </div>
+
+      <div class="text-[11px] text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-200">
+        <span class="font-bold block text-slate-400 uppercase tracking-wide text-[9px]">Staff Transaction Remarks</span>
+        <p class="truncate">{{ selectedOrder.note || 'No custom notes provided.' }}</p>
+      </div>
     </div>
+
   </div>
-
-
   }
 </p-dialog>

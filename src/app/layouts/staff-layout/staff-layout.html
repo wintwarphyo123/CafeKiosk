@@ -118,14 +118,15 @@
               <div
                 class="w-9 h-9 rounded-full bg-amber-50 border border-amber-200/60 flex items-center justify-center text-sm shadow-2xs overflow-hidden">
                 @if(userProfile?.profileImage){
-                <img [src]="getImageUrl(userProfile.profileImage)" (error)="handleImageError($event)" alt="Profile Photo"
-                  class="w-full h-full object-cover" />
+                <img [src]="getImageUrl(userProfile.profileImage)" (error)="handleImageError($event)"
+                  alt="Profile Photo" class="w-full h-full object-cover" />
                 }@else {
                 <img src="/thumbnail.jpg" alt="Default Avatar" class="w-full h-full object-cover opacity-80" />
                 }
               </div>
               <!-- Green status dot -->
-              <span class="absolute -bottom-0 -right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-white rounded-full"></span>
+              <span
+                class="absolute -bottom-0 -right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-white rounded-full"></span>
             </div>
           </div>
 
@@ -238,7 +239,7 @@
         </div>
       </form>
     </p-dialog>
-
+    <input #image type="file" accept=".jpeg,.jpg,.png" (change)="onImgChange($event)" hidden style="display:none" />
     <div class="flex-1 overflow-y-auto p-5 bg-stone-50/40">
       <router-outlet></router-outlet>
     </div>

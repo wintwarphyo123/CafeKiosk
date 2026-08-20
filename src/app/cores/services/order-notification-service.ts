@@ -80,4 +80,16 @@ export class OrderNotificationService {
     });
   }
 
+  listenForMenuSpecialUpdate(callback: (data: any) => void): void {
+    this.hubConnection.on('ReceiveMenuSpecial', (data) => {
+      callback(data);
+    });
+  }
+
+  listenForMenuArchivedUpdate(callback: (data: any) => void): void {
+    this.hubConnection.on('RecevieMenuArchived', (data) => {
+      callback(data);
+    });
+  }
+
 }

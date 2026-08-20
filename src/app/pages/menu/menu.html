@@ -49,6 +49,12 @@
                             (click)="changeState('Deleted')">
                             Deleted Menus
                         </button>
+                        <button type="button"
+                            class="px-3.5 h-full text-xs font-semibold rounded-md transition-all duration-200"
+                            [class]="selectedState === 'Special' ? 'bg-rose-600 text-white shadow-xs' : 'text-stone-500 hover:text-rose-600'"
+                            (click)="changeState('Special')">
+                            Special Menus
+                        </button>
                     </div>
                     @if(userRole === 'ADMIN') {
                     <div class="w-full sm:w-auto sm:ml-auto">
@@ -61,43 +67,55 @@
                 </div>
             </ng-template>
 
+            <!-- HEADER -->
             <ng-template pTemplate="header" let-columns>
                 <tr class="bg-stone-100 text-stone-700 text-[11px] font-bold border-b border-stone-200">
+                    <!-- Image Header (All States) -->
                     <th class="w-20 py-2">Image</th>
 
+                    <!-- Dynamic Columns (Menu Name, Category Name, Price) -->
                     @for(col of columns; track col.field) {
                     <th [pSortableColumn]="col.field" [class.text-right]="col.field === 'price'"
                         [class.text-left]="col.field !== 'price'"
                         [style.width]="col.field === 'description' ? '20rem' : 'auto'"
                         class="py-2 px-3 select-none cursor-pointer hover:bg-stone-200/40 transition-colors">
-
-                        <!-- Flex container handles alignment without line breaks -->
                         <div class="flex items-center gap-1 whitespace-nowrap">
-
                             <span>{{ col.header }}</span>
                             <p-sortIcon [field]="col.field"
                                 class="scale-75 origin-left inline-block opacity-70"></p-sortIcon>
                         </div>
                     </th>
                     }
-                    @if(selectedState!=='Deleted'){
+
+                    <!-- Non-Deleted Headers (All, Available, Out_Of_Stock, Special) -->
+                    @if(selectedState !== 'Deleted') {
                     <th class="w-32 text-center py-2 px-3">Available</th>
+
+                    <!-- Special-Only Headers -->
+                    @if(selectedState === 'Special') {
+                    <th class="w-28 text-center py-2 px-3">Is Special</th>
+                    <th class="w-28 text-center py-2 px-3">Archived</th>
+                    }
+
                     <th class="w-32 text-center py-2 px-3">View Details</th>
-                    @if(userRole=='ADMIN'){
+
+                    @if(userRole === 'ADMIN') {
                     <th class="w-32 text-center py-2 px-3">Actions</th>
                     }
                     }
-                    @else{
+                    <!-- Deleted State Header -->
+                    @else {
                     <th class="w-32 text-center py-2 px-3">Restore</th>
                     }
-
                 </tr>
             </ng-template>
 
+            <!-- BODY -->
             <ng-template pTemplate="body" let-rowData let-columns="columns">
                 <tr [pSelectableRow]="rowData"
                     class="border-b border-stone-100 text-stone-600 text-[11px] hover:bg-amber-50/30 transition-colors">
 
+                    <!-- Image Column (All States) -->
                     <td class="py-1">
                         <p-image [src]="rowData.menuImage ?? ''" alt="{{ rowData.menuName }}"
                             [style]="{ width: '40px', height: '30px' }"
@@ -106,6 +124,7 @@
                         </p-image>
                     </td>
 
+                    <!-- Dynamic Columns Data -->
                     @for(col of columns; track col.field) {
                     <td [class.text-right]="col.field === 'price'" [class.text-left]="col.field !== 'price'"
                         class="py-1.5 px-3 font-medium text-stone-800">
@@ -117,7 +136,10 @@
                     </td>
                     }
 
-                    @if(selectedState!=='Deleted'){
+                    <!-- Non-Deleted Columns (All, Available, Out_Of_Stock, Special) -->
+                    @if(selectedState !== 'Deleted') {
+
+                    <!-- Available Toggle -->
                     <td class="w-32 text-center py-1.5 px-3">
                         <div class="flex items-center justify-center">
                             <button (click)="toggleMenuAvailability(rowData)" pTooltip="Change Status"
@@ -131,6 +153,37 @@
                             </button>
                         </div>
                     </td>
+
+                    <!-- Special-Only Columns -->
+                    @if(selectedState === 'Special') {
+                    <td class="w-28 text-center py-1.5 px-3">
+                        <div class="flex items-center justify-center">
+                            <button (click)="toggleMenuSpecial(rowData)" pTooltip="Change Status" tooltipPosition="top"
+                                class="cursor-pointer focus:outline-none transition-transform active:scale-95">
+                                <span
+                                    [class]="rowData.isSpecial ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100' : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'"
+                                    class="px-2 py-0.5 rounded text-[10px] font-semibold border inline-block tracking-wider transition-colors whitespace-nowrap">
+                                    {{ rowData.isSpecial ? 'SPECIAL' : 'NORMAL' }}
+                                </span>
+                            </button>
+                        </div>
+                    </td>
+
+                    <td class="w-28 text-center py-1.5 px-3">
+                        <div class="flex items-center justify-center">
+                            <button (click)="toggleMenuArchived(rowData)" pTooltip="Change Status" tooltipPosition="top"
+                                class="cursor-pointer focus:outline-none transition-transform active:scale-95">
+                                <span
+                                    [class]="rowData.archived ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100' : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'"
+                                    class="px-2 py-0.5 rounded text-[10px] font-semibold border inline-block tracking-wider transition-colors whitespace-nowrap">
+                                    {{ rowData.archived ? 'Active' : 'Archived' }}
+                                </span>
+                            </button>
+                        </div>
+                    </td>
+                    }
+
+                    <!-- View Detail -->
                     <td class="w-24 text-center py-1.5 px-3">
                         <div class="flex items-center justify-center">
                             <button (click)="viewDetail(rowData)"
@@ -140,7 +193,9 @@
                             </button>
                         </div>
                     </td>
-                    @if(userRole==='ADMIN'){
+
+                    <!-- Actions -->
+                    @if(userRole === 'ADMIN') {
                     <td class="w-24 text-center py-1.5 px-3">
                         <div class="flex gap-1 justify-center items-center">
                             <button (click)="update(rowData)"
@@ -156,9 +211,11 @@
                         </div>
                     </td>
                     }
+
                     }
+                    <!-- Deleted State Column -->
                     @else {
-                    <td>
+                    <td class="w-32 text-center py-1.5 px-3">
                         <button (click)="restoreItem(rowData)"
                             class="text-stone-500 hover:text-green-600 p-1 rounded hover:bg-stone-100 transition-colors"
                             pTooltip="Restore & Recover" tooltipPosition="top">
@@ -166,7 +223,6 @@
                         </button>
                     </td>
                     }
-
 
                 </tr>
             </ng-template>
@@ -211,12 +267,32 @@
                     placeholder="Type comprehensive ingredient listings, notes, or detailed preparation processes..."></textarea>
             </div>
 
+            <div class="grid grid-cols-2 gap-3 p-2.5 bg-stone-50 border border-stone-200/80 rounded-lg my-1">
+                <div class="flex items-center justify-between pr-2 border-r border-stone-200">
+                    <div class="flex flex-col">
+                        <span class="font-bold text-stone-700 text-[11px]">Is Available</span>
+                        <span class="text-[10px] text-stone-400">Available for ordering</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" formControlName="isAvailable" class="sr-only peer">
+                        <div
+                            class="w-8 h-4 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-600">
+                        </div>
+                    </label>
+                </div>
 
-            <div class="flex flex-col gap-1">
-                <label class="font-bold text-stone-700">Is Available <span class="text-rose-500">*</span></label>
-                <input pInputText formControlName="isAvailable"
-                    class="w-full text-[11px] p-2 border border-stone-200 rounded focus:outline-none focus:border-amber-700"
-                    autocomplete="off" placeholder="true / false" />
+                <div class="flex items-center justify-between pl-2">
+                    <div class="flex flex-col">
+                        <span class="font-bold text-stone-700 text-[11px]">Today's Special</span>
+                        <span class="text-[10px] text-stone-400">Highlight on Kiosk</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" formControlName="isSpecial" class="sr-only peer">
+                        <div
+                            class="w-8 h-4 bg-stone-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-amber-600">
+                        </div>
+                    </label>
+                </div>
             </div>
 
             <div class="flex flex-col gap-1 mt-1">

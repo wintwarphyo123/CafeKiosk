@@ -67,9 +67,10 @@ export class Dashboard implements OnInit {
 
   ngOnInit() {
     this.loadData();
+    this.loadingTrendItems();
     this.initChartOptions();
     this.loadChartData();
-    this.loadingTrendItems();
+    
     this.loadOrderData();
   }
 

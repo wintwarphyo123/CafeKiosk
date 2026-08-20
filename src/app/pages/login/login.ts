@@ -6,8 +6,7 @@ import { ToastModule } from 'primeng/toast';
 import { UserService } from '../../cores/services/user';
 import { LoginModel, UserModel } from '../../cores/models/user.model';
 import { ActivatedRoute, Router } from '@angular/router';
-import { InputTextModule } from 'primeng/inputtext'; // InputText Component အတွက် ထည့်သွင်းရန်
-
+import { InputTextModule } from 'primeng/inputtext';
 @Component({
   selector: 'app-login',
   imports: [
@@ -15,7 +14,7 @@ import { InputTextModule } from 'primeng/inputtext'; // InputText Component အ�
     FormsModule,
     ToastModule,
     ReactiveFormsModule,
-    InputTextModule 
+    InputTextModule
   ],
   providers: [MessageService],
   templateUrl: './login.html',
@@ -25,6 +24,7 @@ export class Login implements OnInit {
 
   isloading: boolean = false;
   userModel: UserModel[] = [];
+  showPassword = false;
 
   constructor(
     private userService: UserService,
@@ -77,8 +77,8 @@ export class Login implements OnInit {
             return;
           }
 
-          localStorage.setItem('token', token);
-          
+          //localStorage.setItem('token', token);
+          this.router.navigate(['/dashboard']);
 
           this.userService.userProfile().subscribe({
             next: (profileRes) => {
@@ -148,4 +148,7 @@ export class Login implements OnInit {
       }
     });
   }
+  togglePasswordVisibility() {
+  this.showPassword = !this.showPassword;
+}
 }

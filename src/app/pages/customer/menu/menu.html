@@ -43,84 +43,137 @@
         </div>
     </header>
 
-    <!-- CATEGORY NAVIGATION BANNER -->
-    <nav
-        class="w-full bg-white border-b border-orange-100/70 px-6 py-3 shadow-xs flex items-center gap-3 overflow-x-auto no-scrollbar shrink-0 z-20">
-        <button (click)="selectCategory(null)"
-            class="flex items-center gap-2 px-4 py-2 rounded-xl transition duration-150 text-xs font-bold whitespace-nowrap shrink-0 shadow-xs border"
-            [ngClass]="selectedCategoryId === null ? 'bg-orange-500 text-white border-transparent shadow-md' : 'bg-white hover:bg-orange-50 text-gray-700 border-orange-100/70'">
-            <span>✨ All Menus</span>
-        </button>
+    <!-- MAIN LAYOUT WRAPPER (Horizontal Row Layout) -->
+    <div class="flex-1 w-full flex flex-row overflow-hidden bg-[#FAF7F2] relative">
 
-        @for(cat of categoryModel; track cat.categoryId ){
-        <button (click)="selectCategory(cat.categoryId)" [disabled]="!cat.isActive"
-            class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition duration-150 border whitespace-nowrap shrink-0 shadow-xs 
-               disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale disabled:bg-gray-100 disabled:border-gray-200"
-            [ngClass]="selectedCategoryId === cat.categoryId ? 'bg-orange-500 text-white border-transparent shadow-md' : 'bg-white hover:bg-orange-50 text-gray-700 border-orange-100/70'">
+        <!-- LEFT SIDE: MENU & CATEGORY CONTAINER -->
+        <div class="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
 
-            <img [src]="cat.categoryImage" [alt]="cat.categoryName" class="w-5 h-5 object-cover rounded-md shrink-0" />
+            <!-- UNIFIED HEADER & CATEGORY CONTAINER -->
+            <div class="bg-white border-b border-orange-100/70 shadow-xs shrink-0 z-20">
 
-            <span class="block shrink-0">
-                {{ cat.categoryName }}
-                @if(!cat.isActive) {
-                <span class="text-[9px] font-normal text-red-400 block -mt-0.5">(Disabled)</span>
-                }
-            </span>
-        </button>
-        }
-    </nav>
-
-    <!-- MAIN BODY GRID CONTAINER (COHESIVE COUPLING FRAME) -->
-    <div class="flex-1 w-full grid grid-cols-1" [ngClass]="cartVisible ? 'lg:grid-cols-[1fr_384px]' : 'grid-cols-1'"
-        class="grid overflow-hidden relative">
-
-        <!-- PRODUCT GRID CANVASES WITH AUTOMATIC RE-BALANCING -->
-        <main class="w-full p-6 overflow-y-auto h-full border-r border-orange-100/30">
-            <div class="grid grid-cols-1 sm:grid-cols-2 justify-items-center gap-6 max-w-7xl mx-auto"
-                [ngClass]="cartVisible ? 'md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4' : 'md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'">
-
-                @for(item of filterMenuItem; track item.menuId){
-                <div [ngClass]="!item.isAvailable? 'opacity-65 pointer-events-none' : 'group hover:shadow-md hover:border-orange-200'"
-                    class="bg-white rounded-2xl border border-orange-100/50 flex flex-col justify-between w-full max-w-xs overflow-hidden group hover:shadow-md hover:border-orange-200 transition-all duration-300 shadow-xs">
-
-                    <div>
-                        <div class="overflow-hidden aspect-[4/3] bg-orange-50/30 cursor-pointer relative flex items-center justify-center border-b border-gray-50"
-                            (click)="openDetail(item)">
-                            @if(!item.isAvailable){
-                            <span
-                                class="absolute top-3 right-3 z-30 bg-gray-900/90 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md shadow-sm">
-                                sold out
-                            </span>
-                            }
-                            <img [src]="item.menuImage" [alt]="item.menuName" (error)="handleImageError($event)"
-                                class="w-full h-full object-cover group-hover:scale-105 transition duration-500 ease-out" />
-                        </div>
-                        <div class="p-4 pb-2">
-                            <h3
-                                class="text-sm font-bold text-gray-800 line-clamp-1 group-hover:text-orange-600 transition-colors">
-                                {{ item.menuName }}</h3>
-                        </div>
+                <!-- SPECIALS HIGHLIGHTS -->
+                @if (specialMenuItems && specialMenuItems.length > 0) {
+                <div class="px-6 pt-4 pb-2 border-b border-orange-50">
+                    <div class="flex items-center justify-between mb-2">
+                        <h2 class="text-xs font-bold tracking-wider uppercase flex items-center gap-1.5 text-amber-800">
+                            <i class="pi pi-star-fill text-amber-500 text-xs"></i> Today's Specials
+                        </h2>
+                        <span
+                            class="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                            {{ specialMenuItems.length }} items
+                        </span>
                     </div>
 
-                    <div
-                        class="p-4 pt-2 flex items-center justify-between gap-2 border-t border-gray-50 mt-2 bg-gray-50/30">
-                        <span class="text-sm font-black text-orange-600 tracking-tight">{{ item.price | number:'1.2-2'
-                            }} MMK</span>
-                        <button (click)="openDetail(item)"
-                            class="bg-[#A47551] hover:bg-[#8B5E3C] text-white text-xs px-4 py-2 rounded-xl font-bold transition shadow-xs active:scale-95">
-                            Choose
-                        </button>
+                    <div class="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+                        @for (item of specialMenuItems; track item.menuId) {
+                        <div (click)="openDetail(item)"
+                            class="min-w-[210px] max-w-[230px] bg-amber-50/50 hover:bg-amber-100/60 border border-amber-200/80 rounded-xl p-2 flex items-center justify-between gap-2 shrink-0 transition-all cursor-pointer group shadow-xs">
+                            <div class="flex items-center gap-2.5 overflow-hidden">
+                                <p-image [src]="item.menuImage ?? '' " [style]="{ width: '42px', height: '42px' }"
+                                    [imageStyle]="{ width: '42px', height: '42px', objectFit: 'cover', 'border-radius': '0.5rem' }"
+                                    (onImageError)="handleImageError($event)">
+                                </p-image>
+                                <div class="overflow-hidden">
+                                    <p
+                                        class="font-bold text-xs truncate text-gray-800 group-hover:text-orange-600 transition-colors">
+                                        {{ item.menuName }}
+                                    </p>
+                                    <p class="text-[11px] font-black text-amber-700 mt-0.5">{{ item.price | number }}
+                                        MMK</p>
+                                </div>
+                            </div>
+                        </div>
+                        }
                     </div>
                 </div>
                 }
-            </div>
-        </main>
 
-        <!-- CART SIDEBAR CONTAINER -->
+                <!-- CATEGORY NAVIGATION BANNER -->
+                <nav class="px-6 py-3 flex items-center gap-2.5 overflow-x-auto no-scrollbar">
+                    <button (click)="selectCategory(null)"
+                        class="flex items-center gap-2 px-4 py-2 rounded-xl transition text-xs font-bold whitespace-nowrap shrink-0 border"
+                        [ngClass]="selectedCategoryId === null ? 'bg-orange-500 text-white border-transparent shadow-sm' : 'bg-white hover:bg-orange-50 text-gray-700 border-gray-200'">
+                        <span>✨ All Menus</span>
+                    </button>
+
+                    @for(cat of categoryModel; track cat.categoryId ){
+                    <button (click)="selectCategory(cat.categoryId)" [disabled]="!cat.isActive"
+                        class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition border whitespace-nowrap shrink-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale disabled:bg-gray-100"
+                        [ngClass]="selectedCategoryId === cat.categoryId ? 'bg-orange-500 text-white border-transparent shadow-sm' : 'bg-white hover:bg-orange-50 text-gray-700 border-gray-200'">
+                        <img [src]="cat.categoryImage" [alt]="cat.categoryName"
+                            class="w-4 h-4 object-cover rounded-md shrink-0" />
+                        <span>{{ cat.categoryName }}</span>
+                    </button>
+                    }
+                </nav>
+            </div>
+
+            <!-- MAIN PRODUCT GRID -->
+            <main class="flex-1 p-4 sm:p-6 overflow-y-auto h-full">
+                <div class="grid grid-cols-1 sm:grid-cols-2 justify-items-center gap-4 sm:gap-6 max-w-7xl mx-auto"
+                    [ngClass]="cartVisible ? 'md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4' : 'md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'">
+
+                    @for(item of filterMenuItem; track item.menuId){
+                    <div [ngClass]="!item.isAvailable? 'opacity-65 pointer-events-none' : 'group hover:shadow-md hover:border-orange-200'"
+                        class="bg-white rounded-2xl border border-orange-100/60 flex flex-col justify-between w-full max-w-xs overflow-hidden transition-all duration-300 shadow-xs relative">
+
+                        @if(item.isSpecial) {
+                        <span
+                            class="absolute top-2 left-2 z-10 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1">
+                            <i class="pi pi-star-fill text-[8px]"></i> Special
+                        </span>
+                        }
+
+                        <div>
+                            <div class="overflow-hidden aspect-[4/3] bg-orange-50/20 cursor-pointer relative flex items-center justify-center border-b border-gray-50"
+                                (click)="openDetail(item)">
+                                @if(!item.isAvailable){
+                                <span
+                                    class="absolute top-3 right-3 z-30 bg-gray-900/90 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md shadow-xs">
+                                    sold out
+                                </span>
+                                }
+                                <img [src]="item.menuImage" [alt]="item.menuName" (error)="handleImageError($event)"
+                                    class="w-full h-full object-cover group-hover:scale-105 transition duration-500 ease-out" />
+                            </div>
+                            <div class="p-4 pb-1">
+                                <h3
+                                    class="text-sm font-bold text-gray-800 line-clamp-1 group-hover:text-orange-600 transition-colors">
+                                    {{ item.menuName }}
+                                </h3>
+                            </div>
+                        </div>
+
+                        <div
+                            class="p-4 pt-2 flex items-center justify-between gap-2 border-t border-gray-50 mt-2 bg-gray-50/20">
+                            <span class="text-sm font-black text-orange-600 tracking-tight">
+                                {{ item.price | number:'1.0-0' }} MMK
+                            </span>
+                            <button (click)="openDetail(item)"
+                                class="bg-[#A47551] hover:bg-[#8B5E3C] text-white text-xs px-4 py-2 rounded-xl font-bold transition shadow-xs active:scale-95">
+                                Choose
+                            </button>
+                        </div>
+                    </div>
+                    }
+                </div>
+            </main>
+        </div>
+
+        <!-- MOBILE BACKDROP OVERLAY -->
+        @if(cartVisible) {
+        <div (click)="cartVisible = false"
+            class="lg:hidden fixed inset-0 bg-gray-900/40 backdrop-blur-xs z-30 transition-opacity"></div>
+        }
+
+        <!-- RIGHT SIDE: CART SIDEBAR -->
         @if(cartVisible){
         <aside
-            class="fixed inset-y-0 right-0 w-80 sm:w-96 lg:static lg:w-full bg-white border-l border-orange-100 flex flex-col shadow-2xl lg:shadow-none h-full shrink-0 z-40 lg:z-10 animate-slide-in-right">
-            <div class="p-4 border-b border-gray-100 flex items-center justify-between bg-orange-50/20">
+            class="fixed inset-y-0 right-0 w-full sm:w-96 lg:relative lg:inset-auto lg:w-96 bg-white border-l border-orange-100 flex flex-col shadow-2xl lg:shadow-none h-full max-h-full shrink-0 z-40 lg:z-10 animate-slide-in-right overflow-hidden">
+
+            <!-- Top Header -->
+            <div class="p-4 border-b border-gray-100 flex items-center justify-between bg-orange-50/20 shrink-0">
                 <div class="flex items-center gap-2">
                     <span class="text-sm font-black text-gray-800">My Order</span>
                     <span class="bg-orange-500 text-white text-xs px-2.5 py-0.5 rounded-full font-bold">
@@ -137,13 +190,14 @@
             </div>
 
             <!-- Scrollable Items Area -->
-            <div class="flex-1 overflow-y-auto p-4 space-y-4">
+            <div class="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
                 @if(cartItems.length === 0) {
                 <div class="h-full flex flex-col items-center justify-center text-center p-6 text-gray-400 my-auto">
                     <span class="text-4xl mb-3">🛒</span>
                     <p class="text-xs font-bold text-gray-700">Your cart is empty</p>
-                    <p class="text-[11px] text-gray-400 mt-1 max-w-[180px] leading-relaxed">Pick some drinks and treats
-                        to start your order!</p>
+                    <p class="text-[11px] text-gray-400 mt-1 max-w-[180px] leading-relaxed">
+                        Pick some drinks and treats to start your order!
+                    </p>
                 </div>
                 } @else {
                 @for(cartItem of cartItems; track $index; let idx = $index) {
@@ -181,7 +235,7 @@
             </div>
 
             <!-- Bottom Pricing Bar -->
-            <div class="p-4 bg-white border-t border-gray-100 space-y-4 shadow-lg">
+            <div class="p-4 bg-white border-t border-gray-100 space-y-4 shadow-lg shrink-0 mt-auto">
                 <div class="space-y-2">
                     <div class="flex justify-between text-xs text-gray-500 font-medium">
                         <span>Subtotal</span>
@@ -190,8 +244,9 @@
                     <div
                         class="flex justify-between items-center text-sm font-bold text-gray-800 pt-2 border-t border-dashed border-gray-200">
                         <span>Total Price</span>
-                        <span class="text-orange-600 text-base font-black tracking-tight">{{ orderSubtotal |
-                            number:'1.2-2' }} MMK</span>
+                        <span class="text-orange-600 text-base font-black tracking-tight">
+                            {{ orderSubtotal | number:'1.2-2' }} MMK
+                        </span>
                     </div>
                 </div>
 
@@ -203,287 +258,443 @@
         </aside>
         }
     </div>
-</div>
 
-<!-- POPUP COMPONENT DIALOG DETAILS -->
-<p-dialog [(visible)]="displayDetail" [modal]="true" [header]="selectedItem?.menuName"
-    [style]="{ width: '90vw', maxWidth: '440px' }" [breakpoints]="{ '960px': '75vw', '641px': '90vw' }"
-    [draggable]="false" [resizable]="false">
+    <!-- POPUP COMPONENT DIALOG DETAILS -->
+    <p-dialog [(visible)]="displayDetail" [modal]="true" [header]="selectedItem?.menuName"
+        [style]="{ width: '90vw', maxWidth: '440px' }" [breakpoints]="{ '960px': '75vw', '641px': '90vw' }"
+        [draggable]="false" [resizable]="false">
 
-    @if(selectedItem){
-    <div class="flex flex-col gap-4 pt-2 max-h-[75vh] overflow-y-auto">
-        <div class="w-full flex justify-center">
-            <img [src]="selectedItem.menuImage" class="w-full h-40 object-cover rounded-xl shadow-inner"
-                (error)="handleImageError($event)" />
-        </div>
-
-        <div>
-            <h2 class="text-base font-bold text-gray-800">{{ selectedItem.menuName }}</h2>
-            <p class="text-xs text-gray-400 mt-0.5">{{ selectedItem.description }}</p>
-        </div>
-
-        @for(group of groupedOptions; track group.groupName){
-        <div class="border-t border-gray-100 pt-3">
-            <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-                {{ group.groupName }}
-            </label>
-
-            <div class="flex flex-col gap-2">
-                @if(group.optionItems && group.optionItems.length > 0){
-                @for(option of group.optionItems; track $index){
-                <div [class.opacity-40]="option.isAvailable === false"
-                    [class.pointer-events-none]="option.isAvailable === false"
-                    class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl text-sm transition hover:bg-gray-100">
-                    <div class="flex items-center gap-3 cursor-pointer">
-                        <p-radioButton [name]="group.groupId.toString()" [value]="option"
-                            [disabled]="option.isAvailable === false"
-                            [(ngModel)]="selectedOptions[group.groupId.toString()]" (onClick)="calculateTotalPrice()">
-                        </p-radioButton>
-                        <label class="text-gray-700 text-xs font-semibold cursor-pointer">{{ option.itemName }}
-                            @if(option.isAvailable === false) {
-                            <span class="text-[10px] text-red-500 font-bold ml-1">(Out of Stock)</span>
-                            }
-                        </label>
-                    </div>
-                    @if(option.extraPrice > 0){
-                    <span class="text-xs font-bold text-green-600">
-                        {{ option.extraPrice | number:'1.2-2' }} MMK
-                    </span>
-                    }
-                </div>
-                }
-                }
-            </div>
-        </div>
-        }
-
-        <div class="mt-2 flex items-center justify-between border-t border-gray-100 pt-3 sticky bottom-0 bg-white">
-            <div class="flex items-center bg-gray-100 rounded-xl p-1 border border-gray-200">
-                <button (click)="decrementQuantity()"
-                    class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-gray-600 hover:bg-gray-50 active:scale-95 transition font-bold shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
-                        stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
-                    </svg>
-                </button>
-
-                <span class="text-sm font-black text-gray-800 w-8 text-center">{{ quantity }}</span>
-
-                <button (click)="incrementQuantity()"
-                    class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-gray-600 hover:bg-gray-50 active:scale-95 transition font-bold shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
-                        stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                </button>
+        @if(selectedItem){
+        <div class="flex flex-col gap-4 pt-2 max-h-[75vh] overflow-y-auto">
+            <div class="w-full flex justify-center">
+                <img [src]="selectedItem.menuImage" class="w-full h-40 object-cover rounded-xl shadow-inner"
+                    (error)="handleImageError($event)" />
             </div>
 
-            <div class="flex items-center gap-4">
-                <div class="flex flex-col text-right">
-                    <span class="text-[10px] text-gray-400 font-bold uppercase">Total Price</span>
-                    <span class="text-base font-black text-orange-600">
-                        {{ ((selectedItem.price + totalExtraPrice) * quantity) | number:'1.2-2'}} MMK
-                    </span>
-                </div>
-                <button (click)="confirmAddToCart()"
-                    class="bg-orange-500 hover:bg-orange-600 text-white text-xs px-5 py-2.5 rounded-xl font-bold transition shadow-sm active:scale-95">
-                    Confirm & Add
-                </button>
+            <div>
+                <h2 class="text-base font-bold text-gray-800">{{ selectedItem.menuName }}</h2>
+                <p class="text-xs text-gray-400 mt-0.5">{{ selectedItem.description }}</p>
             </div>
-        </div>
-    </div>
-    }
-</p-dialog>
-<!--Voucher Dialog-->
-<p-dialog [(visible)]="displayVoucherDialog" [modal]="true" [closable]="false"
-    [style]="{ width: '420px', borderRadius: '16px' }" showHeader="false">
 
-    <div class="p-6 bg-white flex flex-col">
-        <!-- Dialog Header -->
-        <div class="text-center mb-4">
-            <i class="pi pi-shopping-bag text-orange-500 text-3xl block mb-1"></i>
-            <h3 class="text-base font-black text-gray-800 uppercase tracking-wide">Review Your Order</h3>
-            <p class="text-[11px] text-gray-400">Please confirm your items before proceeding to payment.</p>
-        </div>
+            @for(group of groupedOptions; track group.groupName){
+            <div class="border-t border-gray-100 pt-3">
+                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                    {{ group.groupName }}
+                </label>
 
-        <div class="w-full border-t border-dashed border-gray-200 my-2"></div>
-
-        <!-- Voucher Slip Content Box -->
-        <div
-            class="w-full bg-gray-50 rounded-xl p-4 space-y-3 font-mono text-xs text-gray-700 max-h-[40vh] overflow-y-auto">
-            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Items List</span>
-
-            @for (item of cartItems; track item.menuId) {
-            <div class="flex flex-col py-1.5 border-b border-gray-100 last:border-0 text-[11px]">
-
-                <!-- Main Menu Name & Price -->
-                <div class="flex justify-between w-full">
-                    <span class="text-gray-800 font-bold">
-                        {{ item.menuName }}
-                        <span class="text-orange-500 font-black ml-1">x{{ item.quantity }}</span>
-                    </span>
-                    <span class="font-bold text-gray-900 ml-auto">
-                        {{ item.calculatedPrice | currency:'MMK ':'symbol':'1.0-0' }}
-                    </span>
-                </div>
-
-                @if (item.selectedOptions && (item.selectedOptions | json) !== '{}') {
-                <div class="pl-3 mt-0.5 space-y-0.5 text-[9px] text-gray-400 font-medium">
-                    @for (optionKey of Object.keys(item.selectedOptions); track optionKey) {
-                    @if (item.selectedOptions[optionKey]) {
-                    <div class="flex items-center gap-1">
-                        <i class="pi pi-plus text-[7px] text-orange-400"></i>
-                        <span>{{ item.selectedOptions[optionKey].groupName }}:</span>
-                        <span class="text-gray-600 font-bold">{{ item.selectedOptions[optionKey].itemName }}</span>
-                        @if (item.selectedOptions[optionKey].extraPrice > 0) {
-                        <span class="text-orange-500 font-semibold">(+{{ item.selectedOptions[optionKey].extraPrice }}
-                            MMK)</span>
+                <div class="flex flex-col gap-2">
+                    @if(group.optionItems && group.optionItems.length > 0){
+                    @for(option of group.optionItems; track $index){
+                    <div [class.opacity-40]="option.isAvailable === false"
+                        [class.pointer-events-none]="option.isAvailable === false"
+                        class="flex items-center justify-between bg-gray-50 p-2.5 rounded-xl text-sm transition hover:bg-gray-100">
+                        <div class="flex items-center gap-3 cursor-pointer">
+                            <p-radioButton [name]="group.groupId.toString()" [value]="option"
+                                [disabled]="option.isAvailable === false"
+                                [(ngModel)]="selectedOptions[group.groupId.toString()]"
+                                (onClick)="calculateTotalPrice()">
+                            </p-radioButton>
+                            <label class="text-gray-700 text-xs font-semibold cursor-pointer">{{ option.itemName }}
+                                @if(option.isAvailable === false) {
+                                <span class="text-[10px] text-red-500 font-bold ml-1">(Out of Stock)</span>
+                                }
+                            </label>
+                        </div>
+                        @if(option.extraPrice > 0){
+                        <span class="text-xs font-bold text-green-600">
+                            {{ option.extraPrice | number:'1.2-2' }} MMK
+                        </span>
                         }
                     </div>
                     }
                     }
                 </div>
-                }
             </div>
             }
 
-            <!-- Summary Price -->
-            <div class="border-t border-gray-300 pt-3 flex justify-between text-sm font-black text-gray-900 mt-2">
-                <span>SUBTOTAL:</span>
-                <span class="text-orange-600">{{ orderSubtotal | currency:'MMK ':'symbol':'1.0-0' }}</span>
+            <div class="mt-2 flex items-center justify-between border-t border-gray-100 pt-3 sticky bottom-0 bg-white">
+                <div class="flex items-center bg-gray-100 rounded-xl p-1 border border-gray-200">
+                    <button (click)="decrementQuantity()"
+                        class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-gray-600 hover:bg-gray-50 active:scale-95 transition font-bold shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
+                            stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" />
+                        </svg>
+                    </button>
+
+                    <span class="text-sm font-black text-gray-800 w-8 text-center">{{ quantity }}</span>
+
+                    <button (click)="incrementQuantity()"
+                        class="w-8 h-8 flex items-center justify-center bg-white rounded-lg text-gray-600 hover:bg-gray-50 active:scale-95 transition font-bold shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
+                            stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <div class="flex flex-col text-right">
+                        <span class="text-[10px] text-gray-400 font-bold uppercase">Total Price</span>
+                        <span class="text-base font-black text-orange-600">
+                            {{ ((selectedItem.price + totalExtraPrice) * quantity) | number:'1.2-2'}} MMK
+                        </span>
+                    </div>
+                    <button (click)="confirmAddToCart()"
+                        class="bg-orange-500 hover:bg-orange-600 text-white text-xs px-5 py-2.5 rounded-xl font-bold transition shadow-sm active:scale-95">
+                        Confirm & Add
+                    </button>
+                </div>
+            </div>
+        </div>
+        }
+    </p-dialog>
+    <!--Voucher Dialog-->
+    <p-dialog [(visible)]="displayVoucherDialog" [modal]="true" [closable]="false"
+        [style]="{ width: '420px', borderRadius: '16px' }" showHeader="false">
+
+        <div class="p-6 bg-white flex flex-col">
+            <!-- Dialog Header -->
+            <div class="text-center mb-4">
+                <i class="pi pi-shopping-bag text-orange-500 text-3xl block mb-1"></i>
+                <h3 class="text-base font-black text-gray-800 uppercase tracking-wide">Review Your Order</h3>
+                <p class="text-[11px] text-gray-400">Please confirm your items before proceeding to payment.</p>
+            </div>
+
+            <div class="w-full border-t border-dashed border-gray-200 my-2"></div>
+
+            <!-- Voucher Slip Content Box -->
+            <div
+                class="w-full bg-gray-50 rounded-xl p-4 space-y-3 font-mono text-xs text-gray-700 max-h-[40vh] overflow-y-auto">
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Items List</span>
+
+                @for (item of cartItems; track item.menuId) {
+                <div class="flex flex-col py-1.5 border-b border-gray-100 last:border-0 text-[11px]">
+
+                    <!-- Main Menu Name & Price -->
+                    <div class="flex justify-between w-full">
+                        <span class="text-gray-800 font-bold">
+                            {{ item.menuName }}
+                            <span class="text-orange-500 font-black ml-1">x{{ item.quantity }}</span>
+                        </span>
+                        <span class="font-bold text-gray-900 ml-auto">
+                            {{ item.calculatedPrice | currency:'MMK ':'symbol':'1.0-0' }}
+                        </span>
+                    </div>
+
+                    @if (item.selectedOptions && (item.selectedOptions | json) !== '{}') {
+                    <div class="pl-3 mt-0.5 space-y-0.5 text-[9px] text-gray-400 font-medium">
+                        @for (optionKey of Object.keys(item.selectedOptions); track optionKey) {
+                        @if (item.selectedOptions[optionKey]) {
+                        <div class="flex items-center gap-1">
+                            <i class="pi pi-plus text-[7px] text-orange-400"></i>
+                            <span>{{ item.selectedOptions[optionKey].groupName }}:</span>
+                            <span class="text-gray-600 font-bold">{{ item.selectedOptions[optionKey].itemName }}</span>
+                            @if (item.selectedOptions[optionKey].extraPrice > 0) {
+                            <span class="text-orange-500 font-semibold">(+{{ item.selectedOptions[optionKey].extraPrice
+                                }}
+                                MMK)</span>
+                            }
+                        </div>
+                        }
+                        }
+                    </div>
+                    }
+                </div>
+                }
+
+                <!-- Summary Price -->
+                <div class="border-t border-gray-300 pt-3 flex justify-between text-sm font-black text-gray-900 mt-2">
+                    <span>SUBTOTAL:</span>
+                    <span class="text-orange-600">{{ orderSubtotal | currency:'MMK ':'symbol':'1.0-0' }}</span>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-5">
+                <button pButton label="Cancel"
+                    class="p-button-secondary p-button-outlined w-1/2 rounded-xl font-bold p-button-sm"
+                    (click)="displayVoucherDialog = false">
+                </button>
+                <button pButton label="Confirm & Pay"
+                    class="p-button-warning w-1/2 rounded-xl text-white font-black shadow-md p-button-sm"
+                    (click)="placeOrderCashAtCounter()">
+                </button>
+            </div>
+        </div>
+    </p-dialog>
+
+    <!-- PrimeNG Dialog for On-Screen Preview -->
+    <p-dialog [(visible)]="displayReceiptModal" [modal]="true" [closable]="false" [draggable]="false"
+        [resizable]="false" header="Order Receipt" styleClass="w-full max-w-md">
+
+        <div id="printable-receipt"
+            class="p-4 bg-white text-gray-800 font-mono text-sm leading-tight max-w-[80mm] mx-auto border border-gray-200 rounded shadow-sm print:shadow-none print:border-none print:p-0">
+
+            <div class="text-center mb-3">
+                <h2 class="text-xl font-bold tracking-wider uppercase text-black">SMART CAFE</h2>
+                <p class="text-xs text-gray-500 font-sans mt-0.5">Payment Slip / Voucher</p>
+
+                <div class="border-b-2 border-dashed border-gray-400 my-2"></div>
+            </div>
+
+            @if (currentOrder) {
+            <div class="space-y-1 text-xs mb-3">
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Order No:</span>
+                    <span class="font-bold text-sm text-black">{{ currentOrder.orderNumber }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Date:</span>
+                    <span>{{ currentOrder.createdAt | date:'short' }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Payment:</span>
+                    <span class="font-semibold text-amber-700">Cash at Counter</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Status:</span>
+                    <span class="font-semibold text-red-600 uppercase">{{ currentOrder.orderStatus || 'UNPAID' }}</span>
+                </div>
+            </div>
+            }
+
+            <div class="border-b border-dashed border-gray-300 my-2"></div>
+
+            <table class="w-full text-xs text-left mb-3">
+                <thead>
+                    <tr class="border-b border-gray-400">
+                        <th class="py-1">Qty</th>
+                        <th class="py-1">Item</th>
+                        <th class="py-1 text-right">Price</th>
+                    </tr>
+                </thead>
+
+                @if (currentOrder?.orderItems) {
+                <tbody class="divide-y divide-gray-100">
+                    <!-- Track by orderItemId or index -->
+                    @for (item of currentOrder.orderItems; track item.orderItemId || $index) {
+                    <tr>
+                        <td class="py-1.5 align-top font-bold">{{ item.quantity }}x</td>
+                        <td class="py-1.5 align-top">
+                            <span class="font-medium text-gray-900">{{ item.menuName }}</span>
+
+                            @for(opt of item.selectedOptions;track opt.optionItemName){
+                                <div class="text-[10px] text-gray-500 pl-2">
+                                + {{ opt.optionItemName }} ({{ opt.extraPrice | currency:'MMK':'symbol':'1.0-0' }})
+                            </div>
+                            }
+                        </td>
+                        <td class="py-1.5 align-top text-right font-medium">
+                            {{ (item.priceAtOrder * item.quantity) | currency:'MMK':'symbol':'1.0-0' }}
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+                }
+            </table>
+
+            <div class="border-b-2 border-dashed border-gray-400 my-2"></div>
+
+            <div class="space-y-1 my-3">
+                <div class="flex justify-between text-base font-bold text-black pt-1">
+                    <span>TOTAL DUE:</span>
+                    <span>{{ currentOrder?.totalAmount | currency:'MMK':'symbol':'1.0-0' }}</span>
+                </div>
+            </div>
+
+            <div class="border-b border-dashed border-gray-300 my-2"></div>
+
+            <div class="text-center my-3">
+                <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-1">Scan or Present Order ID</p>
+                <div class="font-barcode text-2xl tracking-widest text-black select-none">
+                    *{{ currentOrder?.orderNumber }}*
+                </div>
+            </div>
+
+            <div class="text-center text-[10px] text-gray-600 mt-3 pt-2 border-t border-gray-200 space-y-1">
+                <p class="font-bold text-gray-800">Please present this slip to the Cashier.</p>
+                <p>Thank you for visiting Smart Cafe!</p>
             </div>
         </div>
 
-        <div class="flex gap-3 mt-5">
-            <button pButton label="Cancel"
-                class="p-button-secondary p-button-outlined w-1/2 rounded-xl font-bold p-button-sm"
-                (click)="displayVoucherDialog = false">
-            </button>
-            <button pButton label="Confirm & Pay"
-                class="p-button-warning w-1/2 rounded-xl text-white font-black shadow-md p-button-sm"
-                (click)="gotoPayment()">
-            </button>
-        </div>
-    </div>
-</p-dialog>
+        <ng-template pTemplate="footer">
+            <div class="flex justify-end gap-2">
+                <p-button label="Close" icon="pi pi-times" severity="secondary" [outlined]="true"
+                    (onClick)="closeModal()">
+                </p-button>
 
-<p-dialog [(visible)]="displayPaymentDialog" 
-          [modal]="true" 
-          [closable]="paymentStage !== 'LOADING'" 
-          [style]="{width: '460px'}" 
-          header="Checkout Payment"
-          styleClass="luxury-payment-dialog">
-  
-  <div class="bg-[#1c1917] text-[#f5f5f4] p-2 rounded-2xl font-sans">
-    
+                <p-button label="Print Receipt" icon="pi pi-print" severity="primary" (onClick)="printReceipt()">
+                </p-button>
+            </div>
+        </ng-template>
+
+    </p-dialog>
+
+    <!-- <p-dialog [(visible)]="displayPaymentDialog" [modal]="true" [closable]="paymentStage !== 'LOADING'"
+        [style]="{width: '460px'}" header="Checkout Payment" styleClass="luxury-payment-dialog">
+
+        <div class="bg-[#1c1917] text-[#f5f5f4] p-2 rounded-2xl font-sans">-->
+
     <!-- 💳 1️⃣ STAGE: SELECT METHOD -->
-    @if (paymentStage === 'SELECT') {
-      <p class="text-xs text-[#a8a29e] mb-4 uppercase tracking-widest font-black">Choose your preferred payment</p>
-      <div class="grid grid-cols-2 gap-4">
-        <!-- Card Option Button -->
-        <button (click)="handlePaymentSelection('CARD')" class="border-2 border-[#44403c] hover:border-[#d97706] rounded-2xl p-6 flex flex-col items-center justify-center gap-3 bg-[#292524] transition-all duration-200 group active:scale-95">
-          <i class="pi pi-credit-card text-3xl text-[#a8a29e] group-hover:text-[#d97706] transition-colors"></i>
-          <span class="font-bold text-sm tracking-wide">Credit / Debit</span>
-        </button>
-        <!-- E-Pay Option Button -->
-        <button (click)="handlePaymentSelection('EPAY')" class="border-2 border-[#44403c] hover:border-[#d97706] rounded-2xl p-6 flex flex-col items-center justify-center gap-3 bg-[#292524] transition-all duration-200 group active:scale-95">
-          <i class="pi pi-mobile text-3xl text-[#a8a29e] group-hover:text-[#d97706] transition-colors"></i>
-          <span class="font-bold text-sm tracking-wide">E-Wallet Scan</span>
-        </button>
-      </div>
-    }
+    <!-- @if (paymentStage === 'SELECT') {
+            <p class="text-xs text-[#a8a29e] mb-4 uppercase tracking-widest font-black">Choose your preferred payment
+            </p>
+            <div class="grid grid-cols-2 gap-4">
+               
+                <!-- <button (click)="handlePaymentSelection('CARD')"
+                    class="border-2 border-[#44403c] hover:border-[#d97706] rounded-2xl p-6 flex flex-col items-center justify-center gap-3 bg-[#292524] transition-all duration-200 group active:scale-95">
+                    <i
+                        class="pi pi-credit-card text-3xl text-[#a8a29e] group-hover:text-[#d97706] transition-colors"></i>
+                    <span class="font-bold text-sm tracking-wide">Credit / Debit</span>
+                </button>
+                
+                <button (click)="handlePaymentSelection('EPAY')"
+                    class="border-2 border-[#44403c] hover:border-[#d97706] rounded-2xl p-6 flex flex-col items-center justify-center gap-3 bg-[#292524] transition-all duration-200 group active:scale-95">
+                    <i class="pi pi-mobile text-3xl text-[#a8a29e] group-hover:text-[#d97706] transition-colors"></i>
+                    <span class="font-bold text-sm tracking-wide">E-Wallet Scan</span>
+                </button>
+            </div>
+            } 
 
-    <!-- 💳 2️⃣ STAGE: CARD NUMBER INPUT -->
-    @if (paymentStage === 'CARD') {
-      <div class="flex flex-col gap-4">
-        <h3 class="text-base font-bold text-[#fafaf9] tracking-wide">Card Information</h3>
-        <div class="flex flex-col gap-2">
-          <label class="text-[10px] text-[#a8a29e] uppercase font-black tracking-widest">Card Number</label>
-          <input type="text" 
-                 [(ngModel)]="cardNumber" 
-                 placeholder="•••• •••• •••• ••••" 
-                 maxlength="16" 
-                 class="bg-[#292524] border border-[#44403c] text-white p-3 rounded-xl focus:outline-none focus:border-[#d97706] font-mono tracking-widest text-lg text-center w-full shadow-inner" />
-        </div>
-        <div class="flex gap-2 mt-2">
-          <button (click)="paymentStage = 'SELECT'; selectedPaymentMethod = null;" class="flex-1 bg-transparent border border-[#44403c] text-[#a8a29e] py-3 rounded-xl font-bold text-sm transition-all hover:bg-[#292524]">Back</button>
-          <button (click)="orderAndPayment()" class="flex-1 bg-[#d97706] text-white py-3 rounded-xl font-bold text-sm hover:bg-[#b45309] transition-all shadow-md">Pay Securely</button>
-        </div>
-      </div>
-    }
+           
+            @if (paymentStage === 'CARD') {
+            <div class="flex flex-col gap-4">
+                <h3 class="text-base font-bold text-[#fafaf9] tracking-wide">Card Information</h3>
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] text-[#a8a29e] uppercase font-black tracking-widest">Card Number</label>
+                    <input type="text" inputmode="numeric" [(ngModel)]="cardNumber" (input)="onCardNumberInput($event)"
+                        (blur)="onCardNumberBlur()" placeholder="•••• •••• •••• ••••" maxlength="19"
+                        [class]="cardNumberTouched && cardNumberError
+                ? 'bg-[#292524] border-2 border-red-500 text-white p-3 rounded-xl focus:outline-none font-mono tracking-widest text-lg text-center w-full shadow-inner'
+                : ((cardNumber || '').replace(/\D/g, '').length === 16)
+                ? 'bg-[#292524] border-2 border-emerald-500 text-white p-3 rounded-xl focus:outline-none font-mono tracking-widest text-lg text-center w-full shadow-inner'
+                : 'bg-[#292524] border border-[#44403c] text-white p-3 rounded-xl focus:outline-none focus:border-[#d97706] font-mono tracking-widest text-lg text-center w-full shadow-inner'" />
 
-    @if (paymentStage === 'EPAY') {
-      <div class="flex flex-col items-center text-center gap-4">
-        <h3 class="text-base font-bold text-[#fafaf9] tracking-wide">Scan to Pay</h3>
-        <p class="text-xs text-[#a8a29e] px-4">Scan using KPay, WavePay, AYA Pay or CB Pay...</p>
-        
-        <!-- Luxury QR Frame Container -->
-        <div class="w-44 h-44 bg-white p-2 rounded-2xl shadow-2xl flex items-center justify-center border-4 border-[#d97706]/20">
-          <img src="/QR_scan.jpg" alt="Payment QR" class="w-full h-full object-contain" />
-        </div>
-        
-        <div class="flex gap-2 w-full mt-2">
-          <button (click)="paymentStage = 'SELECT'; selectedPaymentMethod = null;" class="flex-1 bg-transparent border border-[#44403c] text-[#a8a29e] py-3 rounded-xl font-bold text-sm transition-all hover:bg-[#292524]">Cancel</button>
-          <button (click)="orderAndPayment()" class="flex-1 bg-[#d97706] text-white py-3 rounded-xl font-bold text-sm hover:bg-[#b45309] transition-all shadow-md">I Have Paid</button>
-        </div>
-      </div>
-    }
+                   
+                    <div class="flex justify-between items-center px-0.5 min-h-[18px]">
+                        @if (cardNumberTouched && cardNumberError) {
+                        <p class="text-red-400 text-[11px] font-semibold flex items-center gap-1">
+                            <i class="pi pi-exclamation-circle text-[10px]"></i>
+                            {{ cardNumberError }}
+                        </p>
+                        } @else if ((cardNumber || '').replace(/\D/g, '').length === 16) {
+                        <p class="text-emerald-400 text-[11px] font-semibold flex items-center gap-1">
+                            <i class="pi pi-check-circle text-[10px]"></i>
+                            Card number looks good!
+                        </p>
+                        } @else {
+                        <p class="text-[#78716c] text-[11px]">Enter your 16-digit card number</p>
+                        }
+                        <span class="text-[11px] font-mono"
+                            [class]="(cardNumber || '').replace(/\D/g, '').length === 16 ? 'text-emerald-400' : 'text-[#78716c]'">
+                            {{ (cardNumber || '').replace(/\D/g, '').length }}/16
+                        </span>
+                    </div>
+                </div>
 
-    <!-- 💳 4️⃣ STAGE: FAKE LOADING EFFECT -->
-    @if (paymentStage === 'LOADING') {
-      <div class="flex flex-col items-center justify-center py-12 gap-4">
-        <i class="pi pi-spin pi-spinner text-4xl text-[#d97706]"></i>
-        <div class="text-center animate-pulse">
-          <h4 class="text-base font-bold text-[#fafaf9] tracking-wide">Verifying Secure Payment</h4>
-          <p class="text-[11px] text-[#78716c] mt-1 tracking-normal">Communicating with banking servers. Please hold...</p>
+                <div class="flex gap-2 mt-1">
+                    <button
+                        (click)="paymentStage = 'SELECT'; selectedPaymentMethod = null; cardNumberError = ''; cardNumberTouched = false;"
+                        class="flex-1 bg-transparent border border-[#44403c] text-[#a8a29e] py-3 rounded-xl font-bold text-sm transition-all hover:bg-[#292524]">
+                        Back
+                    </button>
+                    <button (click)="orderAndPayment()" [disabled]="(cardNumber || '').replace(/\D/g, '').length !== 16"
+                        [class]="(cardNumber || '').replace(/\D/g, '').length === 16
+                ? 'flex-1 bg-[#d97706] text-white py-3 rounded-xl font-bold text-sm hover:bg-[#b45309] transition-all shadow-md cursor-pointer'
+                : 'flex-1 bg-[#44403c] text-[#78716c] py-3 rounded-xl font-bold text-sm cursor-not-allowed'">
+                        Pay Securely
+                    </button>
+                </div>
+            </div>
+            }
+
+
+            @if (paymentStage === 'EPAY') {
+            <div class="flex flex-col items-center text-center gap-4">
+                <h3 class="text-base font-bold text-[#fafaf9] tracking-wide">Scan to Pay</h3>
+                <p class="text-xs text-[#a8a29e] px-4">Scan using KPay, WavePay, AYA Pay or CB Pay...</p>
+
+                
+                <div
+                    class="w-44 h-44 bg-white p-2 rounded-2xl shadow-2xl flex items-center justify-center border-4 border-[#d97706]/20">
+                    <img src="/QR_scan.jpg" alt="Payment QR" class="w-full h-full object-contain" />
+                </div>
+
+                <div class="flex gap-2 w-full mt-2">
+                    <button (click)="paymentStage = 'SELECT'; selectedPaymentMethod = null;"
+                        class="flex-1 bg-transparent border border-[#44403c] text-[#a8a29e] py-3 rounded-xl font-bold text-sm transition-all hover:bg-[#292524]">Cancel</button>
+                    <button (click)="orderAndPayment()"
+                        class="flex-1 bg-[#d97706] text-white py-3 rounded-xl font-bold text-sm hover:bg-[#b45309] transition-all shadow-md">I
+                        Have Paid</button>
+                </div>
+            </div>
+            }
+
+           
+            @if (paymentStage === 'LOADING') {
+            <div class="flex flex-col items-center justify-center py-12 gap-4">
+                <i class="pi pi-spin pi-spinner text-4xl text-[#d97706]"></i>
+                <div class="text-center animate-pulse">
+                    <h4 class="text-base font-bold text-[#fafaf9] tracking-wide">Verifying Secure Payment</h4>
+                    <p class="text-[11px] text-[#78716c] mt-1 tracking-normal">Communicating with banking servers.
+                        Please
+                        hold...</p>
+                </div>
+            </div>
+            }
+
         </div>
-      </div>
-    }
+    </p-dialog> -->
 
-  </div>
-</p-dialog>
-
-<!-- 📡 Floating Action Button (FAB) - Order Tracking -->
+    <!-- 📡 Floating Action Button (FAB) - Order Tracking -->
+    <!-- Floating Action Button (FAB) -->
 <div class="fixed bottom-6 right-6 z-50 group">
     <!-- Tooltip -->
-    <div class="absolute bottom-full right-0 mb-2 px-3 py-1.5 bg-gray-900 text-white text-[11px] font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl">
+    <div
+        class="absolute bottom-full right-0 mb-2 px-3 py-1.5 bg-gray-900 text-white text-[11px] font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-xl">
         Track Order Status
         <div class="absolute top-full right-4 border-4 border-transparent border-t-gray-900"></div>
     </div>
+
     <button (click)="statusExpanded = !statusExpanded"
         [ngClass]="statusExpanded ? 'bg-gray-800 rotate-90' : 'bg-orange-600 hover:bg-orange-700 active:scale-95 animate-bounce'"
         class="w-14 h-14 rounded-full text-white flex items-center justify-center shadow-2xl transition-all duration-300 focus:outline-none relative">
 
         @if (!statusExpanded) {
         <i class="pi pi-receipt text-xl"></i>
-        <!-- အော်ဒါရှိပြီး မပြီးသေးပါက စိမ်းရောင်အချက်ပြမီးလေး လင်းနေမည် -->
-        @if (currentOrder && currentOrder.orderStatus !== 'None' && currentOrder.orderStatus !== 'Ready') {
+        <!-- Active Indicator Dot -->
+        @if (currentOrder && currentOrder.orderStatus !== 'None' && currentOrder.orderStatus !== 'Ready' && currentOrder.orderStatus !== 'Completed') {
         <span class="absolute -top-1 -right-1 flex h-3 w-3">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
         </span>
         }
         } @else {
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"
-            class="w-5 h-5">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
+            stroke="currentColor" class="w-5 h-5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
         </svg>
         }
     </button>
 </div>
 
-<!-- 🌟 ၂။ Live Tracking Drawer Main Container (ဖွင့်လိုက်မှ ပေါ်မည်ဖြစ်ပြီး အော်ဒါမရှိလျှင်လည်း ပွင့်လာခွင့်ရှိသည်) -->
+<!-- Live Tracking Drawer Container -->
 @if (statusExpanded) {
+<!-- Overlay Backdrop -->
 <div (click)="statusExpanded = false" class="fixed inset-0 bg-black/40 z-40 transition-opacity duration-300"></div>
 
 <div
     class="fixed bottom-20 right-6 w-[calc(100vw-3rem)] sm:w-96 bg-white rounded-2xl shadow-2xl z-45 border border-orange-200/50 flex flex-col overflow-hidden animate-fade-in-up">
 
-    <!-- ခြေရာခံစရာ အော်ဒါအစစ်အမှန် ရှိနေသည့် ကဏ္ဍ -->
+    <!-- Active Order Content -->
     @if (currentOrder && currentOrder.orderStatus !== 'None') {
+    
+    <!-- Drawer Header -->
     <div class="p-4 border-b border-orange-100 bg-gradient-to-r from-orange-50 to-amber-50 flex items-center justify-between">
         <div>
-            <span class="text-[10px] text-orange-600 font-bold uppercase tracking-wider block">Live Kitchen Tracking</span>
+            <span class="text-[10px] text-orange-600 font-bold uppercase tracking-wider block">
+                Live Kitchen Tracking
+            </span>
             <h4 class="text-base font-black text-gray-800 mt-0.5">Order #{{ currentOrder.orderNumber }}</h4>
         </div>
         <span class="bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-wide shadow-sm">
@@ -491,21 +702,34 @@
         </span>
     </div>
 
-    <!-- မိမိအော်ဒါသည် Paid ဖြစ်ပြီး မီးဖိုချောင်က မကိုင်ရသေးပါက ပြသမည့် Queue Box -->
-    @if (currentOrder.orderStatus === 'Paid') {
-    <div class="mx-4 mt-3 p-4 bg-amber-50 border-2 border-amber-200 rounded-xl text-center animate-pulse">
-        <p class="text-xs font-semibold text-amber-800 flex items-center justify-center gap-1">
-            <i class="pi pi-clock text-amber-500"></i>
-            ⚠️ There are orders ahead of you.
+    <!-- Alert Banner 1: Payment Pending Status -->
+    @if (currentOrder.orderStatus === 'Pending') {
+    <div class="mx-4 mt-3 p-3 bg-blue-50 border border-blue-200 rounded-xl text-center">
+        <p class="text-xs font-bold text-blue-800 flex items-center justify-center gap-1">
+            <i class="pi pi-info-circle text-blue-500"></i>
+            Payment Pending
         </p>
-        <span class="text-[11px] text-amber-600 block mt-0.5">
-            Please wait inside the queue until the current order is done.
+        <span class="text-[11px] text-blue-600 block mt-0.5 font-medium">
+            Please proceed to the counter to complete your payment.
         </span>
     </div>
     }
 
-    <!-- မိမိအော်ဒါအား ချက်ပြုတ်နေစဉ် နောက်ထပ် Queue ရှိနေပါက ပြသမည့် Box -->
-    @if (isAnotherOrderWaiting && currentOrder.orderStatus !== 'Paid') {
+    <!-- Alert Banner 2: Paid Status (Waiting in Queue) -->
+    @if (currentOrder.orderStatus === 'Paid') {
+    <div class="mx-4 mt-3 p-4 bg-amber-50 border-2 border-amber-200 rounded-xl text-center animate-pulse">
+        <p class="text-xs font-semibold text-amber-800 flex items-center justify-center gap-1">
+            <i class="pi pi-clock text-amber-500"></i>
+            ⚠️ Order Placed in Queue
+        </p>
+        <span class="text-[11px] text-amber-600 block mt-0.5">
+            Please wait, the kitchen will start preparing your order shortly.
+        </span>
+    </div>
+    }
+
+    <!-- Alert Banner 3: Preparing Status with Orders Behind -->
+    @if (isAnotherOrderWaiting && currentOrder.orderStatus !== 'Paid' && currentOrder.orderStatus !== 'Pending') {
     <div class="mx-4 mt-3 p-4 bg-amber-50 border-2 border-amber-200 rounded-xl text-center animate-pulse">
         <p class="text-[11px] font-bold text-amber-800 flex items-center justify-center gap-1">
             <i class="pi pi-clock text-amber-500"></i>
@@ -517,32 +741,40 @@
     </div>
     }
 
-    <!-- Timeline Steps -->
+    <!-- Timeline Steps Section -->
     <div class="p-5 space-y-5 max-h-[60vh] overflow-y-auto bg-white">
         @for (step of statusSteps; track step.status; let i = $index; let isLast = $last) {
         <div class="relative flex gap-4">
 
+            <!-- Step Line Connector -->
             @if (!isLast) {
             <div [ngClass]="isStepCompleted(statusSteps[i+1].status) ? 'bg-orange-500' : 'bg-gray-200'"
                 class="absolute left-4 top-9 bottom-[-20px] w-0.5 -ml-[1px] z-0 transition-all duration-700">
             </div>
             }
 
+            <!-- Step Icon Circle -->
             <div [style.backgroundColor]="isStepCompleted(step.status) ? step.color : '#F3F4F6'"
                 [ngClass]="isStepCompleted(step.status) ? 'text-white scale-105 shadow-md ring-4 ring-orange-50' : 'text-gray-400'"
                 class="w-9 h-9 rounded-full flex items-center justify-center shrink-0 z-10 transition-all duration-300">
                 <i [class]="step.icon" class="text-xs"></i>
             </div>
 
+            <!-- Step Details -->
             <div class="flex flex-col pt-1">
-                <span
-                    [ngClass]="isStepCompleted(step.status) ? 'text-gray-800 font-black' : 'text-gray-400 font-medium'"
+                <span [ngClass]="isStepCompleted(step.status) ? 'text-gray-800 font-black' : 'text-gray-400 font-medium'"
                     class="text-sm transition-colors duration-300">
                     {{ step.label }}
                 </span>
-                <small class="text-[10px] text-gray-400">{{ step.status }}</small>
+                <small class="text-[10px] text-gray-400 font-mono">{{ step.status }}</small>
 
+                <!-- Current Active Step Status Badges -->
                 @if (currentOrder.orderStatus === step.status) {
+                @if (step.status === 'Pending') {
+                <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-[11px] font-bold mt-1 border border-gray-200">
+                    💳 Awaiting Cashier Payment...
+                </span>
+                }
                 @if (step.status === 'Paid') {
                 <span class="inline-flex items-center gap-1 bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full text-[11px] font-bold animate-pulse mt-1">
                     ⏳ In Queue - Waiting for kitchen to start...
@@ -564,16 +796,17 @@
         }
     </div>
     }
-    <!-- 🌟 စနစ်ထဲတွင် အော်ဒါ လုံးဝမရှိသေးပါက ဤ Drawer ပြကွက်အား ပြသပါမည် -->
+
+    <!-- Empty State (No Active Order) -->
     @else {
     <div class="p-8 text-center bg-white space-y-2">
         <i class="pi pi-inbox text-gray-300 text-3xl block"></i>
         <span class="text-xs font-bold text-gray-500 block">No active order tracked</span>
-        <span class="text-[10px] text-gray-400 block">Your current order timeline will appear here once paid.</span>
+        <span class="text-[10px] text-gray-400 block">Your current order timeline will appear here once placed.</span>
     </div>
     }
 
-    <!-- Footer Bar -->
+    <!-- Drawer Footer -->
     <div class="p-3 bg-gradient-to-r from-orange-50 to-amber-50 border-t border-orange-100 text-center">
         <p class="text-[10px] font-bold text-orange-400 flex items-center justify-center gap-1">
             ☕ Powered by SmartCafe

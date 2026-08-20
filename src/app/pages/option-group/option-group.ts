@@ -253,6 +253,7 @@ export class OptionGroup implements OnInit {
         this.optionGroupService.delete(group.id).subscribe({
           next: (res) => {
             this.modelVisible = false;
+            this.loadData();
             this.messageService.add({
               key: 'globalMessage',
               severity: 'success',

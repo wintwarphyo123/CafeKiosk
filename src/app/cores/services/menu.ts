@@ -51,12 +51,28 @@ export class MenuService {
   getDeletedData():Observable<RootModel>{
     return this.http.get<RootModel>(`${environment.apiUrl}/api/menu/deleted`);
   }
+  getSpecialData():Observable<RootModel>{
+    return this.http.get<RootModel>(`${environment.apiUrl}/api/menu/special`);
+  }
+
+  getSpecialDataForAdmin():Observable<RootModel>{
+    return this.http.get<RootModel>(`${environment.apiUrl}/api/menu/isSpecial`);
+  }
+
   restoreData(id:number):Observable<RootModel>{
     return this.http.put<RootModel>(`${environment.apiUrl}/api/menu/${id}/restore`,{})
   }
 
   changeStatus(menuId:number):Observable<RootModel>{
     return this.http.put<RootModel>(`${environment.apiUrl}/api/menu/${menuId}/available`,{})
+  }
+
+  ChangeSpecial(menuId:number):Observable<RootModel>{
+    return this.http.put<RootModel>(`${environment.apiUrl}/api/menu/${menuId}/isSpecial`,{})
+  }
+
+  ChangeArchived(menuId:number):Observable<RootModel>{
+    return this.http.put<RootModel>(`${environment.apiUrl}/api/menu/${menuId}/archived`,{})
   }
 
   convertBase64(file: File): Observable<string> {

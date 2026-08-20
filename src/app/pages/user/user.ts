@@ -1,5 +1,5 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { ChangeDetectorRef, Component, ElementRef, inject, OnInit, signal, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, inject, OnDestroy, OnInit, signal, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -17,6 +17,7 @@ import { UserService } from '../../cores/services/user';
 import { environment } from '../../../environments/environment';
 import { ImageModule } from "primeng/image";
 import { AdminLayout } from '../../layouts/admin-layout/admin-layout';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-user',
@@ -39,9 +40,10 @@ import { AdminLayout } from '../../layouts/admin-layout/admin-layout';
   templateUrl: './user.html',
   styleUrl: './user.scss',
 })
-export class User implements OnInit {
+export class User implements OnInit , OnDestroy{
   @ViewChild('image') image!: ElementRef<HTMLInputElement>;
   @ViewChild('imgV') imgV!: ElementRef<HTMLInputElement>;
+  private destroy$ = new Subject<void>();
 
   imgName: string = '';
   imgBase64String: string = '';
@@ -93,8 +95,17 @@ export class User implements OnInit {
     ];
     this.roleOption = ['Admin', 'KitchenStaff'];
     this.loadData();
+    this.userService.profileUpdated$
+    .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.loadData(); 
+      });
   }
-
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+  
   loadData() {
     this.isLoading = true;
     this.userService.get().subscribe({
@@ -301,16 +312,20 @@ export class User implements OnInit {
         next: (res) => {
           if (res.success) {
             this.messageService.add({ key: 'globalMessage', severity: 'success', summary: 'Success', detail: res.message || 'User updated successfully.' });
+            this.modelVisible = false;
             this.resetImageFields();
             this.loadData();
-            this.modelVisible = false;
             this.selectedUser = null;
           } else {
             this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to update user.' });
           }
+          this.cdr.detectChanges();
         },
         error: (err) => {
+          this.modelVisible=false;
+          this.loadData();
           this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'An error occurred while updating the user.' });
+          this.cdr.detectChanges();
         },
       });
     } else {
@@ -325,9 +340,11 @@ export class User implements OnInit {
           } else {
             this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to create user.' });
           }
+          this.cdr.detectChanges();
         },
         error: (err) => {
           this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'An error occurred while creating the user.' });
+          this.cdr.detectChanges();
         },
       });
     }
@@ -348,8 +365,9 @@ export class User implements OnInit {
         this.userService.delete(this.selectedUser!.userId).subscribe({
           next: (res) => {
             if (res.success) {
-              this.messageService.add({ key: 'globalMessage', severity: 'success', summary: 'Success', detail: res.message || 'User deleted successfully.' });
               this.loadData();
+              this.messageService.add({ key: 'globalMessage', severity: 'success', summary: 'Success', detail: res.message || 'User deleted successfully.' });
+              
             } else {
               this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to delete user.' });
             }

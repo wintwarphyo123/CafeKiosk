@@ -25,6 +25,7 @@ import { OrderNotificationService } from '../../../cores/services/order-notifica
 import { BadgeModule } from 'primeng/badge';
 import { OptionGroupDto, OptionItemDto } from '../../../cores/models/menu-detail.model';
 import { MenuModel } from '../../../cores/models/menu.model';
+import { TrendingItemResponseModel } from '../../../cores/models/dashboard.model';
 
 @Component({
   selector: 'app-menu',
@@ -68,6 +69,7 @@ export class MenuComponent implements OnInit {
   pendingOrderPayload: any = null;
   isAnotherOrderWaiting: boolean = false;
   searchQuery: string = '';
+  trendingItem: TrendingItemResponseModel[] = []//for show ternding menus
 
   displayDetail: boolean = false;
   selectedItem: any = null;
@@ -92,16 +94,22 @@ export class MenuComponent implements OnInit {
     orderNumber: 'N/A',
     orderStatus: 'None'
   };
+  specialMenuItems: MenuModel[] = [];
+  //  featuredSpecialItem: MenuModel | null = null;
 
   statusSteps: any[] = [
+    { status: 'Pending', label: 'Order Placed', icon: 'pi pi-clock', color: '#6B7280' },
     { status: 'Paid', label: 'waiting', icon: 'pi pi-clock', color: '#ff9800', stepIndex: 1 },
     { status: 'Preparing', label: 'preparing', icon: 'pi pi-cog', color: '#2196f3', stepIndex: 2 },
     { status: 'Ready', label: 'ready', icon: 'pi pi-check-circle', color: '#4caf50', stepIndex: 3 }
   ];
 
-  paymentStage: 'SELECT' | 'CARD' | 'EPAY' | 'LOADING' = 'SELECT';
-  selectedPaymentMethod: 'CARD' | 'EPAY' | null = null;
-  cardNumber: string = '';
+  // paymentStage: 'SELECT' | 'CARD' | 'EPAY' | 'LOADING' = 'SELECT';
+  // selectedPaymentMethod: 'CARD' | 'EPAY' | null = null;
+  // cardNumber: string = '';
+  // cardNumberError: string = '';
+  // cardNumberTouched: boolean = false;
+  displayReceiptModal: boolean = false;
 
 
   constructor(
@@ -115,49 +123,115 @@ export class MenuComponent implements OnInit {
   ) { }
 
   ngOnInit() {
+    this.SpecialMenu();
     this.loadCategory();
     this.loadMenu();
     this.listenToOrderUpdates();
 
+
+    // const savedOrderId = localStorage.getItem('currentKioskOrderId');
+    // if (savedOrderId) {
+    //   this.orderService.getOrderStatusTimeline(Number(savedOrderId)).subscribe({
+    //     next: (orderData: any) => {
+    //       const actualData = orderData?.data ?? orderData;
+    //       const status = actualData?.orderStatus ?? actualData?.OrderStatus ?? actualData?.status;
+    //       if (!actualData || status === 'Ready') {
+    //         this.clearKioskStorage();
+    //       } else {
+    //         this.currentOrder = {
+    //           orderId: Number(savedOrderId),
+    //           orderNumber: localStorage.getItem('currentKioskOrderNumber') || 'N/A',
+    //           orderStatus: status
+    //         };
+    //         if (status === 'Preparing') {
+    //           this.statusExpanded = true;
+    //         }
+    //         else {
+    //           this.statusExpanded = false;
+
+    //         }
+    //         this.isAnotherOrderWaiting = (status === 'Paid');
+    //       }
+    //       this.cdr.detectChanges();
+    //     },
+    //     error: (err) => {
+    //       console.warn("Order not found or expired from previous day, clearing storage.");
+    //       localStorage.removeItem('currentKioskOrderId');
+    //       localStorage.removeItem('currentKioskOrderNumber');
+    //       localStorage.removeItem('lastOrderStatus');
+    //       this.currentOrder = { orderNumber: 'N/A', orderStatus: 'None' };
+    //       this.statusExpanded = false;
+    //       this.isAnotherOrderWaiting = false;
+    //       this.cdr.detectChanges();
+    //     }
+    //   });
+    // }
+
     const savedOrderId = localStorage.getItem('currentKioskOrderId');
+
     if (savedOrderId) {
       this.orderService.getOrderStatusTimeline(Number(savedOrderId)).subscribe({
         next: (orderData: any) => {
           const actualData = orderData?.data ?? orderData;
           const status = actualData?.orderStatus ?? actualData?.OrderStatus ?? actualData?.status;
-          if (!actualData || status === 'Ready') {
+
+          // 1. Order မရှိတော့လျှင် သို့မဟုတ် Completed ဖြစ်သွားမှ Storage ရှင်းမည်
+          if (!actualData || status === 'Completed' || status === 'Cancelled') {
             this.clearKioskStorage();
           } else {
+            // 2. Active Order Data ကို Mapping လုပ်မည် (Pending, Paid, Preparing, Ready အားလုံးပါဝင်မည်)
             this.currentOrder = {
               orderId: Number(savedOrderId),
               orderNumber: localStorage.getItem('currentKioskOrderNumber') || 'N/A',
-              orderStatus: status
+              orderStatus: status,
+              orderItems: actualData?.orderItems || []
             };
-            if (status === 'Preparing') {
-              this.statusExpanded = true;
-            }
-            else {
-              this.statusExpanded = false;
 
+            // 3. Status ပေါ်မူတည်၍ Drawer ပွင့်ရန်/ပိတ်ရန် သတ်မှတ်ခြင်း
+            // Pending, Paid, Preparing, Ready အားလုံးတွင် Tracking Drawer ကို ဖွင့်ပေးထားမည်
+            if (['Pending', 'Paid', 'Preparing', 'Ready'].includes(status)) {
+              this.statusExpanded = true;
+            } else {
+              this.statusExpanded = false;
             }
-            this.isAnotherOrderWaiting = (status === 'Paid');
+
+            // 4. Queue Alert Logic ကို ပြင်ဆင်ခြင်း (Backend Response ထဲမှ Flag ကို ယူသုံးခြင်း သို့မဟုတ် API Field အတိုင်း စစ်ခြင်း)
+            this.isAnotherOrderWaiting = actualData?.hasOrdersAhead ?? false;
           }
+
           this.cdr.detectChanges();
         },
         error: (err) => {
-          console.warn("Order not found or expired from previous day, clearing storage.");
-          localStorage.removeItem('currentKioskOrderId');
-          localStorage.removeItem('currentKioskOrderNumber');
-          localStorage.removeItem('lastOrderStatus');
-          this.currentOrder = { orderNumber: 'N/A', orderStatus: 'None' };
-          this.statusExpanded = false;
-          this.isAnotherOrderWaiting = false;
+          console.warn("Order not found or expired, clearing storage.", err);
+          this.clearKioskStorage();
           this.cdr.detectChanges();
         }
       });
     }
 
     this.notificationService.listenForMenuUpdate((data) => {
+      console.log("Live menu status received: ", data);
+      const targetMenu = this.menuModel.find(m => m.menuId === data.menuId);
+
+      if (targetMenu) {
+        targetMenu.isAvailable = data.isAvailable;
+        this.menuModel = [...this.menuModel]
+        this.cdr.detectChanges();
+      }
+    });
+
+    this.notificationService.listenForMenuSpecialUpdate((data) => {
+      console.log("Live menu status received: ", data);
+      const targetMenu = this.menuModel.find(m => m.menuId === data.menuId);
+
+      if (targetMenu) {
+        targetMenu.isAvailable = data.isAvailable;
+        this.menuModel = [...this.menuModel]
+        this.cdr.detectChanges();
+      }
+    });
+
+    this.notificationService.listenForMenuArchivedUpdate((data) => {
       console.log("Live menu status received: ", data);
       const targetMenu = this.menuModel.find(m => m.menuId === data.menuId);
 
@@ -188,10 +262,10 @@ export class MenuComponent implements OnInit {
             if (menu.categoryId === targetCategoryId) {
               menu.isAvailable = false;
             }
-          })
+          });
+          this.menuModel = [...this.menuModel];
         }
-      }
-      this.menuModel = [...this.menuModel];
+      }//if category is disable, the related menu also out of stock
       this.cdr.detectChanges();
     });
 
@@ -214,8 +288,6 @@ export class MenuComponent implements OnInit {
       const incomingOrderNumber = data.orderNumber ?? data.OrderNumber ?? data.orderNo ?? ('ORD-' + incomingOrderId);
       const savedOrderId = localStorage.getItem('currentKioskOrderId');
 
-      // ── READY ───────────────────────────────────────────────────────────────
-      // Only react to Ready if this kiosk is tracking that specific order
       if (incomingOrderStatus === 'Ready') {
         if (savedOrderId && Number(incomingOrderId) === Number(savedOrderId)) {
           this.currentOrder = {
@@ -243,8 +315,6 @@ export class MenuComponent implements OnInit {
         return;
       }
 
-      // ── PREPARING ───────────────────────────────────────────────────────────
-      // Only update this kiosk's timeline if the Preparing order IS our tracked order.
       if (incomingOrderStatus === 'Preparing') {
         if (!savedOrderId || Number(incomingOrderId) !== Number(savedOrderId)) {
           // This Preparing event belongs to a different order — ignore for this kiosk
@@ -292,7 +362,35 @@ export class MenuComponent implements OnInit {
 
     return currentWeight >= targetWeight;
   }
+  SpecialMenu(): void {
+    this.menuService.getSpecialData().subscribe({
+      next: (res) => {
+        if (res.success) {
+          const rawMenu = Array.isArray(res.data) ? res.data : [];
+          this.specialMenuItems = rawMenu.map((item) => ({
+            menuId: item.Id ?? item.menuId ?? item.id ?? 0,
+            menuName: item.menuName ?? '',
+            menuImage: item.menuImage ? this.getImageUrl(item.menuImage) : null,
+            description: item.description ?? '',
+            price: item.price ?? 0,
+            isAvailable: item.isAvailable ?? item.is_available ?? item.Is_available ?? false,
+            categoryId: item.categoryId ?? 0,
+            categoryName: item.categoryName ?? '',
+            isSpecial: item.isSpecial ?? false,
+            archived: item.archived ?? false,
+          }));
+        }
+        else {
+          this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Failed to load special menus.' });
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'Failed to load Special menus.' });
 
+      }
+    });
+  }
   loadCategory(): void {
     this.categoryService.get().subscribe({
       next: (res) => {
@@ -378,8 +476,11 @@ export class MenuComponent implements OnInit {
           price: item.price ?? 0,
           isAvailable: item.isAvailable ?? item.is_available ?? item.Is_available ?? false,
           categoryId: item.categoryId ?? 0,
-          categoryName: item.categoryName ?? ''
+          categoryName: item.categoryName ?? '',
+          isSpecial: item.isSpecial ?? false,
+          archived: item.archived ?? false,
         }));
+        // this.featuredSpecialItem = this.specialMenuItems.length >0 ? this.specialMenuItems[0] : null;
         this.filterMenuByCategory();
         this.cdr.detectChanges();
         console.log(this.menuModel);
@@ -443,8 +544,25 @@ export class MenuComponent implements OnInit {
                     isAvailable: matchingApiItem ? matchingApiItem.isAvailable !== false : true
                   }
                 })
-              }
+              };
             });
+          this.groupedOptions.forEach((group: any) => {
+            if (group.optionItems && group.optionItems.length > 0) {
+              const groupIdKey = group.groupId.toString();
+
+              // 1. Try to find a default keyword (Normal, Regular, Medium, Standard)
+              const defaultOption = group.optionItems.find((opt: any) =>
+                opt.isAvailable &&
+                /normal|regular|medium|standard/i.test(opt.itemName)
+              )
+                // 2. Fallback to the first available option item
+                || group.optionItems.find((opt: any) => opt.isAvailable);
+
+              if (defaultOption) {
+                this.selectedOptions[groupIdKey] = defaultOption;
+              }
+            }
+          });
 
           this.calculateTotalPrice();
           this.displayDetail = true;
@@ -475,11 +593,8 @@ export class MenuComponent implements OnInit {
   }
 
   confirmAddToCart() {
-
     if (!this.selectedItem) {
-
     }
-
     this.cartCount += this.quantity;
     const finalPrice = this.selectedItem.price + this.totalExtraPrice;
     const selectedOptionsClone = JSON.parse(JSON.stringify(this.selectedOptions));
@@ -563,11 +678,172 @@ export class MenuComponent implements OnInit {
     this.displayVoucherDialog = true;
     this.cdr.detectChanges();
   }
-  gotoPayment() {
-    this.pendingOrderPayload = {
-      note: '',
-      items: this.cartItems.map(item => {
+  // gotoPayment() {
+  //   this.pendingOrderPayload = {
+  //     note: '',
+  //     items: this.cartItems.map(item => {
 
+  //       const optionIds: number[] = Object.keys(item.selectedOptions)
+  //         .map(key => {
+  //           const opt = item.selectedOptions[key];
+  //           return opt ? (opt.id ?? opt.itemId ?? opt.optionItemId) : null;
+  //         })
+  //         .filter((id): id is number => id !== null && id !== undefined);
+
+  //       return {
+  //         menuId: item.menuId,
+  //         quantity: item.quantity,
+  //         optionItemSelectedIds: optionIds
+  //       };
+  //     })
+  //   };
+  //   this.displayVoucherDialog = false;
+  //   this.displayPaymentDialog = true;
+  //   this.cdr.detectChanges();
+  //   console.log('Final Prepared Payload:', this.pendingOrderPayload);
+  // }
+  // handlePaymentSelection(method: 'CARD' | 'EPAY') {
+  //   this.selectedPaymentMethod = method;
+  //   this.paymentStage = method;
+  //   // Reset card validation state on new selection
+  //   this.cardNumber = '';
+  //   this.cardNumberError = '';
+  //   this.cardNumberTouched = false;
+  // }
+
+  // onCardNumberInput(event: Event): void {
+  //   const input = event.target as HTMLInputElement;
+  //   // Strip everything except digits and limit to 16 digits max
+  //   const digits = input.value.replace(/\D/g, '').slice(0, 16);
+  //   // Format into groups of 4: XXXX XXXX XXXX XXXX
+  //   this.cardNumber = digits.replace(/(.{4})/g, '$1 ').trim();
+  //   input.value = this.cardNumber;
+  //   // Validate
+  //   if (this.cardNumberTouched) {
+  //     this.validateCardNumber();
+  //   }
+  // }
+
+  // onCardNumberBlur(): void {
+  //   this.cardNumberTouched = true;
+  //   this.validateCardNumber();
+  // }
+
+  // private validateCardNumber(): void {
+  //   const digits = this.cardNumber.replace(/\s/g, '');
+  //   if (!digits) {
+  //     this.cardNumberError = 'Card number is required.';
+  //   } else if (digits.length < 16) {
+  //     this.cardNumberError = `${digits.length}/16 digits entered — must be exactly 16 digits.`;
+  //   } else {
+  //     this.cardNumberError = '';
+  //   }
+  // }
+
+
+  // orderAndPayment() {
+  //   if (!this.selectedPaymentMethod) {
+  //     this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: 'Please select a payment method.' });
+  //     return;
+  //   }
+  //   const cardDigits = (this.cardNumber || '').replace(/\D/g, '');
+  //   if (this.selectedPaymentMethod === 'CARD' && cardDigits.length !== 16) {
+  //     this.cardNumberTouched = true;
+  //     this.cardNumberError = 'Card number must be exactly 16 digits.';
+  //     return;
+  //   }
+  //   this.paymentStage = 'LOADING';
+  //   this.isloading = true;
+  //   this.cdr.detectChanges();
+
+  //   setTimeout(() => {
+  //     this.orderService.create(this.pendingOrderPayload).subscribe({
+  //       next: (res) => {
+  //         if (res.success && res.data) {
+  //           const createdOrderid = res.data.orderId ?? res.data.OrderId ?? res.data.id;
+  //           const createdOrderNumber = res.data.orderNumber ?? res.data.OrderNumber;
+
+  //           const paymentNote = this.selectedPaymentMethod === 'CARD'
+  //             ? `Paid via Card (Ends: ${this.cardNumber.substring(this.cardNumber.length - 4)})`
+  //             : 'Paid via E-Wallet Scan';
+  //           const paymentPayload: ConfirmPaymentRequest = {
+  //             orderId: createdOrderid,
+  //             transitionId: paymentNote,
+  //           }
+
+  //           this.orderService.confirmPayment(paymentPayload).subscribe({
+  //             next: (payRes) => {
+  //               this.isloading = false;
+  //               if (payRes.success && payRes.data) {
+  //                 const targetOrder = payRes.data.order;
+  //                 const serverCalculatedStatus = targetOrder.orderStatus ?? targetOrder.OrderStatus ?? 'Paid';
+  //                 const hasOtherOrdersInQueue = payRes.data.hasOrdersInQueue;
+
+  //                 // Always save this order so this kiosk tracks it
+  //                 localStorage.setItem('currentKioskOrderId', createdOrderid.toString());
+  //                 localStorage.setItem('currentKioskOrderNumber', createdOrderNumber);
+  //                 localStorage.setItem('lastOrderStatus', serverCalculatedStatus);
+
+  //                 // Always show customer their order in the timeline, even if queued
+  //                 this.currentOrder = {
+  //                   orderId: createdOrderid,
+  //                   orderNumber: createdOrderNumber,
+  //                   orderStatus: serverCalculatedStatus  // Will be 'Paid' when in queue
+  //                 };
+
+  //                 // If other orders are being prepared, show queue warning
+  //                 this.isAnotherOrderWaiting = hasOtherOrdersInQueue === true;
+
+  //                 // Auto-open timeline so customer immediately sees their order number & status
+  //                 this.statusExpanded = true;
+
+  //                 this.clearCart();
+  //                 this.displayPaymentDialog = false;
+  //                 this.paymentStage = 'SELECT';
+  //                 this.selectedPaymentMethod = null;
+  //                 this.cardNumber = '';
+
+  //                 this.messageService.add({
+  //                   key: 'globalMessage',
+  //                   severity: 'success',
+  //                   summary: 'Order Placed',
+  //                   detail: `Order #${createdOrderNumber} successfully processed.`,
+  //                   life: 4000
+  //                 });
+  //                 this.cdr.detectChanges();
+  //               } else {
+  //                 this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: payRes.message || 'order fail' });
+  //               }
+  //             },
+  //             error: (err) => {
+  //               this.isloading = false;
+  //               this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'order fail' });
+  //               this.cdr.detectChanges();
+  //             }
+  //           });
+  //         } else {
+  //           this.isloading = false;
+  //           this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Order creation failed' });
+  //           this.cdr.detectChanges();
+  //         }
+  //       },
+  //       error: (err) => {
+  //         this.isloading = false;
+  //         this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'order fail' });
+  //         this.cdr.detectChanges();
+  //       }
+  //     });
+  //   });
+
+  //}
+  placeOrderCashAtCounter() {
+    this.isloading = true;
+    this.cdr.detectChanges();
+
+    // Prepare payload directly
+    this.pendingOrderPayload = {
+      note: 'Cash at Counter',
+      items: this.cartItems.map(item => {
         const optionIds: number[] = Object.keys(item.selectedOptions)
           .map(key => {
             const opt = item.selectedOptions[key];
@@ -582,108 +858,55 @@ export class MenuComponent implements OnInit {
         };
       })
     };
-    this.displayVoucherDialog = false;
-    this.displayPaymentDialog = true;
-    this.cdr.detectChanges();
-    console.log('Final Prepared Payload:', this.pendingOrderPayload);
-  }
-  handlePaymentSelection(method: 'CARD' | 'EPAY') {
-    this.selectedPaymentMethod = method;
-    this.paymentStage = method;
-  }
 
-  orderAndPayment() {
-    if (!this.selectedPaymentMethod) {
-      this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: 'Please select a payment method.' });
-      return;
-    }
-    if (this.selectedPaymentMethod === 'CARD' && (!this.cardNumber || this.cardNumber.trim().length < 16)) {
-      this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: 'Please enter a valid 16-digit card number.' });
-      return;
-    }
-    this.paymentStage = 'LOADING';
-    this.isloading = true;
-    this.cdr.detectChanges();
-    
-    setTimeout(() => {
-      this.orderService.create(this.pendingOrderPayload).subscribe({
-        next: (res) => {
-          if (res.success && res.data) {
-            const createdOrderid = res.data.orderId ?? res.data.OrderId ?? res.data.id;
-            const createdOrderNumber = res.data.orderNumber ?? res.data.OrderNumber;
+    this.orderService.create(this.pendingOrderPayload).subscribe({
+      next: (res) => {
+        this.isloading = false;
+        if (res.success && res.data) {
+          const createdOrder = res.data;
 
-            const paymentNote = this.selectedPaymentMethod === 'CARD'
-              ? `Paid via Card (Ends: ${this.cardNumber.substring(this.cardNumber.length - 4)})`
-              : 'Paid via E-Wallet Scan';
-            const paymentPayload: ConfirmPaymentRequest = {
-              orderId: createdOrderid,
-              transitionId: paymentNote,
-            }
+          // Store order details locally for printing/displaying
+          this.currentOrder = createdOrder;
+          localStorage.setItem('currentKioskOrderId', createdOrder.orderId.toString());
+          localStorage.setItem('currentKioskOrderNumber', createdOrder.orderNumber);
 
-            this.orderService.confirmPayment(paymentPayload).subscribe({
-              next: (payRes) => {
-                this.isloading = false;
-                if (payRes.success && payRes.data) {
-                  const targetOrder = payRes.data.order;
-                  const serverCalculatedStatus = targetOrder.orderStatus ?? targetOrder.OrderStatus ?? 'Paid';
-                  const hasOtherOrdersInQueue = payRes.data.hasOrdersInQueue;
+          // Show receipt dialog or invoke browser print window
+          this.displayReceiptModal = true;
+          this.clearCart();
 
-                  // Always save this order so this kiosk tracks it
-                  localStorage.setItem('currentKioskOrderId', createdOrderid.toString());
-                  localStorage.setItem('currentKioskOrderNumber', createdOrderNumber);
-                  localStorage.setItem('lastOrderStatus', serverCalculatedStatus);
+          this.messageService.add({
+            key: 'globalMessage',
+            severity: 'info',
+            summary: 'Order Placed',
+            detail: `Please take your receipt #${createdOrder.orderNumber} to the cashier.`,
+            life: 5000
+          });
 
-                  // Always show customer their order in the timeline, even if queued
-                  this.currentOrder = {
-                    orderId: createdOrderid,
-                    orderNumber: createdOrderNumber,
-                    orderStatus: serverCalculatedStatus  // Will be 'Paid' when in queue
-                  };
+          // Optional: Trigger native printer directly
+          //setTimeout(() => this.printReceipt(), 300);
+          setTimeout(() => {
+            this.closeModal();
+          }, 5000);
 
-                  // If other orders are being prepared, show queue warning
-                  this.isAnotherOrderWaiting = hasOtherOrdersInQueue === true;
-
-                  // Auto-open timeline so customer immediately sees their order number & status
-                  this.statusExpanded = true;
-
-                  this.clearCart();
-                  this.displayPaymentDialog = false;
-                  this.paymentStage = 'SELECT';
-                  this.selectedPaymentMethod = null;
-                  this.cardNumber = '';
-
-                  this.messageService.add({
-                    key: 'globalMessage',
-                    severity: 'success',
-                    summary: 'Order Placed',
-                    detail: `Order #${createdOrderNumber} successfully processed.`,
-                    life: 4000
-                  });
-                  this.cdr.detectChanges();
-                } else {
-                  this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: payRes.message || 'order fail' });
-                }
-              },
-              error: (err) => {
-                this.isloading = false;
-                this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'order fail' });
-                this.cdr.detectChanges();
-              }
-            });
-          } else {
-            this.isloading = false;
-            this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Order creation failed' });
-            this.cdr.detectChanges();
-          }
-        },
-        error: (err) => {
-          this.isloading = false;
-          this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'order fail' });
           this.cdr.detectChanges();
+        } else {
+          this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Order creation failed' });
         }
-      });
+      },
+      error: (err) => {
+        this.isloading = false;
+        this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'Order creation failed' });
+        this.cdr.detectChanges();
+      }
     });
+  }
 
+  printReceipt() {
+    window.print();
+  }
+  closeModal(): void {
+    this.displayReceiptModal = false;
+    this.displayVoucherDialog = false;
   }
 
   onSearchChange() {

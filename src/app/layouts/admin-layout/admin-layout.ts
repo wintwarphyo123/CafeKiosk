@@ -9,7 +9,7 @@ import { DialogModule } from "primeng/dialog";
 import { SelectModule } from "primeng/select";
 import { environment } from '../../../environments/environment';
 import { FormBuilder, FormGroup, FormsModule, Validators, ReactiveFormsModule } from '@angular/forms';
-import {  ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ToastModule } from "primeng/toast";
 
 @Component({
@@ -26,8 +26,8 @@ import { ToastModule } from "primeng/toast";
     ReactiveFormsModule,
     ConfirmDialogModule,
     ToastModule
-],
-  providers: [MessageService,ConfirmationService],
+  ],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './admin-layout.html',
   styleUrl: './admin-layout.scss',
 })
@@ -67,7 +67,7 @@ export class AdminLayout implements OnInit, OnDestroy {
     private userService: UserService,
     private orderNotificationService: OrderNotificationService,
     private messageService: MessageService,
-    private confirmationService:ConfirmationService,
+    private confirmationService: ConfirmationService,
     private cdr: ChangeDetectorRef,
     private router: Router
   ) { }
@@ -81,7 +81,8 @@ export class AdminLayout implements OnInit, OnDestroy {
         if (res.success) {
           this.userProfile = res.data;
         }
-        this.cdr.detectChanges();
+        // Defer detectChanges to avoid ExpressionChangedAfterItHasBeenCheckedError
+        Promise.resolve().then(() => this.cdr.detectChanges());
       },
       error: (err) => {
         this.messageService.add({
@@ -91,7 +92,7 @@ export class AdminLayout implements OnInit, OnDestroy {
           detail: 'Failed to fetch user profile.'
         });
         this.onLogout();
-        this.cdr.detectChanges();
+        Promise.resolve().then(() => this.cdr.detectChanges());
       }
     });
 
@@ -144,7 +145,7 @@ export class AdminLayout implements OnInit, OnDestroy {
         reader.readAsDataURL(file);
         reader.onload = () => {
           this.imgSrc = reader.result as string;
-          this.cdr.detectChanges();
+          Promise.resolve().then(() => this.cdr.detectChanges());
         };
       }
     }
@@ -199,10 +200,69 @@ export class AdminLayout implements OnInit, OnDestroy {
   }
 
   submit() {
-    if (this.userForm.valid) {
-      console.log('Updated Profile Data Payload:', this.userForm.value);
-      this.modelVisible = false; // close modal on success
+    if (this.userForm.invalid) {
+      this.userForm.markAllAsTouched();
+      return;
     }
+
+    const formValue = this.userForm.getRawValue();
+    const userId = formValue.userId;
+
+    if (!userId) {
+      this.messageService.add({
+        key: 'globalMessage',
+        severity: 'error',
+        summary: 'Error',
+        detail: 'User ID is missing.'
+      });
+      return;
+    }
+
+    this.isloading = true;
+
+    this.userService.update(userId, formValue).subscribe({
+      next: (res) => {
+        this.isloading = false;
+        if (res.success) {
+          this.messageService.add({
+            key: 'globalMessage',
+            severity: 'success',
+            summary: 'Success',
+            detail: res.message || 'Profile updated successfully.'
+          });
+
+          // Close modal
+          this.modelVisible = false;
+
+          // Optionally refresh local profile data
+          this.userService.userProfile().subscribe(profileRes => {
+            if (profileRes.success) {
+              this.userProfile = profileRes.data;
+              this.cdr.detectChanges();
+            }
+          });
+          this.userService.notifyProfileUpdated();// to alert user data, when the profile data is changed
+        } else {
+          this.messageService.add({
+            key: 'globalMessage',
+            severity: 'error',
+            summary: 'Error',
+            detail: res.message || 'Failed to update profile.'
+          });
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.isloading = false;
+        this.messageService.add({
+          key: 'globalMessage',
+          severity: 'error',
+          summary: 'Error',
+          detail: err.message || 'An error occurred while updating the profile.'
+        });
+        this.cdr.detectChanges();
+      }
+    });
   }
   //signal
   ngOnDestroy(): void {
@@ -215,27 +275,28 @@ export class AdminLayout implements OnInit, OnDestroy {
   }
 
   onLogout() {
-  this.confirmationService.confirm({
-    message: 'Are you sure you want to sign out of your account?',
-    header: 'Sign Out Confirmation',
-    icon: 'pi pi-sign-out text-amber-700', 
-    accept: () => {
-      
-      localStorage.removeItem('token');
-      //localStorage.removeItem('userRole'); 
-      
-      this.router.navigate(['/login']);
-      
-      this.messageService.add({
-        key: 'globalMessage',
-        severity: 'success',
-        summary: 'Signed Out',
-        detail: 'You have been logged out successfully.'
-      });
-    },
-    reject: () => {
-      console.log('Logout cancelled by user.');
-    }
-  });
-}
+    this.confirmationService.confirm({
+      message: 'Are you sure you want to sign out of your account?',
+      header: 'Sign Out Confirmation',
+      icon: 'pi pi-sign-out text-amber-700',
+      accept: () => {
+
+        //localStorage.removeItem('token');
+        //localStorage.removeItem('userRole'); 
+        this.userService.logout();
+
+        this.router.navigate(['/login']);
+
+        this.messageService.add({
+          key: 'globalMessage',
+          severity: 'success',
+          summary: 'Signed Out',
+          detail: 'You have been logged out successfully.'
+        });
+      },
+      reject: () => {
+        console.log('Logout cancelled by user.');
+      }
+    });
+  }
 }

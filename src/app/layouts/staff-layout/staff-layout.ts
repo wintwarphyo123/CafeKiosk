@@ -24,8 +24,8 @@ import { ToastModule } from "primeng/toast";
     ReactiveFormsModule,
     ConfirmDialogModule,
     ToastModule
-],
-  providers: [MessageService,ConfirmationService],
+  ],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './staff-layout.html',
   styleUrl: './staff-layout.scss',
 })
@@ -64,7 +64,7 @@ export class StaffLayout implements OnInit {
   constructor(
     private userService: UserService,
     private messageService: MessageService,
-    private confirmationService:ConfirmationService,
+    private confirmationService: ConfirmationService,
     private cdr: ChangeDetectorRef,
     private orderNotificationService: OrderNotificationService,
     private router: Router
@@ -100,7 +100,7 @@ export class StaffLayout implements OnInit {
     this.orderNotificationService.notificationCount$
       .pipe(takeUntil(this.destroy$))
       .subscribe(count => {
-        
+
         this.cdr.detectChanges();
       });
   }
@@ -207,43 +207,97 @@ export class StaffLayout implements OnInit {
   }
 
   submit() {
-    if (this.userForm.valid) {
-      console.log('Updated Profile Data Payload:', this.userForm.value);
-
-      // Call your save service here, for example:
-      // this.userService.updateProfile(this.userForm.value).subscribe(res => { ... })
-
-      this.modelVisible = false; // close modal on success
+    if (this.userForm.invalid) {
+      this.userForm.markAllAsTouched();
+      return;
     }
+
+    const formValue = this.userForm.getRawValue();
+    const userId = formValue.userId;
+
+    if (!userId) {
+      this.messageService.add({
+        key: 'globalMessage',
+        severity: 'error',
+        summary: 'Error',
+        detail: 'User ID is missing.'
+      });
+      return;
+    }
+
+    this.isloading = true;
+
+    this.userService.update(userId, formValue).subscribe({
+      next: (res) => {
+        this.isloading = false;
+        if (res.success) {
+          this.messageService.add({
+            key: 'globalMessage',
+            severity: 'success',
+            summary: 'Success',
+            detail: res.message || 'Profile updated successfully.'
+          });
+          // Close modal
+          this.modelVisible = false;
+
+          // Optionally refresh local profile data
+          this.userService.userProfile().subscribe(profileRes => {
+            if (profileRes.success) {
+              this.userProfile = profileRes.data;
+              this.cdr.detectChanges();
+            }
+          });
+          this.userService.notifyProfileUpdated();// to alert user data, when the profile data is changed
+        } else {
+          this.messageService.add({
+            key: 'globalMessage',
+            severity: 'error',
+            summary: 'Error',
+            detail: res.message || 'Failed to update profile.'
+          });
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.isloading = false;
+        this.messageService.add({
+          key: 'globalMessage',
+          severity: 'error',
+          summary: 'Error',
+          detail: err.message || 'An error occurred while updating the profile.'
+        });
+        this.cdr.detectChanges();
+      }
+    });
   }
   toggleProfile() {
     this.isProfileOpen = !this.isProfileOpen;
   }
 
   onLogout() {
-  this.confirmationService.confirm({
-    message: 'Are you sure you want to sign out of your account?',
-    header: 'Sign Out Confirmation',
-    icon: 'pi pi-sign-out text-amber-700', 
-    accept: () => {
-      
-      localStorage.removeItem('token');
-      //localStorage.removeItem('userRole'); 
-      
-      this.router.navigate(['/login']);
-      
-      this.messageService.add({
-        key: 'globalMessage',
-        severity: 'success',
-        summary: 'Signed Out',
-        detail: 'You have been logged out successfully.'
-      });
-    },
-    reject: () => {
-      console.log('Logout cancelled by user.');
-    }
-  });
-}
+    this.confirmationService.confirm({
+      message: 'Are you sure you want to sign out of your account?',
+      header: 'Sign Out Confirmation',
+      icon: 'pi pi-sign-out text-amber-700',
+      accept: () => {
+
+        localStorage.removeItem('token');
+        //localStorage.removeItem('userRole'); 
+
+        this.router.navigate(['/login']);
+
+        this.messageService.add({
+          key: 'globalMessage',
+          severity: 'success',
+          summary: 'Signed Out',
+          detail: 'You have been logged out successfully.'
+        });
+      },
+      reject: () => {
+        console.log('Logout cancelled by user.');
+      }
+    });
+  }
   onSearch() {
     this.router.navigate(['/staff/kitchen-dashboard'], {
       queryParams: { search: this.searchText },
@@ -263,7 +317,7 @@ export class StaffLayout implements OnInit {
     });
   }
 
-  
+
   toggleMobileMenu() {
     this.isMobileMenuOpen = !this.isMobileMenuOpen;
   }

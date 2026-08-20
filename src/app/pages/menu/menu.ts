@@ -82,7 +82,9 @@ export class Menu implements OnInit {
     price: [0],
     isAvailable: [true],
     categoryId: [null],
-    categoryName: ['']
+    categoryName: [''],
+    isSpecial:[false],
+    archived:[false]
   })
 
   ngOnInit(): void {
@@ -147,7 +149,9 @@ export class Menu implements OnInit {
           price: item.price ?? 0,
           isAvailable: item.isAvailable ?? item.is_available ?? true,
           categoryId: item.categoryId ?? 0,
-          categoryName: item.categoryName ?? ''
+          categoryName: item.categoryName ?? '',
+          isSpecial:item.isSpecial ?? false,
+          archived:item.archived ?? false,
         }));
         this.filterMenuState(this.selectedState);
         this.cdr.detectChanges();
@@ -182,7 +186,32 @@ export class Menu implements OnInit {
               price: item.price ?? 0,
               isAvailable: item.isAvailable ?? item.is_available ?? true,
               categoryId: item.categoryId ?? 0,
-              categoryName: item.categoryName ?? ''
+              categoryName: item.categoryName ?? '',
+              isSpecial:item.isSpecial ?? false,
+              archived:item.archived ?? false
+            }));
+          }
+          this.cdr.detectChanges();
+        }
+      })
+    }
+    else if (state === 'Special') {
+      this.menuService.getSpecialDataForAdmin().subscribe({
+        next: (res) => {
+          this.isLoading = false;
+          if (res.success) {
+            const rawData = Array.isArray(res.data) ? res.data : [];
+            this.filteredMenu = rawData.map((item) => ({
+              menuId: item.Id ?? item.menuId ?? item.id ?? 0,
+              menuName: item.menuName ?? '',
+              menuImage: item.menuImage ? this.getImageUrl(item.menuImage) : null,
+              description: item.description ?? '',
+              price: item.price ?? 0,
+              isAvailable: item.isAvailable ?? item.is_available ?? true,
+              categoryId: item.categoryId ?? 0,
+              categoryName: item.categoryName ?? '',
+              isSpecial:Boolean(item.isSpecial ?? item.IsSpecial ?? false),
+              archived:Boolean(item.isArchived ?? item.archived ?? item.Archived ?? false)
             }));
           }
           this.cdr.detectChanges();
@@ -325,6 +354,8 @@ export class Menu implements OnInit {
         price: Number(formValue.price),
         description: formValue.description,
         isAvailable: formValue.isAvailable === 'true' || formValue.isAvailable === true,
+        isSpecial: Boolean(formValue.isSpecial),
+        archived: Boolean(formValue.archived),
         categoryId: Number(formValue.categoryId)
       }
       this.menuService.update(currentMenuId, menuData).subscribe({
@@ -358,6 +389,8 @@ export class Menu implements OnInit {
         price: Number(formValue.price),
         description: formValue.description,
         isAvailable: formValue.isAvailable === 'true' || formValue.isAvailable === true,
+        isSpecial: Boolean(formValue.isSpecial),
+        archived: Boolean(formValue.archived),
         categoryId: Number(formValue.categoryId)
       }
       this.menuService.create(menuData).subscribe({
@@ -394,6 +427,8 @@ export class Menu implements OnInit {
       description: '',
       price: 0,
       isAvailable: true,
+      isSpecial:false,
+      archived:false,
       categoryId: null,
       categoryName: ''
     });
@@ -417,6 +452,7 @@ export class Menu implements OnInit {
       price: menu.price ?? 0,
       description: menu.description ?? '',
       isAvailable: menu.isAvailable ?? true,
+      isSpecial:menu.isSpecial?? false,
       categoryId: menu.categoryId ?? null
     });
 
@@ -460,6 +496,43 @@ export class Menu implements OnInit {
         this.isLoading = false;
         if (res.success) {
           item.isAvailable = !item.isAvailable;
+          this.messageService.add({ key: 'globalMessage', severity: 'success', summary: 'Success', detail: res.message || 'Status Updated' });
+        } else {
+          this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Failed', detail: 'Status change failed' });
+        }
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: 'Something went wrong' });
+      }
+    })
+  }
+  toggleMenuSpecial(item: any) {
+    this.isLoading = true;
+    this.menuService.ChangeSpecial(item.menuId).subscribe({
+      next: (res) => {
+        this.isLoading = false;
+        if (res.success) {
+          item.isSpecial = !item.isSpecial;
+          this.messageService.add({ key: 'globalMessage', severity: 'success', summary: 'Success', detail: res.message || 'Status Updated' });
+        } else {
+          this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Failed', detail: 'Status change failed' });
+        }
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: 'Something went wrong' });
+      }
+    })
+  }
+
+  toggleMenuArchived(item: any) {
+    this.isLoading = true;
+    this.menuService.ChangeArchived(item.menuId).subscribe({
+      next: (res) => {
+        this.isLoading = false;
+        if (res.success) {
+          item.archived = !item.archived;
           this.messageService.add({ key: 'globalMessage', severity: 'success', summary: 'Success', detail: res.message || 'Status Updated' });
         } else {
           this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Failed', detail: 'Status change failed' });
