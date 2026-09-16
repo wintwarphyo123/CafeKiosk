@@ -90,7 +90,6 @@ export class Reports {
     this.cols = [//orderNumber,totalAmount,phoneNumber,note,createdAt,updatedAt
       { field: 'orderNumber', header: 'Order Number' },
       { field: 'totalAmount', header: 'Total Amount' },
-      { field: 'note', header: 'Transaction Note' },
       { field: 'createdAt', header: 'Ordered Date' },
       { field: 'updatedAt', header: 'Updated Date' },
     ];

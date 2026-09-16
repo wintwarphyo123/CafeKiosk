@@ -77,9 +77,9 @@
                 <tr class="bg-gray-50 text-gray-700 font-bold border-b border-gray-200 hidden lg:table-row">
                     <th class="w-12 text-center py-3 bg-gray-50 text-gray-500 font-semibold">#</th>
                     @for(col of columns; track col.field) {
-                    <th [pSortableColumn]="col.field" [class.text-right]="col.field === 'totalAmount'"
+                    <th [pSortableColumn]="col.field"
                         class="py-3 px-4 text-left font-semibold text-gray-600 hover:bg-gray-100 transition-colors">
-                        <div class="flex items-center gap-1" [class.justify-end]="col.field === 'totalAmount'">
+                        <div class="flex items-center gap-1" >
                             {{ col.header }}
                             <p-sortIcon [field]="col.field" class="text-[10px] opacity-70"></p-sortIcon>
                         </div>
@@ -118,19 +118,6 @@
                         }
                         @else if(col.field === 'updatedAt') {
                         <span class="text-gray-500 font-medium text-[11px]">{{ rowData[col.field] | date: 'yyyy MMMM dd' }}</span>
-                        }
-
-                        @else if(col.field === 'note') {
-                        @if(rowData[col.field] && rowData[col.field].includes('Paid via')) {
-                        <p-tag severity="success" [value]="rowData[col.field]"
-                            [style]="{'font-size': '10px', 'font-weight': '700', 'padding': '2px 8px'}"></p-tag>
-                        } @else if (rowData[col.field]) {
-                        <p-tag severity="warn" [value]="rowData[col.field]"
-                            [style]="{'font-size': '10px', 'font-weight': '700', 'padding': '2px 8px'}"></p-tag>
-                        } @else {
-                        <p-tag severity="secondary" value="No Note"
-                            [style]="{'font-size': '10px', 'padding': '2px 8px'}"></p-tag>
-                        }
                         }
 
                         @else {

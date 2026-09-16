@@ -27,6 +27,10 @@ export class OrderService {
     return this.http.get<RootModel>(`${environment.apiUrl}/api/order/${id}`)
   }
 
+  ChangeToPaidState(orderId: number): Observable<RootModel> {
+    return this.http.put<RootModel>(`${environment.apiUrl}/api/order/${orderId}/paid`, {});
+  }
+
   startPreparingOrder(orderId: number): Observable<RootModel> {
     return this.http.put<RootModel>(`${environment.apiUrl}/api/order/${orderId}/prepare`, {});
   }

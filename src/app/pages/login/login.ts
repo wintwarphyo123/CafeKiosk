@@ -78,7 +78,7 @@ export class Login implements OnInit {
           }
 
           //localStorage.setItem('token', token);
-          this.router.navigate(['/dashboard']);
+         // this.router.navigate(['/dashboard']);
 
           this.userService.userProfile().subscribe({
             next: (profileRes) => {

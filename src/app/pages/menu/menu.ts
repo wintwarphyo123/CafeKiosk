@@ -61,7 +61,7 @@ export class Menu implements OnInit {
   cols!: SortColumn[];
   filteredMenu: MenuModel[] = [];
   selectedState: string = 'All';
-  
+
 
   constructor(
     private menuService: MenuService,
@@ -70,7 +70,7 @@ export class Menu implements OnInit {
     private confirmationService: ConfirmationService,
     private router: Router,
     private route: ActivatedRoute,
-    
+
   ) { }
 
   private formBuilder = inject(FormBuilder);
@@ -83,8 +83,8 @@ export class Menu implements OnInit {
     isAvailable: [true],
     categoryId: [null],
     categoryName: [''],
-    isSpecial:[false],
-    archived:[false]
+    isSpecial: [false],
+    archived: [false]
   })
 
   ngOnInit(): void {
@@ -97,7 +97,7 @@ export class Menu implements OnInit {
     this.userRole = savedRole.toUpperCase();
     this.categoryData();
     this.loadData();
-    
+
   }
 
   categoryData() {
@@ -150,8 +150,8 @@ export class Menu implements OnInit {
           isAvailable: item.isAvailable ?? item.is_available ?? true,
           categoryId: item.categoryId ?? 0,
           categoryName: item.categoryName ?? '',
-          isSpecial:item.isSpecial ?? false,
-          archived:item.archived ?? false,
+          isSpecial: item.isSpecial ?? false,
+          archived: item.archived ?? false,
         }));
         this.filterMenuState(this.selectedState);
         this.cdr.detectChanges();
@@ -187,8 +187,8 @@ export class Menu implements OnInit {
               isAvailable: item.isAvailable ?? item.is_available ?? true,
               categoryId: item.categoryId ?? 0,
               categoryName: item.categoryName ?? '',
-              isSpecial:item.isSpecial ?? false,
-              archived:item.archived ?? false
+              isSpecial: item.isSpecial ?? false,
+              archived: item.archived ?? false
             }));
           }
           this.cdr.detectChanges();
@@ -210,8 +210,8 @@ export class Menu implements OnInit {
               isAvailable: item.isAvailable ?? item.is_available ?? true,
               categoryId: item.categoryId ?? 0,
               categoryName: item.categoryName ?? '',
-              isSpecial:Boolean(item.isSpecial ?? item.IsSpecial ?? false),
-              archived:Boolean(item.isArchived ?? item.archived ?? item.Archived ?? false)
+              isSpecial: Boolean(item.isSpecial ?? item.IsSpecial ?? false),
+              archived: Boolean(item.isArchived ?? item.archived ?? item.Archived ?? false)
             }));
           }
           this.cdr.detectChanges();
@@ -223,51 +223,51 @@ export class Menu implements OnInit {
     }
   }
 
-  restoreItem(menu:MenuModel) {
-     
-      this.confirmationService.confirm({
-        message: 'Are you sure want to restore?',
-        header: 'Confirmation',
-        icon: 'pi pi-exclamation-triangle',
-        accept: () => {
-          this.menuService.restoreData(menu.menuId).subscribe({
-            next: (res) => {
-              this.modalVisible = false;
-              if (res.success) {
-                this.loadData();
-                this.messageService.add({
-                  key: 'globalMessage',
-                  severity: 'success',
-                  summary: 'success',
-                  detail: 'Menu restore successfully'
-                });
-                this.filterMenuState('Deleted');
-              } else {
-                this.messageService.add({
-                  key: 'globalMessage',
-                  severity: 'warn',
-                  summary: 'warning',
-                  detail: 'Menu restore fail'
-                });
-                this.cdr.detectChanges();
-              }
-            },
-            error: (err) => {
-              
-              this.modalVisible = false;
+  restoreItem(menu: MenuModel) {
+
+    this.confirmationService.confirm({
+      message: 'Are you sure want to restore?',
+      header: 'Confirmation',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        this.menuService.restoreData(menu.menuId).subscribe({
+          next: (res) => {
+            this.modalVisible = false;
+            if (res.success) {
               this.loadData();
               this.messageService.add({
                 key: 'globalMessage',
-                severity: 'error',
-                summary: 'Error',
-                detail: 'Menu restore failed, name is already exist!!'
+                severity: 'success',
+                summary: 'success',
+                detail: 'Menu restore successfully'
+              });
+              this.filterMenuState('Deleted');
+            } else {
+              this.messageService.add({
+                key: 'globalMessage',
+                severity: 'warn',
+                summary: 'warning',
+                detail: 'Menu restore fail'
               });
               this.cdr.detectChanges();
             }
-          });
-        }
-      })
-    }
+          },
+          error: (err) => {
+
+            this.modalVisible = false;
+            this.loadData();
+            this.messageService.add({
+              key: 'globalMessage',
+              severity: 'error',
+              summary: 'Error',
+              detail: 'Menu restore failed, name is already exist!!'
+            });
+            this.cdr.detectChanges();
+          }
+        });
+      }
+    })
+  }
   handleImageError(event: any) {
     event.target.src = this.thumbnailUrl;
   }
@@ -344,20 +344,22 @@ export class Menu implements OnInit {
   submit() {
     const formValue = this.menuForm.getRawValue();
     let menuData: any;
+    const imageToSend = this.imgBase64String ? this.imgBase64String : '';
 
     if (this.isEdited) {
       const currentMenuId = this.selectedMenu?.menuId ?? 0;
       menuData = {
         menuId: currentMenuId,
         menuName: formValue.menuName,
-        menuImage: formValue.menuImage,
+        menuImage: imageToSend, // <-- URL path မပို့ဘဲ Base64 string သို့မဟုတ် empty သာ ပို့မည်
         price: Number(formValue.price),
         description: formValue.description,
         isAvailable: formValue.isAvailable === 'true' || formValue.isAvailable === true,
         isSpecial: Boolean(formValue.isSpecial),
         archived: Boolean(formValue.archived),
         categoryId: Number(formValue.categoryId)
-      }
+      };
+
       this.menuService.update(currentMenuId, menuData).subscribe({
         next: (res) => {
           if (res.success) {
@@ -370,17 +372,9 @@ export class Menu implements OnInit {
               summary: 'Success',
               detail: 'Menu Updated Successfully'
             });
-          } else {
-            this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message });
           }
-          this.selectedMenu = null;
-        },
-        error: (err) => {
-          this.modalVisible = false;
-          this.loadData();
-          this.messageService.add({ key: 'globalMessage', severity: 'warn', summary: 'Warning', detail: 'Menu Update Failed' });
         }
-      })
+      });
     } else {
       menuData = {
         menuId: 0,
@@ -427,8 +421,8 @@ export class Menu implements OnInit {
       description: '',
       price: 0,
       isAvailable: true,
-      isSpecial:false,
-      archived:false,
+      isSpecial: false,
+      archived: false,
       categoryId: null,
       categoryName: ''
     });
@@ -452,7 +446,7 @@ export class Menu implements OnInit {
       price: menu.price ?? 0,
       description: menu.description ?? '',
       isAvailable: menu.isAvailable ?? true,
-      isSpecial:menu.isSpecial?? false,
+      isSpecial: menu.isSpecial ?? false,
       categoryId: menu.categoryId ?? null
     });
 

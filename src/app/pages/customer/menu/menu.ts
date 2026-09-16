@@ -24,7 +24,7 @@ import { Router } from '@angular/router';
 import { OrderNotificationService } from '../../../cores/services/order-notification-service';
 import { BadgeModule } from 'primeng/badge';
 import { OptionGroupDto, OptionItemDto } from '../../../cores/models/menu-detail.model';
-import { MenuModel } from '../../../cores/models/menu.model';
+import { MenuModel, RecommendMenu } from '../../../cores/models/menu.model';
 import { TrendingItemResponseModel } from '../../../cores/models/dashboard.model';
 
 @Component({
@@ -69,7 +69,8 @@ export class MenuComponent implements OnInit {
   pendingOrderPayload: any = null;
   isAnotherOrderWaiting: boolean = false;
   searchQuery: string = '';
-  trendingItem: TrendingItemResponseModel[] = []//for show ternding menus
+  trendingItem: TrendingItemResponseModel[] = [];//for show ternding menus
+  recommendMenu: RecommendMenu[] = [];//for recommend menu
 
   displayDetail: boolean = false;
   selectedItem: any = null;
@@ -104,12 +105,8 @@ export class MenuComponent implements OnInit {
     { status: 'Ready', label: 'ready', icon: 'pi pi-check-circle', color: '#4caf50', stepIndex: 3 }
   ];
 
-  // paymentStage: 'SELECT' | 'CARD' | 'EPAY' | 'LOADING' = 'SELECT';
-  // selectedPaymentMethod: 'CARD' | 'EPAY' | null = null;
-  // cardNumber: string = '';
-  // cardNumberError: string = '';
-  // cardNumberTouched: boolean = false;
   displayReceiptModal: boolean = false;
+  displayRecommendMenu: boolean = false;
 
 
   constructor(
@@ -574,6 +571,34 @@ export class MenuComponent implements OnInit {
         this.cdr.detectChanges();
       }
     });
+    //mainMenuId, recommendedMenuId, recommendedMenuName, recommendedMenuPrice, recommendedMenuImageUrl, pairingCount, supportScore 
+
+    this.menuService.getRecommendedMenu(item.menuId).subscribe({
+      next: (res: any) => {
+        const data = res.data ?? res;
+        if (Array.isArray(data) && data.length > 0) {
+          this.recommendMenu = data.map((rec: any) => ({
+            mainMenuId: rec.mainMenuId ?? rec.menuId ?? item.menuId,
+            recommendedMenuId: rec.recommendedMenuId ?? rec.id ?? rec.menuId,
+            recommendedMenuName: rec.recommendedMenuName ?? rec.menuName ?? rec.name ?? '',
+            recommendedMenuPrice: rec.recommendedMenuPrice ?? rec.price ?? 0,
+            // Image path ကို getImageUrl() ဖြင့် ဖြတ်ပေးခြင်း
+            recommendedMenuImageUrl: rec.recommendedMenuImageUrl || rec.menuImage || rec.image
+              ? this.getImageUrl(rec.recommendedMenuImageUrl || rec.menuImage || rec.image)
+              : null,
+              pairingCount: rec.pairingCount ?? 0,
+              supportScore: rec.supportScore ?? 0
+          }));
+        } else {
+          this.recommendMenu = [];
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.recommendMenu = [];
+        console.log('No recommendations found for this item.', err);
+      }
+    });
   }
 
   incrementQuantity() {
@@ -628,6 +653,9 @@ export class MenuComponent implements OnInit {
     console.log('Selected Customizations:', this.selectedOptions);
     console.log('Final Price:', finalPrice);
     this.displayDetail = false;
+    if (this.recommendMenu && this.recommendMenu.length > 0) {
+      this.recommendationMenuDialog();
+    }
   }
 
   calculateCartTotalPrice() {
@@ -678,164 +706,39 @@ export class MenuComponent implements OnInit {
     this.displayVoucherDialog = true;
     this.cdr.detectChanges();
   }
-  // gotoPayment() {
-  //   this.pendingOrderPayload = {
-  //     note: '',
-  //     items: this.cartItems.map(item => {
 
-  //       const optionIds: number[] = Object.keys(item.selectedOptions)
-  //         .map(key => {
-  //           const opt = item.selectedOptions[key];
-  //           return opt ? (opt.id ?? opt.itemId ?? opt.optionItemId) : null;
-  //         })
-  //         .filter((id): id is number => id !== null && id !== undefined);
+  recommendationMenuDialog(): void {
+    this.displayRecommendMenu = true;
+    this.cdr.detectChanges();
+  }
 
-  //       return {
-  //         menuId: item.menuId,
-  //         quantity: item.quantity,
-  //         optionItemSelectedIds: optionIds
-  //       };
-  //     })
-  //   };
-  //   this.displayVoucherDialog = false;
-  //   this.displayPaymentDialog = true;
-  //   this.cdr.detectChanges();
-  //   console.log('Final Prepared Payload:', this.pendingOrderPayload);
-  // }
-  // handlePaymentSelection(method: 'CARD' | 'EPAY') {
-  //   this.selectedPaymentMethod = method;
-  //   this.paymentStage = method;
-  //   // Reset card validation state on new selection
-  //   this.cardNumber = '';
-  //   this.cardNumberError = '';
-  //   this.cardNumberTouched = false;
-  // }
+  addRecommendedToCart(item: RecommendMenu): void {
+    const existingItem = this.cartItems.findIndex(cart => cart.menuId === item.recommendedMenuId);
 
-  // onCardNumberInput(event: Event): void {
-  //   const input = event.target as HTMLInputElement;
-  //   // Strip everything except digits and limit to 16 digits max
-  //   const digits = input.value.replace(/\D/g, '').slice(0, 16);
-  //   // Format into groups of 4: XXXX XXXX XXXX XXXX
-  //   this.cardNumber = digits.replace(/(.{4})/g, '$1 ').trim();
-  //   input.value = this.cardNumber;
-  //   // Validate
-  //   if (this.cardNumberTouched) {
-  //     this.validateCardNumber();
-  //   }
-  // }
+    if (existingItem > -1) {
+      this.cartItems[existingItem].quantity += 1;
+      this.cartItems[existingItem].calculatedPrice = this.cartItems[existingItem].quantity * this.cartItems[existingItem].singleTotalPrice;
+    } else {
+      this.cartItems.push({
+        menuId: item.recommendedMenuId,
+        menuName: item.recommendedMenuName,
+        basePrice: item.recommendedMenuPrice,
+        selectedOptions: {},
+        quantity: 1,
+        singleTotalPrice: item.recommendedMenuPrice,
+        calculatedPrice: item.recommendedMenuPrice
+      });
+    }
 
-  // onCardNumberBlur(): void {
-  //   this.cardNumberTouched = true;
-  //   this.validateCardNumber();
-  // }
+    this.calculateCartTotalPrice();
+    this.messageService.add({
+      key: 'globalMessage',
+      severity: 'success',
+      summary: 'Added Recommended Item',
+      detail: `${item.recommendedMenuName} added to cart!`
+    });
+  }
 
-  // private validateCardNumber(): void {
-  //   const digits = this.cardNumber.replace(/\s/g, '');
-  //   if (!digits) {
-  //     this.cardNumberError = 'Card number is required.';
-  //   } else if (digits.length < 16) {
-  //     this.cardNumberError = `${digits.length}/16 digits entered — must be exactly 16 digits.`;
-  //   } else {
-  //     this.cardNumberError = '';
-  //   }
-  // }
-
-
-  // orderAndPayment() {
-  //   if (!this.selectedPaymentMethod) {
-  //     this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: 'Please select a payment method.' });
-  //     return;
-  //   }
-  //   const cardDigits = (this.cardNumber || '').replace(/\D/g, '');
-  //   if (this.selectedPaymentMethod === 'CARD' && cardDigits.length !== 16) {
-  //     this.cardNumberTouched = true;
-  //     this.cardNumberError = 'Card number must be exactly 16 digits.';
-  //     return;
-  //   }
-  //   this.paymentStage = 'LOADING';
-  //   this.isloading = true;
-  //   this.cdr.detectChanges();
-
-  //   setTimeout(() => {
-  //     this.orderService.create(this.pendingOrderPayload).subscribe({
-  //       next: (res) => {
-  //         if (res.success && res.data) {
-  //           const createdOrderid = res.data.orderId ?? res.data.OrderId ?? res.data.id;
-  //           const createdOrderNumber = res.data.orderNumber ?? res.data.OrderNumber;
-
-  //           const paymentNote = this.selectedPaymentMethod === 'CARD'
-  //             ? `Paid via Card (Ends: ${this.cardNumber.substring(this.cardNumber.length - 4)})`
-  //             : 'Paid via E-Wallet Scan';
-  //           const paymentPayload: ConfirmPaymentRequest = {
-  //             orderId: createdOrderid,
-  //             transitionId: paymentNote,
-  //           }
-
-  //           this.orderService.confirmPayment(paymentPayload).subscribe({
-  //             next: (payRes) => {
-  //               this.isloading = false;
-  //               if (payRes.success && payRes.data) {
-  //                 const targetOrder = payRes.data.order;
-  //                 const serverCalculatedStatus = targetOrder.orderStatus ?? targetOrder.OrderStatus ?? 'Paid';
-  //                 const hasOtherOrdersInQueue = payRes.data.hasOrdersInQueue;
-
-  //                 // Always save this order so this kiosk tracks it
-  //                 localStorage.setItem('currentKioskOrderId', createdOrderid.toString());
-  //                 localStorage.setItem('currentKioskOrderNumber', createdOrderNumber);
-  //                 localStorage.setItem('lastOrderStatus', serverCalculatedStatus);
-
-  //                 // Always show customer their order in the timeline, even if queued
-  //                 this.currentOrder = {
-  //                   orderId: createdOrderid,
-  //                   orderNumber: createdOrderNumber,
-  //                   orderStatus: serverCalculatedStatus  // Will be 'Paid' when in queue
-  //                 };
-
-  //                 // If other orders are being prepared, show queue warning
-  //                 this.isAnotherOrderWaiting = hasOtherOrdersInQueue === true;
-
-  //                 // Auto-open timeline so customer immediately sees their order number & status
-  //                 this.statusExpanded = true;
-
-  //                 this.clearCart();
-  //                 this.displayPaymentDialog = false;
-  //                 this.paymentStage = 'SELECT';
-  //                 this.selectedPaymentMethod = null;
-  //                 this.cardNumber = '';
-
-  //                 this.messageService.add({
-  //                   key: 'globalMessage',
-  //                   severity: 'success',
-  //                   summary: 'Order Placed',
-  //                   detail: `Order #${createdOrderNumber} successfully processed.`,
-  //                   life: 4000
-  //                 });
-  //                 this.cdr.detectChanges();
-  //               } else {
-  //                 this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: payRes.message || 'order fail' });
-  //               }
-  //             },
-  //             error: (err) => {
-  //               this.isloading = false;
-  //               this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'order fail' });
-  //               this.cdr.detectChanges();
-  //             }
-  //           });
-  //         } else {
-  //           this.isloading = false;
-  //           this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: res.message || 'Order creation failed' });
-  //           this.cdr.detectChanges();
-  //         }
-  //       },
-  //       error: (err) => {
-  //         this.isloading = false;
-  //         this.messageService.add({ key: 'globalMessage', severity: 'error', summary: 'Error', detail: err.message || 'order fail' });
-  //         this.cdr.detectChanges();
-  //       }
-  //     });
-  //   });
-
-  //}
   placeOrderCashAtCounter() {
     this.isloading = true;
     this.cdr.detectChanges();

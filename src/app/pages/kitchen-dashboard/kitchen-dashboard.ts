@@ -299,6 +299,9 @@ export class KitchenDashboard implements OnInit, OnDestroy {
     let statusObservable$: Observable<any>;
 
     switch (newStatus) {
+      case 'Paid':
+        statusObservable$ = this.orderService.ChangeToPaidState(orderId);
+        break;
       case 'Preparing':
         statusObservable$ = this.orderService.startPreparingOrder(orderId);
         break;

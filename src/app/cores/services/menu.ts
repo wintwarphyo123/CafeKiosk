@@ -75,6 +75,10 @@ export class MenuService {
     return this.http.put<RootModel>(`${environment.apiUrl}/api/menu/${menuId}/archived`,{})
   }
 
+  getRecommendedMenu(menuId:number):Observable<RootModel>{
+    return this.http.get<RootModel>(`${environment.apiUrl}/api/menu/recommend/${menuId}`)
+  }
+
   convertBase64(file: File): Observable<string> {
     const result = new ReplaySubject<string>(1);
     const reader = new FileReader();

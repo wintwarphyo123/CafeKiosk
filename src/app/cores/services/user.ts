@@ -64,9 +64,7 @@ export class UserService {
     return this.http.delete<RootModel>(`${environment.apiUrl}/api/user/${id}`, {})
   }
 
-  // login(credential: LoginModel): Observable<RootModel> {
-  //   return this.http.post<RootModel>(`${environment.apiUrl}/api/auth/login`, credential, { withCredentials: true })
-  // }
+  
   login(credential: LoginModel): Observable<RootModel> {
     return this.http
       .post<RootModel>(`${environment.apiUrl}/api/auth/login`, credential)
@@ -112,19 +110,6 @@ export class UserService {
     this.currentUserProfile.set(null);
   }
 
-  // userProfile(): Observable<RootModel> {
-  //   return this.http.get<RootModel>(`${environment.apiUrl}/api/auth/profile`, { withCredentials: true })
-  //     .pipe(
-  //       tap(res => {
-  //         if (res.success && res.data) {
-  //           const role = res.data?.role ?? res.data?.userRole ?? null;
-
-  //           this.currentUserProfile.set(res.data);
-  //           this.setStoredRole(typeof role === 'string' ? role : null);
-  //         }
-  //       })
-  //     );
-  // }
    userProfile(): Observable<RootModel> {
     return this.http
       .get<RootModel>(`${environment.apiUrl}/api/auth/profile`)

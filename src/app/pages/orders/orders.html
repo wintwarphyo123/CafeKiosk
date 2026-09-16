@@ -56,7 +56,7 @@
                     <th [pSortableColumn]="col.field"
                         class="py-3.5 px-4 font-semibold text-gray-600 hover:bg-gray-100 transition-colors">
                         <div class="flex items-center gap-1.5 w-full" 
-                            [class.justify-end]="col.field === 'totalAmount'"
+                            [class.justify-start]="col.field === 'totalAmount'"
                             [class.justify-start]="col.field !== 'totalAmount'">
                             <span>{{ col.header }}</span>
                             <p-sortIcon [field]="col.field" class="text-[9px] opacity-50"></p-sortIcon>
@@ -89,25 +89,6 @@
 
                         @else if(col.field === 'createdAt' || col.field === 'updatedAt') {
                         <span class="text-gray-400 font-medium">{{ rowData[col.field] | date: 'yyyy MMMM dd' }}</span>
-                        }
-
-                        @else if(col.field === 'note') {
-                            @if(rowData[col.field] && rowData[col.field].includes('Paid via')) {
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-green-50 text-green-700 border border-green-200/60">
-                                <span class="w-1 h-1 rounded-full bg-green-500"></span>
-                                {{ rowData[col.field] }}
-                            </span>
-                            } @else if (rowData[col.field]) {
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200/60">
-                                <span class="w-1 h-1 rounded-full bg-amber-500"></span>
-                                Txn Code: {{ rowData[col.field] }}
-                            </span>
-                            } @else {
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-gray-50 text-gray-400 border border-gray-200/60">
-                                <span class="w-1 h-1 rounded-full bg-gray-300"></span>
-                                Unpaid / Cash
-                            </span>
-                            }
                         }
 
                         @else {

@@ -275,28 +275,29 @@ export class AdminLayout implements OnInit, OnDestroy {
   }
 
   onLogout() {
-    this.confirmationService.confirm({
-      message: 'Are you sure you want to sign out of your account?',
-      header: 'Sign Out Confirmation',
-      icon: 'pi pi-sign-out text-amber-700',
-      accept: () => {
+  this.confirmationService.confirm({
+    header: 'Sign Out?',
+    message: 'Are you sure you want to log out? Any unsaved changes may be lost.',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: 'Yes, Sign Out',
+    rejectLabel: 'Cancel',
+    acceptButtonStyleClass: 'p-button-danger p-button-rounded px-4 py-2 font-medium',
+    rejectButtonStyleClass: 'p-button-outlined p-button-secondary p-button-rounded px-4 py-2 font-medium mr-2',
+    
+    accept: () => {
+      this.userService.logout();
+      this.router.navigate(['/login']);
 
-        //localStorage.removeItem('token');
-        //localStorage.removeItem('userRole'); 
-        this.userService.logout();
-
-        this.router.navigate(['/login']);
-
-        this.messageService.add({
-          key: 'globalMessage',
-          severity: 'success',
-          summary: 'Signed Out',
-          detail: 'You have been logged out successfully.'
-        });
-      },
-      reject: () => {
-        console.log('Logout cancelled by user.');
-      }
-    });
-  }
+      this.messageService.add({
+        key: 'globalMessage',
+        severity: 'success',
+        summary: 'Signed Out',
+        detail: 'You have been logged out successfully.'
+      });
+    },
+    reject: () => {
+      console.log('Logout cancelled by user.');
+    }
+  });
+}
 }

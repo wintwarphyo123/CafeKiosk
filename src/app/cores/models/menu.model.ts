@@ -10,5 +10,15 @@ export interface MenuModel {
     isSpecial:boolean| null;
     archived:boolean|null;
 }//menuId,menuName,menuImage,description,price,isAvailable,categoryId,categoryName
+//mainMenuId, recommendedMenuId, recommendedMenuName, recommendedMenuPrice, recommendedMenuImageUrl, pairingCount, supportScore 
+export interface RecommendMenu{
+    mainMenuId:number |null;
+    recommendedMenuId:number|null;
+    recommendedMenuName:string|null;
+    recommendedMenuPrice:number |null;
+    recommendedMenuImageUrl:string |null;
+    pairingCount:number |null;
+    supportScore:number |null;
+}
 
 
